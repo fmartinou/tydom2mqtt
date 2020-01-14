@@ -17,8 +17,7 @@ from datetime import datetime
 
 from cover import Cover
 from alarm_control_panel import Alarm
-from error import Error
-from heartbeat import MQTTHearbeat
+
 
 
 # Thanks https://stackoverflow.com/questions/49878953/issues-listening-incoming-messages-in-websocket-client-on-python-3-6
