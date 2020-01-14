@@ -84,6 +84,4 @@ if __name__ == '__main__':
                 print("Error : ", e)
             os.excel("tydom2mqtt_restarter.sh","")
             sys.exit(-1)
-.sh","")
-            sys.exit(-1)
-        sys.exit(-1)
+
