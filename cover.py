@@ -4,10 +4,9 @@ import time
 from datetime import datetime
 
 cover_config_topic = "homeassistant/cover/tydom/{id}/config"
-cover_config = "homeassistant/cover/tydom/{id}/config"
-cover_position_topic = "homeassistant/cover/tydom/{id}/current_position"
-cover_set_postion_topic = "homeassistant/cover/tydom/{id}/set_position"
-cover_attributes_topic = "homeassistant/cover/tydom/{id}/attributes"
+cover_position_topic = "cover/tydom/{id}/current_position"
+cover_set_postion_topic = "cover/tydom/{id}/set_position"
+cover_attributes_topic = "cover/tydom/{id}/attributes"
 
 
 class Cover:
@@ -53,9 +52,9 @@ class Cover:
         self.config['payload_close'] = 0
         self.config['retain'] = 'false'
         self.config['device'] = self.device
+        # print(self.config)
 
         if (self.mqtt != None):
-        # print(self.config)
             self.mqtt.mqtt_client.publish(self.config_topic, json.dumps(self.config), qos=0)
         # setup_pub = '(self.config_topic, json.dumps(self.config), qos=0)'
         # return(setup_pub)
