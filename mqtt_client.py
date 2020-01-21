@@ -8,9 +8,10 @@ from gmqtt import Client as MQTTClient
 
 # Globals
 ####################################### MQTT
-tydom_topic = "homeassistant/+/tydom/#"
+tydom_topic = "+/tydom/#"
 refresh_topic = "homeassistant/requests/tydom/refresh"
 hostname = socket.gethostname()
+
 
 # STOP = asyncio.Event()
 class MQTT_Hassio():
@@ -61,8 +62,7 @@ class MQTT_Hassio():
             
 
     async def on_message(self, client, topic, payload, qos, properties):
-
-
+        # print('Incoming MQTT message : ', topic, payload)
         if (topic == "homeassistant/requests/tydom/update"):
             print('Incoming MQTT update request : ', topic, payload)
             await self.tydom.get_data()
@@ -84,17 +84,21 @@ class MQTT_Hassio():
 
             else:
                 await self.tydom.put_devices_data(str(get_id), 'position', str(json.loads(payload)))
-        elif ('set_position' in str(topic)):
+        
+        elif ('set_position' in str(topic)) and not ('homeassistant'in str(topic)):
+
             print('Incoming MQTT set_position request : ', topic, payload)
-            get_id = (topic.split("/"))[3] #extract id from mqtt
-            # print(tydom, str(get_id), 'position', json.loads(payload))
+            get_id = (topic.split("/"))[2] #extract id from mqtt
+            print(str(get_id), 'position', json.loads(payload))
             if not self.tydom.connection.open:
-                print('Websocket not opened, reconnect...')
+                print('MQTT req : Websocket not opened, reconnect...')
                 await self.tydom.connect()
                 await self.tydom.put_devices_data(str(get_id), 'position', str(json.loads(payload)))
 
             else:
-                await self.tydom.put_devices_data(str(get_id), 'position', str(json.loads(payload)))
+                if not (str(json.loads(payload)) == ''):
+                    await self.tydom.put_devices_data(str(get_id), 'position', str(json.loads(payload)))
+
         else:
             pass
             # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
@@ -109,10 +113,4 @@ class MQTT_Hassio():
         print("MQTT is connected and suscribed ! =)", client)
         pyld = 'Started !',str(datetime.fromtimestamp(time.time()))
         client.publish('homeassistant/sensor/tydom/last_clean_startup', pyld, qos=1, retain=True)
-        # print('Requesting 1st data...')
-        # await self.tydom.post_refresh()
-        # await self.tydom.get_data()
 
-                
-    # def ask_exit(*args):
-    #     STOP.set()
