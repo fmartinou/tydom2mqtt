@@ -14,10 +14,10 @@ import time
 from http.server import BaseHTTPRequestHandler
 import ssl
 from datetime import datetime
+import subprocess, platform
 
 from cover import Cover
 from alarm_control_panel import Alarm
-
 
 
 # Thanks https://stackoverflow.com/questions/49878953/issues-listening-incoming-messages-in-websocket-client-on-python-3-6
@@ -33,11 +33,21 @@ from alarm_control_panel import Alarm
 deviceAlarmKeywords = ['alarmMode','alarmState','alarmSOS','zone1State','zone2State','zone3State','zone4State','zone5State','zone6State','zone7State','zone8State','gsmLevel','inactiveProduct','zone1State','liveCheckRunning','networkDefect','unitAutoProtect','unitBatteryDefect','unackedEvent','alarmTechnical','systAutoProtect','sysBatteryDefect','zsystSupervisionDefect','systOpenIssue','systTechnicalDefect','videoLinkDefect']
 # Device dict for parsing
 device_dict = dict()
+climateKeywords = ['temperature', 'authorization', 'hvacMode', 'setpoint']
 
 
 class TydomWebSocketClient():
 
     def __init__(self, mac, password, host='mediation.tydom.com', mqtt_client=None):
+        if not (host == 'mediation.tydom.com'):
+            try:
+                # Test if mediation.tydom.com is reacheable
+                output = subprocess.check_output("ping -{} 1 {}".format('n' if platform.system().lower()=="windows" else 'c', 'mediation.tydom.com'), shell=True)
+                print('mediation.tydom.com is reacheable !')
+                host = 'mediation.tydom.com'
+            except Exception as e:
+                print('Remote control is down, fallback to local ip for that connection')
+
 
         # Set Host, ssl context and prefix for remote or local connection
         if host == "mediation.tydom.com":
@@ -53,9 +63,10 @@ class TydomWebSocketClient():
         self.mac = mac
         self.host = host
         self.mqtt_client = mqtt_client
-
+        self.connection = None
 
     async def connect(self):
+        
         print('WS Connection start')
         '''
             Connecting to webSocket server
@@ -69,7 +80,6 @@ class TydomWebSocketClient():
                         "Sec-WebSocket-Key": self.generate_random_key(),
                         "Sec-WebSocket-Version": "13"
                         }
-
         conn = http.client.HTTPSConnection(self.host, 443, context=self.ssl_context)
         # Get first handshake
         conn.request("GET", "/mediation/client?mac={}&appli=1".format(self.mac), None, httpHeaders)
@@ -82,8 +92,6 @@ class TydomWebSocketClient():
         conn.close()
         # Build websocket headers
         websocketHeaders = {'Authorization': self.build_digest_headers(nonce)}
-
-
         if self.ssl_context is not None:
             websocket_ssl_context = self.ssl_context
         else:
@@ -91,19 +99,16 @@ class TydomWebSocketClient():
 
 
         try:
-            # #Connection to MQTT client 1st
-            # Moved to main tasks
-
             print('"Attempting websocket connection..."')
             print('Host :')
             print(self.host)
+                
+            
             self.connection = await websockets.client.connect('wss://{}:443/mediation/client?mac={}&appli=1'.format(self.host, self.mac),
                                                     extra_headers=websocketHeaders, ssl=websocket_ssl_context)
             # async with websockets.client.connect('wss://{}:443/mediation/client?mac={}&appli=1'.format(self.host, self.mac),
             #                             extra_headers=websocketHeaders, ssl=websocket_ssl_context) as self.connection:
-    
-            
-                # if self.connection.open:
+
             while True:
                 print("Tydom Websocket is Connected !", self.connection)
                 return self.connection
@@ -111,7 +116,7 @@ class TydomWebSocketClient():
         except Exception as e:
             print('Websocket def connect error')
             print(e)
-            print('Reconnect...')
+            print('Reconnecting...')
             await self.connect()
 
     async def heartbeat(self):
@@ -145,39 +150,38 @@ class TydomWebSocketClient():
         if not self.connection.open:
             print('Websocket not opened, reconnect...')
             await self.connect()
-            
-        else:
-            str = self.cmd_prefix + "GET " + msg +" HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
-            a_bytes = bytes(str, "ascii")
-            await websocket.send(a_bytes)
-            print('Command send to websocket')
-            return 0
+   
+        str = self.cmd_prefix + "GET " + msg +" HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
+        a_bytes = bytes(str, "ascii")
+        await websocket.send(a_bytes)
+        print('Command send to websocket')
+        return 0
 
 # Send Generic POST message
     async def send_post_message(self, websocket, msg):
         if not self.connection.open:
             print('Websocket not opened, reconnect...')
             await self.connect()
-            
-        else:
-            str = self.cmd_prefix + "POST " + msg +" HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
-            a_bytes = bytes(str, "ascii")
-            await websocket.send(a_bytes)
-            return 0
+
+        str = self.cmd_prefix + "POST " + msg +" HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
+        a_bytes = bytes(str, "ascii")
+        await websocket.send(a_bytes)
+        return 0
 
     # Give order (name + value) to endpoint
     async def put_devices_data(self, endpoint_id, name, value):
         if not self.connection.open:
             print('Websocket not opened, reconnect...')
             await self.connect()
-            
-        else:
-            # For shutter, value is the percentage of closing
-            body="[{\"name\":\"" + name + "\",\"value\":\""+ value + "\"}]"
-            # endpoint_id is the endpoint = the device (shutter in this case) to open.
-            str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/data HTTP/1.1\r\nContent-Length: ".format(str(endpoint_id),str(endpoint_id))+str(len(body))+"\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"+body+"\r\n\r\n"
-            a_bytes = bytes(str_request, "ascii")
-            await self.connection.send(a_bytes)
+
+        # For shutter, value is the percentage of closing
+        body="[{\"name\":\"" + name + "\",\"value\":\""+ value + "\"}]"
+        # endpoint_id is the endpoint = the device (shutter in this case) to open.
+        str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/data HTTP/1.1\r\nContent-Length: ".format(str(endpoint_id),str(endpoint_id))+str(len(body))+"\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"+body+"\r\n\r\n"
+        a_bytes = bytes(str_request, "ascii")
+        await self.connection.send(a_bytes)
+        print('PUT req send to Websocket ! : ' + str_request)
+        return 0
 
     # Run scenario
     async def put_scenarios(self, scenario_id):
@@ -200,8 +204,6 @@ class TydomWebSocketClient():
 
             bytes_str = await self.connection.recv()
             print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            newheartbeat = heartbeat()
-            await newheartbeat.publish_update()
             # print(bytes_str)
             first = str(bytes_str[:40]) # Scanning 1st characters
             try:
@@ -451,6 +453,32 @@ class TydomWebSocketClient():
 
             if not (msg_type == None):
                 try:
+
+                    # #data msg
+                    # tydom_data = {}
+                    # elements = json.loads(data)
+                    # for element in elements:
+                    #     for endpoint in element['endpoints']:
+                    #         for value in endpoint['data']:
+                    #             if value['name'] == 'position':
+                    #                 print('Cover data parsed')
+                    #                 data['device_type'] = "cover"
+                    #                 data['endpoint'] = endpoint['id']
+                    #                 data[value['name']] = value['value']
+                    #             if value['name'] in deviceAlarmKeywords:
+                    #                 data['device_type'] = "alarm_control_panel"
+                    #                 print('Alarm data parsed')
+                    #                 data['endpoint'] = endpoint['id']
+                    #                 data[value['name']] = value['value']
+                    #             if value['name'] in _climate_vals:
+                    #                 data['device_type'] = "climate"
+                    #                 data['endpoint'] = endpoint['id']
+                    #                 data[value['name']] = value['value']
+                                    
+                    # return tydom_data
+
+
+
                     parsed = json.loads(data)
                     # print(parsed)
                     if (msg_type == 'msg_config'):
@@ -459,12 +487,12 @@ class TydomWebSocketClient():
                             if i["last_usage"] == 'shutter':
                                 # print('{} {}'.format(i["id_endpoint"],i["name"]))
                                 device_dict[i["id_endpoint"]] = i["name"]
-                                                    
                                 # TODO get other device type
                             if i["last_usage"] == 'alarm':
                                 # print('{} {}'.format(i["id_endpoint"], i["name"]))
                                 device_dict[i["id_endpoint"]] = "Tyxal Alarm"
                         print('Configuration updated')
+                        
                     elif (msg_type == 'msg_data'):
                         for i in parsed:
                             attr = {}
@@ -490,7 +518,7 @@ class TydomWebSocketClient():
                                         new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                                         new_cover.update()
 
-                                    # Get last known position (for alarm)
+                                    # Get last known state (for alarm)
                                     if elementName in deviceAlarmKeywords:
                                         alarm_data = '{} : {}'.format(elementName, elementValue)
                                         # print(alarm_data)
@@ -506,7 +534,7 @@ class TydomWebSocketClient():
                                             state = "armed_home"
                                         elif alarm_data == "alarmMode : OFF":
                                             state = "disarmed"
-                                        elif alarm_data == "alarmState : ON":
+                                        elif alarm_data == "alarmState : ON" or alarm_data == "alarmSOS : true":
                                             state = "triggered"
                                         elif alarm_data == "alarmSOS : true":
                                             sos = True
@@ -521,10 +549,11 @@ class TydomWebSocketClient():
                                             # print(state)
                                             alarm = "alarm_tydom_"+str(endpoint_id)
                                             print("Alarm created / updated : "+alarm)
+
                                             alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, attributes=attr, mqtt=self.mqtt_client)
                                             alarm.update()
                     elif (msg_type == 'msg_html'):
-                        print("pong")
+                        print("HTML Response ?")
                     else:
                         # Default json dump
                         print()
