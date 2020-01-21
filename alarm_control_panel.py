@@ -2,12 +2,12 @@ import json
 import time
 from datetime import datetime
 
-alarm_topic = "homeassistant/alarm_control_panel/tydom/#"
+alarm_topic = "alarm_control_panel/tydom/#"
 alarm_config = "homeassistant/alarm_control_panel/tydom/{id}/config"
-alarm_state_topic = "homeassistant/alarm_control_panel/tydom/{id}/state"
-alarm_command_topic = "homeassistant/alarm_control_panel/tydom/{id}/set"
-alarm_sos_topic = "homeassistant/binary_sensor/tydom/{id}/sos"
-alarm_attributes_topic = "homeassistant/alarm_control_panel/tydom/{id}/attributes"
+alarm_state_topic = "alarm_control_panel/tydom/{id}/state"
+alarm_command_topic = "alarm_control_panel/tydom/{id}/set"
+alarm_sos_topic = "binary_sensor/tydom/{id}/sos"
+alarm_attributes_topic = "alarm_control_panel/tydom/{id}/attributes"
 
 
 class Alarm:
