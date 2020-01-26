@@ -1,7 +1,9 @@
 # tydom2mqtt
 Link a tydom hub to a mqtt server
 Based on https://github.com/cth35/tydom_python
-Preq : pip3 install websockets requests
+
+
+Needed packages : pip3 install websockets requests tendo
 
 Add your credentials to main.py, then python3 main.py to test, if all is good, do a
 
