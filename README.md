@@ -1,5 +1,5 @@
 # tydom2mqtt
-Link a tydom hub to a mqtt server
+Link a Delta Dore's tydom hub to a mqtt server
 Based on https://github.com/cth35/tydom_python
 
 
