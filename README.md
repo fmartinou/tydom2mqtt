@@ -3,15 +3,15 @@ Link a Delta Dore's tydom hub to a mqtt server
 Based on https://github.com/cth35/tydom_python
 
 
-Needed packages : "pip3 install websockets requests tendo"
+Needed packages : "pip3 install websockets requests"
 
-Add your credentials to main.py, then "python3 main.py" to test, if all is good, do a set and forget :
+- Add your credentials to main.py
+- Put the tydom.service file in the folder of your choice (/usr/lib/systemd/system/ if you don't now)
+- with commandline, do "systemctl enable tydom.service"
+- with commandline, do "systemctl start tydom.service"
+- with commandline, check "systemctl status tydom.service" or with journalctl.
 
-"sh tydom2mqtt_restarter.sh"
-
-The tydom2mqtt_restarter.sh script is made to restart in case of fatal error.
 Disconnections from both servers are handled with automatic reconnections.
-
 
 Alarm is readonly for now, (i've soldered a remote to optocouplers and an ESP8266 with esphome to set it from home assisant, a least it's very reliable !).
 
