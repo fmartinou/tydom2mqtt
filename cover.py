@@ -66,8 +66,10 @@ class Cover:
         if (self.mqtt != None):
             self.mqtt.mqtt_client.publish(self.position_topic, self.current_position, qos=0, retain=True)
             self.mqtt.mqtt_client.publish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
+        print("Cover created / updated : ", self.name, self.id, self.current_position)
 
         # update_pub = '(self.position_topic, self.current_position, qos=0, retain=True)'
         # return(update_pub)
         # self.attributes_topic = cover_attributes_topic.format(id=self.id, attributes=self.attributes)
         # hassio.publish(self.attributes_topic, self.attributes, qos=0)
+

@@ -2,6 +2,7 @@ import asyncio
 import time
 import json
 import socket
+import sys
 from datetime import datetime
 
 from gmqtt import Client as MQTTClient
@@ -30,13 +31,17 @@ class MQTT_Hassio():
 
         try:
             print('Attempting MQTT connection...')
-            print(self.broker_host)
-            client = MQTTClient(hostname)
+            print('MQTT host : ', self.broker_host)
+            adress = hostname+str(datetime.fromtimestamp(time.time()))
+            print(adress)
+
+            client = MQTTClient(adress)
+            print(client)
 
             client.on_connect = self.on_connect
             client.on_message = self.on_message
             client.on_disconnect = self.on_disconnect
-            client.on_subscribe = self.on_subscribe
+            # client.on_subscribe = self.on_subscribe
 
             client.set_auth_credentials(self.user, self.password)
             await client.connect(self.broker_host, self.port, self.ssl)
@@ -58,20 +63,29 @@ class MQTT_Hassio():
             # client.subscribe('homeassistant/#', qos=0)
             client.subscribe(tydom_topic, qos=0)
         except Exception as e:
-            print("Error : ", e)
+            print("Error on connect : ", e)
             
 
     async def on_message(self, client, topic, payload, qos, properties):
         # print('Incoming MQTT message : ', topic, payload)
-        if (topic == "homeassistant/requests/tydom/update"):
+        if ('update' in str(topic)):
+#        if "update" in topic:
             print('Incoming MQTT update request : ', topic, payload)
             await self.tydom.get_data()
+        elif ('kill' in str(topic)):
+#        if "update" in topic:
+            print('Incoming MQTT kill request : ', topic, payload)
+            sys.exit()
         elif (topic == "homeassistant/requests/tydom/refresh"):
             print('Incoming MQTT refresh request : ', topic, payload)
             await self.tydom.post_refresh()
         elif (topic == "homeassistant/requests/tydom/scenarii"):
             print('Incoming MQTT scenarii request : ', topic, payload)
             await self.tydom.get_scenarii()
+
+        elif (topic == "/tydom/init"):
+            print('Incoming MQTT init request : ', topic, payload)
+            await self.tydom.connect()
 
         elif ('set_scenario' in str(topic)):
             print('Incoming MQTT set_scenario request : ', topic, payload)
@@ -107,10 +121,15 @@ class MQTT_Hassio():
     def on_disconnect(self, client, packet, exc=None):
         print('MQTT Disconnected !')
         print("##################################")
-        self.connect()    
+        # self.connect()
+        
 
     def on_subscribe(self, client, mid, qos):
         print("MQTT is connected and suscribed ! =)", client)
-        pyld = 'Started !',str(datetime.fromtimestamp(time.time()))
-        client.publish('homeassistant/sensor/tydom/last_clean_startup', pyld, qos=1, retain=True)
+        try:
+            pyld = str(datetime.fromtimestamp(time.time()))
+            client.publish('homeassistant/sensor/tydom/last_clean_startup', pyld, qos=1, retain=True)
+        except Exception as e:
+            print("on subscribe error : ", e)
+
 

@@ -15,6 +15,8 @@ from http.server import BaseHTTPRequestHandler
 import ssl
 from datetime import datetime
 import subprocess, platform
+import sdnotify
+
 
 from cover import Cover
 from alarm_control_panel import Alarm
@@ -39,38 +41,69 @@ climateKeywords = ['temperature', 'authorization', 'hvacMode', 'setpoint']
 class TydomWebSocketClient():
 
     def __init__(self, mac, password, host='mediation.tydom.com', mqtt_client=None):
-        if not (host == 'mediation.tydom.com'):
-            try:
-                # Test if mediation.tydom.com is reacheable
-                output = subprocess.check_output("ping -{} 1 {}".format('n' if platform.system().lower()=="windows" else 'c', 'mediation.tydom.com'), shell=True)
-                print('mediation.tydom.com is reacheable !')
-                host = 'mediation.tydom.com'
-            except Exception as e:
-                print('Remote control is down, fallback to local ip for that connection')
-
-
-        # Set Host, ssl context and prefix for remote or local connection
-        if host == "mediation.tydom.com":
-            self.remote_mode = True
-            self.ssl_context = None
-            self.cmd_prefix = "\x02"
-        else:
-            self.remote_mode = False
-            self.ssl_context = ssl._create_unverified_context()
-            self.cmd_prefix = ""
+        print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
+        print('Initialising TydomClient Class')
 
         self.password = password
         self.mac = mac
         self.host = host
         self.mqtt_client = mqtt_client
         self.connection = None
+        self.remote_mode = True
+        self.ssl_context = None
+        self.cmd_prefix = "\x02"
 
     async def connect(self):
-        
-        print('WS Connection start')
+        print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
+        print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
+        print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
+        print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
+        print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
+        print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
+        print('TYDOM WEBSOCKET CONNECTION INITIALISING....                     ')
+
+
+        if not (self.host == 'mediation.tydom.com'):
+            test = None
+            testlocal = None
+            try:
+                print('Testing if local Tydom hub IP is reachable....')
+                testlocal = subprocess.check_output("ping -{} 1 {}".format('n' if platform.system().lower()=="windows" else 'c', self.host), shell=True)
+            except Exception as e:
+                print('Local control is down, will try to fallback to remote....')
+
+            try:
+                # raise Exception ## Uncomment to pure lcoal IP mode
+                print('Testing if mediation.tydom.com is reacheable...')
+                test = subprocess.check_output("ping -{} 1 {}".format('n' if platform.system().lower()=="windows" else 'c', 'mediation.tydom.com'), shell=True)
+                print('mediation.tydom.com is reacheable ! Using it to prevent code 1006 deconnections from local ip for now.')
+                self.host = 'mediation.tydom.com'
+            except Exception as e:
+
+                print('Remote control is down !')
+
+                if (testlocal == None) :
+                    print("Exiting to ensure systemd restart....")
+                    sys.exit()
+                else:
+                    print('Fallback to local ip for that connection, except code 1006 deconnections every 60 seconds...')
+
+           
+        # Set Host, ssl context and prefix for remote or local connection
+        if self.host == "mediation.tydom.com":
+            print('Setting remote mode context.')
+            self.remote_mode = True
+            self.ssl_context = None
+            self.cmd_prefix = "\x02"
+        else:
+            print('Setting local mode context.')
+            self.remote_mode = False
+            self.ssl_context = ssl._create_unverified_context()
+            self.cmd_prefix = ""
+
+        print('Building headers, getting 1st handshake and authentication....')
         '''
             Connecting to webSocket server
-
             websockets.client.connect returns a WebSocketClientProtocol, which is used to send and receive messages
         '''
         httpHeaders =  {"Connection": "Upgrade",
@@ -90,6 +123,7 @@ class TydomWebSocketClient():
         res.read()
         # Close HTTPS Connection
         conn.close()
+        print('Upgrading http connection to websocket....')
         # Build websocket headers
         websocketHeaders = {'Authorization': self.build_digest_headers(nonce)}
         if self.ssl_context is not None:
@@ -99,25 +133,32 @@ class TydomWebSocketClient():
 
 
         try:
-            print('"Attempting websocket connection..."')
-            print('Host :')
+            print('Attempting websocket connection with tydom hub.......................')
+            print('Host Target :')
             print(self.host)
-                
             
             self.connection = await websockets.client.connect('wss://{}:443/mediation/client?mac={}&appli=1'.format(self.host, self.mac),
                                                     extra_headers=websocketHeaders, ssl=websocket_ssl_context)
+
             # async with websockets.client.connect('wss://{}:443/mediation/client?mac={}&appli=1'.format(self.host, self.mac),
             #                             extra_headers=websocketHeaders, ssl=websocket_ssl_context) as self.connection:
+            await self.notify_alive()
+            # n = sdnotify.SystemdNotifier()
+            # n.notify("WATCHDOG=1")
 
             while True:
+                print('\o/ \o/ \o/ \o/ \o/ \o/ \o/ \o/ \o/ ')
                 print("Tydom Websocket is Connected !", self.connection)
                 return self.connection
 
         except Exception as e:
             print('Websocket def connect error')
             print(e)
-            print('Reconnecting...')
-            await self.connect()
+            print('Exiting to ensure systemd restart....')
+            sys.exit() #Exit all to ensure systemd restart
+            # print('Reconnecting...')
+            # asyncio.sleep(8)
+            # await self.connect()
 
     async def heartbeat(self):
         '''
@@ -131,48 +172,61 @@ class TydomWebSocketClient():
         print("##################################")
         await self.post_refresh()
         await self.get_data()
-        while True:
+        while self.connection.open:
             try:
                 # await self.connection.send('ping')
                 # await get_ping(self)
                 # print('****** ping !')
                 await self.post_refresh()
-                await asyncio.sleep(20)
-            except websockets.exceptions.ConnectionClosed as e:
+                await asyncio.sleep(40)
+
+
+            except Exception as e:
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
                 print('Heartbeat error')
                 print('Connection with server closed')
                 print(e)
-                print('Reconnecting...')
-                await self.connect()
+                print('Exiting to ensure systemd restart....')
+                sys.exit() #Exit all to ensure systemd restart
+                # print('Reconnecting...')
+                # await self.connect()
 
 # Send Generic GET message
     async def send_message(self, websocket, msg):
         if not self.connection.open:
-            print('Websocket not opened, reconnect...')
-            await self.connect()
+            print('Exiting to ensure systemd restart....')
+            sys.exit() #Exit all to ensure systemd restart
+            # print('Websocket not opened, reconnect...')
+            # await self.connect()
    
         str = self.cmd_prefix + "GET " + msg +" HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
         a_bytes = bytes(str, "ascii")
         await websocket.send(a_bytes)
-        print('Command send to websocket')
+        print('GET Command send to websocket')
         return 0
 
 # Send Generic POST message
     async def send_post_message(self, websocket, msg):
         if not self.connection.open:
-            print('Websocket not opened, reconnect...')
-            await self.connect()
+            print('Exiting to ensure systemd restart....')
+            sys.exit() #Exit all to ensure systemd restart
+            # print('Websocket not opened, reconnect...')
+            # await self.connect()
 
         str = self.cmd_prefix + "POST " + msg +" HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
         a_bytes = bytes(str, "ascii")
         await websocket.send(a_bytes)
+        # print('POST Command send to websocket')
         return 0
 
     # Give order (name + value) to endpoint
     async def put_devices_data(self, endpoint_id, name, value):
         if not self.connection.open:
-            print('Websocket not opened, reconnect...')
-            await self.connect()
+            print('Exiting to ensure systemd restart....')
+            sys.exit() #Exit all to ensure systemd restart
+            # print('Websocket not opened, reconnect...')
+            # await self.connect()
 
         # For shutter, value is the percentage of closing
         body="[{\"name\":\"" + name + "\",\"value\":\""+ value + "\"}]"
@@ -180,7 +234,7 @@ class TydomWebSocketClient():
         str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/data HTTP/1.1\r\nContent-Length: ".format(str(endpoint_id),str(endpoint_id))+str(len(body))+"\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"+body+"\r\n\r\n"
         a_bytes = bytes(str_request, "ascii")
         await self.connection.send(a_bytes)
-        print('PUT req send to Websocket ! : ' + str_request)
+        print('PUT request send to Websocket !')
         return 0
 
     # Run scenario
@@ -203,9 +257,15 @@ class TydomWebSocketClient():
         while True:
 
             bytes_str = await self.connection.recv()
-            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
             # print(bytes_str)
             first = str(bytes_str[:40]) # Scanning 1st characters
+            #Notify systemd watchdog
+            await self.notify_alive()
+            # n = sdnotify.SystemdNotifier()
+            # n.notify("WATCHDOG=1")
+
+
             try:
                 if ("refresh" in first):
                     print('OK refresh message detected !')
@@ -224,8 +284,8 @@ class TydomWebSocketClient():
                         incoming = self.parse_put_response(bytes_str)
                         # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                         await self.parse_response(incoming)
-                        print('PUT message processed !')
-                        print("##################################")
+                        # print('PUT message processed !')
+                        # print("##################################")
                         #ish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
                     except:
                         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
@@ -252,7 +312,7 @@ class TydomWebSocketClient():
                         incoming = self.parse_put_response(bytes_str)
                         await self.parse_response(incoming)
                         print('POST message processed !')
-                        print("##################################")
+                        # print("##################################")
                     except:
                         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                         print('RAW INCOMING :')
@@ -270,9 +330,8 @@ class TydomWebSocketClient():
                     try:
                         # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                         await self.parse_response(incoming)
-                        print('Common / GET response message processed !')
-                        print("##################################")
-                        #ish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
+                        # print('Pong !')
+                        # print("##################################")
                     except:
                         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                         print('RAW INCOMING :')
@@ -289,140 +348,18 @@ class TydomWebSocketClient():
                     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 
             except Exception as e:
-
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 print('receiveMessage error')
                 print(e)
+                print('Exiting to ensure systemd restart....')
+                sys.exit() #Exit all to ensure systemd restart
                 # print(bytes_str)
-                print('Reconnecting in 8s')
-                await asyncio.sleep(8)
-                await self.connect()
+                # print('Reconnecting in 8s')
+                # await asyncio.sleep(8)
+                # await self.connect()
 
 
 
-
-
-
-#           ###### BACKUP
-#             try:
-#                 print("INCOMING >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-
-#                 bytes_str = await self.connection.recv()
-
-#                 first = str(bytes_str[:40]) # Scanning 1st characters
-#                 try:
-#                     if ("refresh" in first):
-#                         print('OK refresh message detected !')
-
-#                     elif ("/devices/data" in first) or ("/configs/file" in first):
-#                         print('PUT /devices/data message detected !')
-#                         try:
-#                             incoming = self.parse_put_response(bytes_str)
-#                             # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                             await self.parse_response(incoming)
-#                             print('PUT message processed !')
-#                             print("##################################")
-#                         except:
-#                             print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                             print('RAW INCOMING :')
-#                             print(bytes_str)
-#                             print('END RAW')
-#                             print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                      elif ("info" in first):
-#                         try:
-#                             # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                             incoming = get(bytes_str)
-#                             await self.parse_response(incoming)
-#                             print('Info message processed !')
-#                             print("##################################")
-#                         except:
-#                             print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                             print('RAW INCOMING :')
-#                             print(bytes_str)
-#                             print('END RAW')
-#                             print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-         
-#                     elif ("scn" in first):
-#                         try:
-#                             # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                             incoming = get(bytes_str)
-#                             await self.parse_response(incoming)
-#                             print('Scenarii message processed !')
-#                             print("##################################")
-#                         except:
-#                             print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                             print('RAW INCOMING :')
-#                             print(bytes_str)
-#                             print('END RAW')
-#                             print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")            
-#                     elif ("POST" in first):
-#                         try:
-#                             # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                             incoming = self.parse_put_response(bytes_str)
-#                             await self.parse_response(incoming)
-#                             print('POST message processed !')
-#                             print("##################################")
-#                         except:
-#                             print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                             print('RAW INCOMING :')
-#                             print(bytes_str)
-#                             print('END RAW')
-#                             print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                     elif ("HTTP/1.1 400" in first): #(bytes_str != 0) and 
-#                         print("The request is badly formed !")
-#                         # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                         # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                         # print(incoming)
-#                         # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                         # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                         # try:
-#                         #     # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                         #     await self.parse_response(incoming)
-#                         #     print('Common / GET response message processed !')
-#                         #     print("##################################")
-#                         #     # # self.mqtt_client.publish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
-#                         # except:
-#                         #     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                         #     print('RAW INCOMING :')
-#                         #     print(bytes_str)
-#                         #     print('END RAW')
-#                         #     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                             # await parse_put_response(incoming)
-#                     else:
-#                         try:
-#                             # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                             incoming = self.parse_put_response(bytes_str)
-#                             await self.parse_response(incoming)
-#                             print('Message processed !')
-#                             print("##################################")
-#                         except:
-              
-#                             print("Didn't detect incoming type, here it is :")
-#                             print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                             print('RAW INCOMING :')
-#                             print(bytes_str)
-#                             print('END RAW')
-#                             print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-#                 except websockets.exceptions.ConnectionClosed:
-#                     print('Connection with server closed')
-#                     break        
-#                 # except Exception as e: 
-#                 #     print('Consumer task has crashed !')    
-#                 #     print("Error : ", e)
-#                 #     error = "Consumer crashed ! {}".format(e)
-#                 #     if (mqtt_client != None):
-#                 #         self.mqtt_client.client.publish('homeassistant/sensor/tydom/last_crash', str(error), qos=1, retain=True)
-#                 #     print('Webconnection consumer error, retrying in 8 seconds...')
-#                 #     tydom = None
-#                 #     await asyncio.sleep(8)
-#                 #     await self.connect()
-#             except Exception as e:
-
-#                 print('receiveMessage error')
-#                 print(e)
-#                 # print(bytes_str)
-#                 print('Reconnecting in 8s')
-#                 await asyncio.sleep(8)
-#                 await self.connect()
 
 
     # Basic response parsing. Typically GET responses + instanciate covers and alarm class for updating data
@@ -434,9 +371,11 @@ class TydomWebSocketClient():
         # Detect type of incoming data
         if (data != ''):
             if ("id" in first):
+                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 print('Incoming message type : data detected')
                 msg_type = 'msg_data'
             elif ("date" in first):
+                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 print('Incoming message type : config detected')
                 msg_type = 'msg_config'
             elif ("doctype" in first):
@@ -444,41 +383,17 @@ class TydomWebSocketClient():
                 msg_type = 'msg_html'
                 print(data)
             elif ("productName" in first):
+                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 print('Incoming message type : Info detected')
                 msg_type = 'msg_info'
-                print(data)        
+                # print(data)        
             else:
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 print('Incoming message type : no type detected')
                 print(first)
 
             if not (msg_type == None):
                 try:
-
-                    # #data msg
-                    # tydom_data = {}
-                    # elements = json.loads(data)
-                    # for element in elements:
-                    #     for endpoint in element['endpoints']:
-                    #         for value in endpoint['data']:
-                    #             if value['name'] == 'position':
-                    #                 print('Cover data parsed')
-                    #                 data['device_type'] = "cover"
-                    #                 data['endpoint'] = endpoint['id']
-                    #                 data[value['name']] = value['value']
-                    #             if value['name'] in deviceAlarmKeywords:
-                    #                 data['device_type'] = "alarm_control_panel"
-                    #                 print('Alarm data parsed')
-                    #                 data['endpoint'] = endpoint['id']
-                    #                 data[value['name']] = value['value']
-                    #             if value['name'] in _climate_vals:
-                    #                 data['device_type'] = "climate"
-                    #                 data['endpoint'] = endpoint['id']
-                    #                 data[value['name']] = value['value']
-                                    
-                    # return tydom_data
-
-
-
                     parsed = json.loads(data)
                     # print(parsed)
                     if (msg_type == 'msg_config'):
@@ -514,7 +429,6 @@ class TydomWebSocketClient():
                                             print_id = endpoint_id
                                         # print('{} : {}'.format(print_id, elementValue))
                                         new_cover = "cover_tydom_"+str(endpoint_id)
-                                        print("Cover created / updated : "+new_cover)
                                         new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                                         new_cover.update()
 
@@ -526,7 +440,7 @@ class TydomWebSocketClient():
                                         # alarmState : ON = Triggered
                                         # alarmSOS   : true = SOS triggered
                                         state = None
-                                        sos = False
+                                        sos_state = False
                                         
                                         if alarm_data == "alarmMode : ON":
                                             state = "armed_away"
@@ -534,31 +448,35 @@ class TydomWebSocketClient():
                                             state = "armed_home"
                                         elif alarm_data == "alarmMode : OFF":
                                             state = "disarmed"
-                                        elif alarm_data == "alarmState : ON" or alarm_data == "alarmSOS : true":
+                                        elif alarm_data == "alarmState : ON":
                                             state = "triggered"
                                         elif alarm_data == "alarmSOS : true":
-                                            sos = True
+                                            state = "triggered"
+                                            sos_state = True
                                         else:
                                             attr[elementName] = [elementValue]
                                         #     attr[alarm_data]
                                             # print(attr)
                                         #device_dict[i["id_endpoint"]] = i["name"]
-                                        if (sos == True):
+                                        if (sos_state == True):
                                             print("SOS !")
                                         if not (state == None):
                                             # print(state)
                                             alarm = "alarm_tydom_"+str(endpoint_id)
-                                            print("Alarm created / updated : "+alarm)
-
-                                            alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, attributes=attr, mqtt=self.mqtt_client)
+                                            # print("Alarm created / updated : "+alarm)
+                                            alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, attributes=attr, sos=str(sos_state), mqtt=self.mqtt_client)
                                             alarm.update()
                     elif (msg_type == 'msg_html'):
                         print("HTML Response ?")
+                    elif (msg_type == 'msg_info'):
+                        pass
                     else:
                         # Default json dump
                         print()
                         print(json.dumps(parsed, sort_keys=True, indent=4, separators=(',', ': ')))
                 except Exception as e:
+                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
                     print('Cannot parse response !')
                     # print('Response :')
                     # print(data)
@@ -632,10 +550,10 @@ class TydomWebSocketClient():
     # Refresh (all)
     async def post_refresh(self):
         if not (self.connection.open):
-            print('Websocket not opened, reconnect...')
-            await self.connect()
+            print('Exiting to ensure systemd restart....')
+            sys.exit() #Exit all to ensure systemd restart
         else:
-            print("Refresh....")
+            # print("Refresh....")
             msg_type = '/refresh/all'
             # req = 'POST'
             await self.send_post_message(self.connection, msg_type)
@@ -682,8 +600,10 @@ class TydomWebSocketClient():
 
     async def get_data(self):
         if not self.connection.open:
-            print('Websocket not opened, reconnect...')
-            await self.connect()
+            print('get_data error !')
+            # await self.exiting()wait self.exiting()
+            print('Exiting to ensure systemd restart....')
+            sys.exit() #Exit all to ensure systemd restart
 
         else:
             await self.get_configs_file()
@@ -699,6 +619,28 @@ class TydomWebSocketClient():
         # name = await websocket.recv()
         # parse_response(name)
 
+
+    async def notify_alive(self, msg='OK'):
+        statestr = msg #+' : '+str(datetime.fromtimestamp(time.time()))
+        #Notify systemd watchdog
+        n = sdnotify.SystemdNotifier()
+        n.notify("WATCHDOG=1")
+        print("Tydom HUB is still connected, systemd's watchdog notified...")
+
+        # await self.POST_Hassio(sensorname='last_ping', state=statestr, friendlyname='Tydom Connection')
+        # except Exception as e:
+        #     print('Hassio sensor down !'+e)
+
+    async def exiting(self):
+
+        print("Exiting to ensure systemd restart....")
+        statestr = 'Exiting...'+' : '+str(datetime.fromtimestamp(time.time()))
+
+        # try:
+        #     await self.POST_Hassio(sensorname='last_ping', state=statestr, friendlyname='Tydom connection')
+        # except Exception as e:
+        #     print('Hassio sensor down !'+e)
+        sys.exit()
 
 class BytesIOSocket:
     def __init__(self, content):
