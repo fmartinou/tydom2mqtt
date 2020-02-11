@@ -6,7 +6,7 @@ Based on https://github.com/cth35/tydom_python
 Needed packages : "pip3 install websockets requests"
 
 - Add your credentials to main.py
-- Put the tydom.service file in the folder of your choice (/usr/lib/systemd/system/ if you don't now)
+- Put the tydom.service file in the folder of your choice (/usr/lib/systemd/system/ if you don't know where)
 - Change the path if the main.py file in tydom.service (by default i've put it in the share folder of hassio for backup purposes)
 - with commandline, do "systemctl enable tydom.service"
 - with commandline, do "systemctl start tydom.service"
