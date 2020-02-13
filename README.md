@@ -3,7 +3,7 @@ Link a Delta Dore's tydom hub to a mqtt server
 Based on https://github.com/cth35/tydom_python
 
 
-Needed packages : "pip3 install websockets requests"
+Needed packages : "pip3 install websockets requests gmqtt"
 
 - Add your credentials to main.py
 - Put the tydom.service file in the folder of your choice (/usr/lib/systemd/system/ if you don't know where)
