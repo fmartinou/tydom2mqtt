@@ -1,7 +1,9 @@
 # tydom2mqtt
-Link a Delta Dore's tydom hub to a mqtt server
+Link a Delta Dore's tydom hub to a mqtt broker
 Based on https://github.com/cth35/tydom_python
 
+Recommanded setup : any Linux server with systemd management and python3.8.
+Home assistant's MQTT auto discovery enabled. For other systemd you just add devices like any MQTT devices..
 
 Needed packages : "pip3 install websockets requests gmqtt"
 
