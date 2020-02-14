@@ -32,7 +32,7 @@ from alarm_control_panel import Alarm
 # http.client.HTTPConnection.debuglevel = 1
 
 # Dicts
-deviceAlarmKeywords = ['alarmMode','alarmState','alarmSOS','zone1State','zone2State','zone3State','zone4State','zone5State','zone6State','zone7State','zone8State','gsmLevel','inactiveProduct','zone1State','liveCheckRunning','networkDefect','unitAutoProtect','unitBatteryDefect','unackedEvent','alarmTechnical','systAutoProtect','sysBatteryDefect','zsystSupervisionDefect','systOpenIssue','systTechnicalDefect','videoLinkDefect']
+deviceAlarmKeywords = ['alarmMode','alarmState','alarmSOS','zone1State','zone2State','zone3State','zone4State','zone5State','zone6State','zone7State','zone8State','gsmLevel','inactiveProduct','zone1State','liveCheckRunning','networkDefect','unitAutoProtect','unitBatteryDefect','unackedEvent','alarmTechnical','systAutoProtect','sysBatteryDefect','zsystSupervisionDefect','systOpenIssue','systTechnicalDefect','videoLinkDefect', 'outTemperature']
 # Device dict for parsing
 device_dict = dict()
 climateKeywords = ['temperature', 'authorization', 'hvacMode', 'setpoint']
@@ -409,8 +409,10 @@ class TydomWebSocketClient():
                         print('Configuration updated')
                         
                     elif (msg_type == 'msg_data'):
+                        # print(parsed)
                         for i in parsed:
                             attr = {}
+
                             if i["endpoints"][0]["error"] == 0:
                                 for elem in i["endpoints"][0]["data"]:
                                     # Get full name of this id
@@ -419,9 +421,10 @@ class TydomWebSocketClient():
                                     elementName = elem["name"]
                                     # Element value
                                     elementValue = elem["value"]
-                                    
+                                    elementValidity = elem["validity"]
+                                    # print(elementName,elementValue,elementValidity)
                                     # Get last known position (for shutter)
-                                    if elementName == 'position':
+                                    if elementName == 'position' and elementValidity == 'upToDate':
                                         name_of_id = self.get_name_from_id(endpoint_id)
                                         if len(name_of_id) != 0:
                                             print_id = name_of_id
@@ -432,40 +435,89 @@ class TydomWebSocketClient():
                                         new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                                         new_cover.update()
 
-                                    # Get last known state (for alarm)
+                                    # Get last known state (for alarm) # NEW METHOD
                                     if elementName in deviceAlarmKeywords:
-                                        alarm_data = '{} : {}'.format(elementName, elementValue)
-                                        # print(alarm_data)
-                                        # alarmMode  : ON or ZONE or OFF
-                                        # alarmState : ON = Triggered
-                                        # alarmSOS   : true = SOS triggered
-                                        state = None
-                                        sos_state = False
-                                        
-                                        if alarm_data == "alarmMode : ON":
-                                            state = "armed_away"
-                                        elif alarm_data == "alarmMode : ZONE":
-                                            state = "armed_home"
-                                        elif alarm_data == "alarmMode : OFF":
-                                            state = "disarmed"
-                                        elif alarm_data == "alarmState : ON":
-                                            state = "triggered"
-                                        elif alarm_data == "alarmSOS : true":
-                                            state = "triggered"
-                                            sos_state = True
-                                        else:
-                                            attr[elementName] = [elementValue]
-                                        #     attr[alarm_data]
-                                            # print(attr)
-                                        #device_dict[i["id_endpoint"]] = i["name"]
-                                        if (sos_state == True):
-                                            print("SOS !")
-                                        if not (state == None):
-                                            # print(state)
-                                            alarm = "alarm_tydom_"+str(endpoint_id)
-                                            # print("Alarm created / updated : "+alarm)
-                                            alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, attributes=attr, sos=str(sos_state), mqtt=self.mqtt_client)
-                                            alarm.update()
+                                        attr[elementName] = elementValue
+
+                                # Get last known state (for alarm) # NEW METHOD
+                                if attr != {}:
+                                    # print(attr)
+                                    state = None
+                                    sos_state = False
+                                    out = None
+
+                                    if attr["alarmState"] == "ON":
+                                        state = "triggered"
+                                    if attr["alarmSOS"] == "true":
+                                        state = "triggered"
+                                        sos_state = True
+                                    if attr ["alarmMode"]  == "ON":
+                                        state = "armed_away"
+                                    elif attr["alarmMode"]  == "ZONE":
+                                        state = "armed_home"
+                                    elif attr["alarmMode"]  == "OFF":
+                                        state = "disarmed"
+                                    
+                                    # print(state)
+
+                                    
+                                    out = attr["outTemperature"]
+                                    # print(out)
+                                    # else:
+                                    #     attr[elementName] = [elementValue]
+                                    #     attr[alarm_data]
+                                        # print(attr)
+                                    #device_dict[i["id_endpoint"]] = i["name"]
+                                    if (sos_state == True):
+                                        print("SOS !")
+                                    if not (state == None):
+                                        # print(state)
+                                        alarm = "alarm_tydom_"+str(endpoint_id)
+                                        # print("Alarm created / updated : "+alarm)
+                                        alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, out_temp=out, attributes=attr, sos=str(sos_state), mqtt=self.mqtt_client)
+                                        alarm.update()
+
+
+                                    # Get last known state (for alarm) # OLD Method, probably compatible if you have multiple alarms
+                                    # if elementName in deviceAlarmKeywords:
+                                    #     # print(i["endpoints"][0]["data"])
+                                    #     alarm_data = '{} : {}'.format(elementName, elementValue)
+                                    #     # print(alarm_data)
+                                    #     # alarmMode  : ON or ZONE or OFF
+                                    #     # alarmState : ON = Triggered
+                                    #     # alarmSOS   : true = SOS triggered
+                                    #     state = None
+                                    #     sos_state = False
+                                    #     out = None
+
+                                    #     if alarm_data == "alarmState : ON":
+                                    #         state = "triggered"
+                                    #     if alarm_data == "alarmSOS : true":
+                                    #         state = "triggered"
+                                    #         sos_state = True
+                                    #     if alarm_data == "alarmMode : ON":
+                                    #         state = "armed_away"
+                                    #     if alarm_data == "alarmMode : ZONE":
+                                    #         state = "armed_home"
+                                    #     if alarm_data == "alarmMode : OFF":
+                                    #         state = "disarmed"
+
+                                    #     if elementName == "outTemperature":
+                                    #         out = elementValue
+                                    #     else:
+                                    #         attr[elementName] = [elementValue]
+                                    #     #     attr[alarm_data]
+                                    #         # print(attr)
+                                    #     #device_dict[i["id_endpoint"]] = i["name"]
+                                    #     if (sos_state == True):
+                                    #         print("SOS !")
+                                    #     if not (state == None):
+                                    #         # print(state)
+                                    #         alarm = "alarm_tydom_"+str(endpoint_id)
+                                    #         # print("Alarm created / updated : "+alarm)
+                                    #         alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, out_temp=out, attributes=attr, sos=str(sos_state), mqtt=self.mqtt_client)
+                                    #         alarm.update()
+                                    
                     elif (msg_type == 'msg_html'):
                         print("HTML Response ?")
                     elif (msg_type == 'msg_info'):

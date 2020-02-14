@@ -12,13 +12,14 @@ alarm_attributes_topic = "alarm_control_panel/tydom/{id}/attributes"
 
 class Alarm:
 
-    def __init__(self, id, name, current_state=None, sos=None, attributes=None, mqtt=None):
+    def __init__(self, id, name, current_state=None, sos=None, attributes=None, mqtt=None, out_temp=None):
         self.id = id
         self.name = name
         self.current_state = current_state
         self.attributes = attributes
         self.sos = sos
         self.mqtt = mqtt
+        self.out_temp = out_temp
 
     def setup(self):
         self.device = {}
@@ -33,12 +34,12 @@ class Alarm:
         self.config['name'] = self.name
         self.config['unique_id'] = self.id
         self.config['device'] = self.device
-        # self.config['attributes'] = self.attributes
+        self.config['attributes'] = self.attributes
         self.config['command_topic'] = alarm_command_topic.format(id=self.id)
         self.config['state_topic'] = alarm_state_topic.format(id=self.id)
+        self.config['code_arm_required'] = 'false'
 
         ### SOS binary sensor
-
         self.sos_device = {}
         self.sos_device['manufacturer'] = 'Delta Dore'
         self.sos_device['model'] = 'Tyxal'
@@ -70,7 +71,7 @@ class Alarm:
             self.mqtt.mqtt_client.publish(self.sos_state_topic, self.sos, qos=0, retain=True) #SOS State
 
             self.mqtt.mqtt_client.publish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
-        print("Alarm created / updated : ", self.name, self.id, self.current_state, self.sos)
+        print("Alarm created / updated : ", self.name, self.id, self.current_state, self.sos, self.out_temp)
 
 
 
