@@ -4,10 +4,12 @@ The script works in background, with remote mode by default (see todo), and roll
 
 Not based on a poll mechanism but on push from websocket, i.e. it constantly pings the tydom hub to keep alive the connection and receive updates instantly.
 
+Home assistant users : Use MQTT auto discovery, no further config necessary ! (Hassio docker install + MQTT addon on top of Ubuntu server is my personal setup.)
+For other home automation systems you just add devices like any MQTT devices.
+
 Based on https://github.com/cth35/tydom_python
 
-Recommanded setup : any Linux server with systemd management and python3.8.
-Home assistant's MQTT auto discovery enabled. For other systemd you just add devices like any MQTT devices.
+Recommanded setup : any Linux OS with systemd management and python3.7
 
 Needed packages : "pip3 install websockets requests gmqtt"
 
