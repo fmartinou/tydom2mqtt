@@ -22,7 +22,6 @@ Needed packages : "pip3 install websockets requests gmqtt"
 - with commandline, do "systemctl start tydom.service"
 - with commandline, check "systemctl status tydom.service" or with journalctl.
 
-
 Alarm is readonly for now, (i've soldered a remote to optocouplers and an ESP8266 with esphome to set it from home assisant, a least it's very reliable !).
 
 i don't have climate or lights to test, feel free to help !
