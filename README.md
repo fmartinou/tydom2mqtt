@@ -8,7 +8,7 @@ Home assistant's MQTT auto discovery enabled. For other systemd you just add dev
 Needed packages : "pip3 install websockets requests gmqtt"
 
 - Add your credentials to main.py
-- Put all the *.py files in a folder of your choice (by default i've put it in the share folder of hassio for backup purposes)
+- Put all the *.py files in a folder of your choice (by default i've put it in the share folder of hassio for backup purposes "/usr/share/hassio/share/tydom/")
 - Put the tydom.service file in the folder of your choice (/usr/lib/systemd/system/ if you don't know where)
 - Change the path if the main.py file in tydom.service
 - with commandline, do "systemctl enable tydom.service"
