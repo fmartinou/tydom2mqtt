@@ -27,7 +27,7 @@ loop = asyncio.get_event_loop()
 
 ####### CREDENTIALS TYDOM
 mac = "" #MAC Address of Tydom Box
-tydom_ip = "" # Local ip address or mediation.tydom.com for remote connexion
+tydom_ip = "" # Local ip address (local mode is not used by default for now, but you can force it in tydom_websocket.py
 password = "" #Tydom password
 
 ####### CREDENTIALS MQTT
