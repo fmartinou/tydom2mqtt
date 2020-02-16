@@ -141,12 +141,10 @@ class TydomWebSocketClient():
                                                     extra_headers=websocketHeaders, ssl=websocket_ssl_context)
 
             # async with websockets.client.connect('wss://{}:443/mediation/client?mac={}&appli=1'.format(self.host, self.mac),
-            #                             extra_headers=websocketHeaders, ssl=websocket_ssl_context) as self.connection:
-            await self.notify_alive()
-            # n = sdnotify.SystemdNotifier()
-            # n.notify("WATCHDOG=1")
+            #                                       extra_headers=websocketHeaders, ssl=websocket_ssl_context) as self.connection:
 
-            while True:
+            while 1:
+                await self.notify_alive()
                 print('\o/ \o/ \o/ \o/ \o/ \o/ \o/ \o/ \o/ ')
                 print("Tydom Websocket is Connected !", self.connection)
                 return self.connection
@@ -254,7 +252,7 @@ class TydomWebSocketClient():
         '''
             Receiving all server messages and handling them
         '''
-        while True:
+        while 1:
 
             bytes_str = await self.connection.recv()
             # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
@@ -436,7 +434,7 @@ class TydomWebSocketClient():
                                         new_cover.update()
 
                                     # Get last known state (for alarm) # NEW METHOD
-                                    if elementName in deviceAlarmKeywords:
+                                    if elementName in deviceAlarmKeywords and elementValidity == 'upToDate':
                                         attr[elementName] = elementValue
 
                                 # Get last known state (for alarm) # NEW METHOD
@@ -446,28 +444,21 @@ class TydomWebSocketClient():
                                     sos_state = False
                                     out = None
 
-                                    if attr["alarmState"] == "ON":
+                                    if attr["alarmState"] and attr["alarmState"] == "ON":
                                         state = "triggered"
-                                    if attr["alarmSOS"] == "true":
+                                    if attr["alarmSOS"] and attr["alarmSOS"] == "true":
                                         state = "triggered"
                                         sos_state = True
-                                    if attr ["alarmMode"]  == "ON":
+                                    
+                                    elif  attr ["alarmMode"] and attr ["alarmMode"]  == "ON":
                                         state = "armed_away"
-                                    elif attr["alarmMode"]  == "ZONE":
+                                    elif attr["alarmMode"] and attr["alarmMode"]  == "ZONE":
                                         state = "armed_home"
-                                    elif attr["alarmMode"]  == "OFF":
+                                    elif attr["alarmMode"] and attr["alarmMode"]  == "OFF":
                                         state = "disarmed"
-                                    
-                                    # print(state)
-
-                                    
+                                   
                                     out = attr["outTemperature"]
-                                    # print(out)
-                                    # else:
-                                    #     attr[elementName] = [elementValue]
-                                    #     attr[alarm_data]
-                                        # print(attr)
-                                    #device_dict[i["id_endpoint"]] = i["name"]
+
                                     if (sos_state == True):
                                         print("SOS !")
                                     if not (state == None):
@@ -517,7 +508,7 @@ class TydomWebSocketClient():
                                     #         # print("Alarm created / updated : "+alarm)
                                     #         alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, out_temp=out, attributes=attr, sos=str(sos_state), mqtt=self.mqtt_client)
                                     #         alarm.update()
-                                    
+
                     elif (msg_type == 'msg_html'):
                         print("HTML Response ?")
                     elif (msg_type == 'msg_info'):
