@@ -276,7 +276,7 @@ class TydomWebSocketClient():
                         print(bytes_str)
                         print('END RAW')
                         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                elif ("PUT /devices/data" in first):
+                elif ("PUT /devices/data" in first) or ("/devices/cdata" in first):
                     print('PUT /devices/data message detected !')
                     try:
                         incoming = self.parse_put_response(bytes_str)
@@ -348,6 +348,11 @@ class TydomWebSocketClient():
             except Exception as e:
                 print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 print('receiveMessage error')
+                print('RAW :')
+                print(bytes_str)
+                print("Incoming payload :")
+                print(incoming)
+                print("Error :")
                 print(e)
                 print('Exiting to ensure systemd restart....')
                 sys.exit() #Exit all to ensure systemd restart
@@ -412,61 +417,71 @@ class TydomWebSocketClient():
                             attr = {}
 
                             if i["endpoints"][0]["error"] == 0:
-                                for elem in i["endpoints"][0]["data"]:
-                                    # Get full name of this id
-                                    endpoint_id = i["endpoints"][0]["id"]
-                                    # Element name
-                                    elementName = elem["name"]
-                                    # Element value
-                                    elementValue = elem["value"]
-                                    elementValidity = elem["validity"]
-                                    # print(elementName,elementValue,elementValidity)
-                                    # Get last known position (for shutter)
-                                    if elementName == 'position' and elementValidity == 'upToDate':
-                                        name_of_id = self.get_name_from_id(endpoint_id)
-                                        if len(name_of_id) != 0:
-                                            print_id = name_of_id
-                                        else:
-                                            print_id = endpoint_id
-                                        # print('{} : {}'.format(print_id, elementValue))
-                                        new_cover = "cover_tydom_"+str(endpoint_id)
-                                        new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
-                                        new_cover.update()
+                                try:
+                                    for elem in i["endpoints"][0]["data"]:
+                                        # Get full name of this id
+                                        endpoint_id = i["endpoints"][0]["id"]
+                                        # Element name
+                                        elementName = elem["name"]
+                                        # Element value
+                                        elementValue = elem["value"]
+                                        elementValidity = elem["validity"]
+                                        # print(elementName,elementValue,elementValidity)
+                                        # Get last known position (for shutter)
+                                        if elementName == 'position' and elementValidity == 'upToDate':
+                                            name_of_id = self.get_name_from_id(endpoint_id)
+                                            if len(name_of_id) != 0:
+                                                print_id = name_of_id
+                                            else:
+                                                print_id = endpoint_id
+                                            # print('{} : {}'.format(print_id, elementValue))
+                                            new_cover = "cover_tydom_"+str(endpoint_id)
+                                            new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
+                                            new_cover.update()
 
-                                    # Get last known state (for alarm) # NEW METHOD
-                                    if elementName in deviceAlarmKeywords and elementValidity == 'upToDate':
-                                        attr[elementName] = elementValue
-
+                                        # Get last known state (for alarm) # NEW METHOD
+                                        if elementName in deviceAlarmKeywords and elementValidity == 'upToDate':
+                                            attr[elementName] = elementValue
+                                except Exception as e:
+                                    print('msg_data error in parsing !')
+                                    print(e)
                                 # Get last known state (for alarm) # NEW METHOD
                                 if attr != {}:
                                     # print(attr)
                                     state = None
                                     sos_state = False
                                     out = None
+                                    try:
+                                        if 'alarmState' in attr and attr['alarmState'] == "ON":
+                                            state = "triggered"
+                                        if 'alarmSOS' in attr and attr['alarmSOS'] == "true":
+                                            state = "triggered"
+                                            sos_state = True                                                                               
+                                        elif 'alarmMode' in attr and attr ["alarmMode"]  == "ON":
+                                            state = "armed_away"
+                                        elif 'alarmMode' in attr and attr["alarmMode"]  == "ZONE":
+                                            state = "armed_home"
+                                        elif 'alarmMode' in attr and attr["alarmMode"]  == "OFF":
+                                            state = "disarmed"
 
-                                    if attr["alarmState"] and attr["alarmState"] == "ON":
-                                        state = "triggered"
-                                    if attr["alarmSOS"] and attr["alarmSOS"] == "true":
-                                        state = "triggered"
-                                        sos_state = True
-                                    
-                                    elif  attr ["alarmMode"] and attr ["alarmMode"]  == "ON":
-                                        state = "armed_away"
-                                    elif attr["alarmMode"] and attr["alarmMode"]  == "ZONE":
-                                        state = "armed_home"
-                                    elif attr["alarmMode"] and attr["alarmMode"]  == "OFF":
-                                        state = "disarmed"
-                                   
-                                    out = attr["outTemperature"]
+                                        if 'outTemperature' in attr:
+                                            out = attr["outTemperature"]
 
-                                    if (sos_state == True):
-                                        print("SOS !")
-                                    if not (state == None):
-                                        # print(state)
-                                        alarm = "alarm_tydom_"+str(endpoint_id)
-                                        # print("Alarm created / updated : "+alarm)
-                                        alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, out_temp=out, attributes=attr, sos=str(sos_state), mqtt=self.mqtt_client)
-                                        alarm.update()
+                                        if (sos_state == True):
+                                            print("SOS !")
+
+                                        if not (state == None):
+                                            # print(state)
+                                            alarm = "alarm_tydom_"+str(endpoint_id)
+                                            # print("Alarm created / updated : "+alarm)
+                                            alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, out_temp=out, attributes=attr, sos=str(sos_state), mqtt=self.mqtt_client)
+                                            alarm.update()
+
+                                    except Exception as e:
+                                        print("Error in alarm parsing !")
+                                        print(e)
+                                        pass
+
 
 
                                     # Get last known state (for alarm) # OLD Method, probably compatible if you have multiple alarms
@@ -480,7 +495,7 @@ class TydomWebSocketClient():
                                     #     state = None
                                     #     sos_state = False
                                     #     out = None
-
+                                    #     print(alarm_data)
                                     #     if alarm_data == "alarmState : ON":
                                     #         state = "triggered"
                                     #     if alarm_data == "alarmSOS : true":
@@ -525,6 +540,7 @@ class TydomWebSocketClient():
                     # print(data)
                     if (e != 'Expecting value: line 1 column 1 (char 0)'):
                         print("Error : ", e)
+                        print(parsed)
 
 
     # PUT response DIRTY parsing
@@ -702,3 +718,5 @@ class HTTPRequest(BaseHTTPRequestHandler):
     def send_error(self, code, message):
         self.error_code = code
         self.error_message = message
+
+
