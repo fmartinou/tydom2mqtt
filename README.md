@@ -32,6 +32,7 @@ TODO (but i've got no more time...) :
 
 - Fix that annoying code 1006 systematic deconnection after 60s when using local mode (new since december, not before).
 - Fix parsing of cdata msg type (will not crash anymore in the meantime), coming from an action from a alarm remote (and probably other things), we can get which remote had an action on alarm with it.
+- Add all the attributes as json for home assistant (can see defect, etc. on attributes)
 - Isolate parser in a class maybe...
 - HACS / Docker versions
 - Fork it to a proper Home Assistant integration with clean onboarding
