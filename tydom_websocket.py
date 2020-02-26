@@ -404,7 +404,8 @@ class TydomWebSocketClient():
                             # Get list of shutter
                             if i["last_usage"] == 'shutter':
                                 # print('{} {}'.format(i["id_endpoint"],i["name"]))
-                                device_dict[i["id_endpoint"]] = i["name"]
+                                # device_dict[i["id_endpoint"]] = i["name"]
+                                device_dict[i["id_device"]] = i["name"]
                                 # TODO get other device type
                             if i["last_usage"] == 'alarm':
                                 # print('{} {}'.format(i["id_endpoint"], i["name"]))
@@ -420,7 +421,8 @@ class TydomWebSocketClient():
                                 try:
                                     for elem in i["endpoints"][0]["data"]:
                                         # Get full name of this id
-                                        endpoint_id = i["endpoints"][0]["id"]
+                                        # endpoint_id = i["endpoints"][0]["id"]
+                                        endpoint_id = i["id"] # thanks @azrod 
                                         # Element name
                                         elementName = elem["name"]
                                         # Element value
