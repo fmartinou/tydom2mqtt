@@ -12,7 +12,7 @@ Based on https://github.com/cth35/tydom_python
 
 Recommanded setup : any Linux OS with systemd management and python3.7
 
-Needed packages : "pip3 install websockets requests gmqtt"
+Needed packages : "pip3 install websockets requests gmqtt sdnotify"
 
 - Add your credentials to main.py
 - Put all the *.py files in a folder of your choice (Hassio users : by default i've put them in the share folder of hassio for backup purposes "/usr/share/hassio/share/tydom/")
