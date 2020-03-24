@@ -342,7 +342,7 @@ class TydomWebSocketClient():
 
 
     async def notify_alive(self, msg='OK'):
-        print('Still Alive !')
+        print('Connection Still Alive !')
         # pass
         # if self.sys_context == 'systemd':
         #     import sdnotify

@@ -4,20 +4,48 @@ import time
 from datetime import datetime
 import os
 import sys
-
+import json
 from mqtt_client import MQTT_Hassio
 from tydom_websocket import TydomWebSocketClient
 
+############ HASSIO ADDON
 
-####### CREDENTIALS TYDOM
-TYDOM_MAC = os.getenv('TYDOM_MAC') #MAC Address of Tydom Box
-TYDOM_IP = os.getenv('TYDOM_IP', 'mediation.tydom.com') # Local ip address, default to mediation.tydom.com for remote connexion if not specified
-TYDOM_PASSWORD = os.getenv('TYDOM_PASSWORD') #Tydom password
+try:
+    with open('/data/options.json') as f:
+        print('/data/options.json detected, Hassio Addons Mode, parsing data to ')
+        try:
+            data = json.load(f)
+            ####### CREDENTIALS TYDOM
+            TYDOM_MAC = data['TYDOM_MAC'] #MAC Address of Tydom Box
+            if data['TYDOM_IP'] != '':
+                TYDOM_IP = data['TYDOM_IP'] #, 'mediation.tydom.com') # Local ip address, default to mediation.tydom.com for remote connexion if not specified
+            else:
+                TYDOM_IP = 'mediation.tydom.com'
+            TYDOM_PASSWORD = data['TYDOM_PASSWORD'] #Tydom password
 
-####### CREDENTIALS MQTT
-MQTT_HOST = os.getenv('MQTT_HOST', 'localhost')
-MQTT_USER = os.getenv('MQTT_USER')
-MQTT_PASSWORD = os.getenv('MQTT_PASSWORD')
+            ####### CREDENTIALS MQTT
+            if data['MQTT_HOST'] != '':
+                MQTT_HOST = data['TYDOM_IP'] #, 'mediation.tydom.com') # Local ip address, default to mediation.tydom.com for remote connexion if not specified
+            else:
+                MQTT_HOST = 'localhost'
+            
+            MQTT_USER = data['MQTT_USER']
+            MQTT_PASSWORD = data['MQTT_PASSWORD']
+
+        except Exception as e:
+            print('Parsing error', e)
+            
+except FileNotFoundError :
+    print("No /data/options.json, seems where are not in hassio addon mode.")
+    ####### CREDENTIALS TYDOM
+    TYDOM_MAC = os.getenv('TYDOM_MAC') #MAC Address of Tydom Box
+    TYDOM_IP = os.getenv('TYDOM_IP', 'mediation.tydom.com') # Local ip address, default to mediation.tydom.com for remote connexion if not specified
+    TYDOM_PASSWORD = os.getenv('TYDOM_PASSWORD') #Tydom password
+
+    ####### CREDENTIALS MQTT
+    MQTT_HOST = os.getenv('MQTT_HOST', 'localhost')
+    MQTT_USER = os.getenv('MQTT_USER')
+    MQTT_PASSWORD = os.getenv('MQTT_PASSWORD')
 
 loop = asyncio.get_event_loop()
 
