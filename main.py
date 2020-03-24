@@ -30,18 +30,18 @@ loop = asyncio.get_event_loop()
 
 
 ####### CREDENTIALS TYDOM
-TYDOM_MAC = os.environ['TYDOM_MAC'] #MAC Address of Tydom Box
-TYDOM_IP = os.environ['TYDOM_IP', 'mediation.tydom.com'] # Local ip address or mediation.tydom.com for remote connexion
-TYDOM_PASSWORD = os.environ['TYDOM_PASSWORD'] #Tydom password
+TYDOM_MAC = os.getenv('TYDOM_MAC') #MAC Address of Tydom Box
+TYDOM_IP = os.getenv('TYDOM_IP', 'mediation.tydom.com') # Local ip address or mediation.tydom.com for remote connexion
+TYDOM_PASSWORD = os.getenv('TYDOM_PASSWORD') #Tydom password
 
 ####### CREDENTIALS MQTT
-MQTT_HOST = os.environ['MQTT_HOST', 'localhost']
-MQTT_USER = os.environ['MQTT_USER']
-MQTT_PASSWORD = os.environ['MQTT_PASSWORD']
+MQTT_HOST = os.getenv('MQTT_HOST', 'localhost')
+MQTT_USER = os.getenv('MQTT_USER')
+MQTT_PASSWORD = os.getenv('MQTT_PASSWORD')
 
 
 ####### OPTIONS
-SYS_CONTEXT = os.environ['SYS_CONTEXT', None] # None if you don't use systemd, preparing for docker....
+SYS_CONTEXT = os.getenv('SYS_CONTEXT', None) # None if you don't use systemd, preparing for docker....
 
 def loop_task():
 
