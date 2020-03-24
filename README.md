@@ -20,7 +20,9 @@ You just need the install.sh to download, mod it with your credentials (Tydom an
 ```
 sh install.sh
 ```
+HASSIO / HOME ASSISTATN CORE USERS :
 
+- Addon repository : https://github.com/WiwiWillou/hassio_addons.git
 
 - To force a restart from your system, publish anything to hassio/tydom/kill, i will exit the script, systemd will restart it clean.
 
