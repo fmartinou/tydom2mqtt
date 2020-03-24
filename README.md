@@ -13,6 +13,26 @@ For other home automation systems you just add devices like any MQTT devices, ch
 
 Based initialy on https://github.com/cth35/tydom_python
 
+############# DOCKER INSTALL
+
+```
+docker run \
+  --restart=always \
+  --net=host \
+  --name=tydom2mqtt \
+  -e TYDOM_MAC='xxxx' \
+  -e TYDOM_IP='xxxx' \
+  -e TYDOM_PASSWORD='xxxxx' \
+  -e MQTT_HOST=xxxx \
+  -e MQTT_USER=xxxx \
+  -e MQTT_PASSWORD='xxxx' \
+  -e SYS_CONTEXT=None \
+  mrwiwi/tydom2mqtt
+```
+
+##############" OLD
+
+
 Recommanded setup : any Linux OS with systemd management and python3.7
 
 Needed packages : "pip3 install websockets requests gmqtt"
@@ -31,20 +51,6 @@ If it works and you want the systemd mechanism :
 - with commandline, do "systemctl start tydom.service"
 - with commandline, check "systemctl status tydom.service" or with journalctl.
 
-If you want the docker recommanded version :
-
-docker run \
-  --restart=always \
-  --net=host \
-  --name=tydom2mqtt \
-  -e TYDOM_MAC='xxxx' \
-  -e TYDOM_IP='xxxx' \
-  -e TYDOM_PASSWORD='xxxxx' \
-  -e MQTT_HOST=xxxx \
-  -e MQTT_USER=xxxx \
-  -e MQTT_PASSWORD='xxxx' \
-  -e SYS_CONTEXT=None \
-  mrwiwi/tydom2mqtt
 
 
 
