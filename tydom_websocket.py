@@ -11,7 +11,6 @@ import time
 import ssl
 from datetime import datetime
 import subprocess, platform
-import sdnotify
 # import aiohttp
 
 from tydomMessagehandler import TydomMessageHandler
@@ -27,7 +26,7 @@ from tydomMessagehandler import TydomMessageHandler
 
 class TydomWebSocketClient():
 
-    def __init__(self, mac, password, host='mediation.tydom.com', mqtt_client=None):
+    def __init__(self, mac, password, host='mediation.tydom.com', mqtt_client=None, sys_context=None):
         print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
         print('Initialising TydomClient Class')
 
@@ -39,6 +38,7 @@ class TydomWebSocketClient():
         self.remote_mode = True
         self.ssl_context = None
         self.cmd_prefix = "\x02"
+        self.sys_context = sys_context
 
     async def connect(self):
         print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
@@ -351,24 +351,12 @@ class TydomWebSocketClient():
 
 
     async def notify_alive(self, msg='OK'):
-        statestr = msg #+' : '+str(datetime.fromtimestamp(time.time()))
-        #Notify systemd watchdog
-        n = sdnotify.SystemdNotifier()
-        n.notify("WATCHDOG=1")
-        # print("Tydom HUB is still connected, systemd's watchdog notified...")
+        if self.sys_context == 'systemd':
+            import sdnotify
+            statestr = msg #+' : '+str(datetime.fromtimestamp(time.time()))
+            #Notify systemd watchdog
+            n = sdnotify.SystemdNotifier()
+            n.notify("WATCHDOG=1")
+            # print("Tydom HUB is still connected, systemd's watchdog notified...")
 
-        # await self.POST_Hassio(sensorname='last_ping', state=statestr, friendlyname='Tydom Connection')
-        # except Exception as e:
-        #     print('Hassio sensor down !'+e)
-
-    async def exiting(self):
-
-        print("Exiting to ensure systemd restart....")
-        statestr = 'Exiting...'+' : '+str(datetime.fromtimestamp(time.time()))
-
-        # try:
-        #     await self.POST_Hassio(sensorname='last_ping', state=statestr, friendlyname='Tydom connection')
-        # except Exception as e:
-        #     print('Hassio sensor down !'+e)
-        sys.exit()
 
