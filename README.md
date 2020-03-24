@@ -7,9 +7,6 @@ Disconnections from both servers are handled with automatic restart of the scrip
 
 Not based on a poll mechanism but on push from websocket, i.e. it constantly pings the tydom hub to keep alive the connection and receive updates instantly.
 
-Home assistant users : Use MQTT auto discovery, no further config necessary ! (Hassio docker install + MQTT addon on top of Ubuntu server is my personal setup.)
-For other home automation systems you just add devices like any MQTT devices, check on the cover and alarm py files to see or modify the topics !
-
 Based initialy on https://github.com/cth35/tydom_python
 
 You need a functional MQTT broker before using it.
@@ -20,10 +17,12 @@ You just need the install.sh to download, mod it with your credentials (Tydom an
 ```
 sh install.sh
 ```
-HASSIO / HOME ASSISTATN CORE USERS :
+HASSIO / HOME ASSISTANT CORE USERS :
 
 - Addon repository : https://github.com/WiwiWillou/hassio_addons.git
+-Use MQTT auto discovery, no further config necessary ! (Hassio docker install + MQTT addon on top of Ubuntu server is my personal setup.)
 
+- For other home automation systems you just add devices like any MQTT devices, check on the cover and alarm py files to see or modify the topics !
 - To force a restart from your system, publish anything to hassio/tydom/kill, i will exit the script, systemd will restart it clean.
 
 Alarm is readonly for now, (i've soldered a remote to optocouplers and an ESP8266 with esphome to set it from home assisant, a least it's very reliable !).
