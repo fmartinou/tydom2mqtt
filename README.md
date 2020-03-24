@@ -39,3 +39,19 @@ TODO (but i've got no more time...) :
 - Add climate, lights, etc.
 - Build a web frontend to see and test (use frontail for now)
 - Add a folder of images to document where to solder on alarm remote and ESPHome configuration. // Add alarm handling, see mgcrea node tydom-client (what a guy :))
+
+
+Home Assistant User :
+
+To fix the not updating / ask update on restart (because the config part as already happenned when hassio boot), create that script on hass, and create an automation to execute it when hass start !
+
+```
+update_tydom2mqtt:
+  alias: Tydom Update
+  sequence:
+  - data:
+      payload: '{ "update" }'
+      topic: hassio/tydom/update
+    service: mqtt.publish
+```
+ 
