@@ -50,25 +50,25 @@ class TydomWebSocketClient():
         print('TYDOM WEBSOCKET CONNECTION INITIALISING....                     ')
 
 
-        if not (self.host == 'mediation.tydom.com'):
-            test = None
-            testlocal = None
-            try:
-                print('Testing if local Tydom hub IP is reachable....')
-                testlocal = subprocess.check_output("ping -{} 1 {}".format('n' if platform.system().lower()=="windows" else 'c', self.host), shell=True)
-            except Exception as e:
-                print('Local control is down, will try to fallback to remote....')
-                try:
-                    print('Testing if mediation.tydom.com is reacheable...')
-                    test = subprocess.check_output("ping -{} 1 {}".format('n' if platform.system().lower()=="windows" else 'c', 'mediation.tydom.com'), shell=True)
-                    print('mediation.tydom.com is reacheable ! Using it to prevent code 1006 deconnections from local ip for now.')
-                    self.host = 'mediation.tydom.com'
-                except Exception as e:
-                    print('Remote control is down !')
+        # if not (self.host == 'mediation.tydom.com'):
+        #     test = None
+        #     testlocal = None
+        #     try:
+        #         print('Testing if local Tydom hub IP is reachable....')
+        #         testlocal = subprocess.check_output("ping -{} 1 {}".format('n' if platform.system().lower()=="windows" else 'c', self.host), shell=True)
+        #     except Exception as e:
+        #         print('Local control is down, will try to fallback to remote....')
+        #         try:
+        #             print('Testing if mediation.tydom.com is reacheable...')
+        #             test = subprocess.check_output("ping -{} 1 {}".format('n' if platform.system().lower()=="windows" else 'c', 'mediation.tydom.com'), shell=True)
+        #             print('mediation.tydom.com is reacheable ! Using it to prevent code 1006 deconnections from local ip for now.')
+        #             self.host = 'mediation.tydom.com'
+        #         except Exception as e:
+        #             print('Remote control is down !')
 
-                    if (testlocal == None) :
-                        print("Exiting to ensure systemd restart....")
-                        sys.exit()
+        #             if (testlocal == None) :
+        #                 print("Exiting to ensure restart....")
+        #                 raise Exception
 
            
         # Set Host, ssl context and prefix for remote or local connection
@@ -140,8 +140,8 @@ class TydomWebSocketClient():
         except Exception as e:
             print('Websocket def connect error')
             print(e)
-            print('Exiting to ensure systemd restart....')
-            sys.exit() #Exit all to ensure systemd restart
+            print('Exiting to ensure restart....')
+            raise Exception #Exit all to ensure systemd restart
             # print('Reconnecting...')
             # asyncio.sleep(8)
             # await self.connect()
@@ -184,8 +184,8 @@ class TydomWebSocketClient():
                 print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 print('Connection with server closed')
                 print(e)
-                print('Exiting to ensure systemd restart....')
-                sys.exit() #Exit all to ensure systemd restart
+                print('Exiting to ensure restart....')
+                raise Exception #Exit all to ensure systemd restart
                 # print('Reconnecting...')
                 # await self.connect()
 
@@ -197,8 +197,8 @@ class TydomWebSocketClient():
 # Send Generic GET message
     async def send_message(self, websocket, msg):
         if not self.connection.open:
-            print('Exiting to ensure systemd restart....')
-            sys.exit() #Exit all to ensure systemd restart
+            print('Exiting to ensure restart....')
+            raise Exception #Exit all to ensure systemd restart
             # print('Websocket not opened, reconnect...')
             # await self.connect()
    
@@ -212,8 +212,8 @@ class TydomWebSocketClient():
 # Send Generic POST message
     async def send_post_message(self, websocket, msg):
         if not self.connection.open:
-            print('Exiting to ensure systemd restart....')
-            sys.exit() #Exit all to ensure systemd restart
+            print('Exiting to ensure restart....')
+            raise Exception #Exit all to ensure systemd restart
             # print('Websocket not opened, reconnect...')
             # await self.connect()
 
@@ -226,8 +226,8 @@ class TydomWebSocketClient():
     # Give order (name + value) to endpoint
     async def put_devices_data(self, endpoint_id, name, value):
         if not self.connection.open:
-            print('Exiting to ensure systemd restart....')
-            sys.exit() #Exit all to ensure systemd restart
+            print('Exiting to ensure restart....')
+            raise Exception #Exit all to ensure systemd restart
             # print('Websocket not opened, reconnect...')
             # await self.connect()
 
@@ -278,8 +278,8 @@ class TydomWebSocketClient():
     # Refresh (all)
     async def post_refresh(self):
         if not (self.connection.open):
-            print('Exiting to ensure systemd restart....')
-            sys.exit() #Exit all to ensure systemd restart
+            print('Exiting to ensure restart....')
+            raise Exception #Exit all to ensure systemd restart
         else:
             # print("Refresh....")
             msg_type = '/refresh/all'
@@ -332,8 +332,8 @@ class TydomWebSocketClient():
         if not self.connection.open:
             print('get_data error !')
             # await self.exiting()wait self.exiting()
-            print('Exiting to ensure systemd restart....')
-            sys.exit() #Exit all to ensure systemd restart
+            print('Exiting to ensure restart....')
+            raise Exception #Exit all to ensure systemd restart
 
         else:
             await self.get_configs_file()
