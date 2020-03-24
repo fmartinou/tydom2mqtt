@@ -9,10 +9,6 @@ from mqtt_client import MQTT_Hassio
 from tydom_websocket import TydomWebSocketClient
 
 
-
-loop = asyncio.get_event_loop()
-
-
 ####### CREDENTIALS TYDOM
 TYDOM_MAC = os.getenv('TYDOM_MAC') #MAC Address of Tydom Box
 TYDOM_IP = os.getenv('TYDOM_IP', 'mediation.tydom.com') # Local ip address or mediation.tydom.com for remote connexion
@@ -27,21 +23,20 @@ MQTT_PASSWORD = os.getenv('MQTT_PASSWORD')
 ####### OPTIONS
 SYS_CONTEXT = os.getenv('SYS_CONTEXT', None) # None if you don't use systemd, preparing for docker....
 
+
+loop = asyncio.get_event_loop()
+
 def loop_task():
 
     tydom = None
     hassio = None
 
-    if (MQTT_HOST == None):
-        MQTT_HOST = "localhost"
+    if (MQTT_HOST == 'localhost'):
         MQTT_PORT = 1883 #1884 for websocket without SSL
         MQTT_SSL = False
     else:
-        # host = remote_adress
-        MQTT_HOST = MQTT_HOST
         MQTT_PORT = 8883 #8884 for websocket
         MQTT_SSL = True
-
 
     # Creating client object
     hassio = MQTT_Hassio(MQTT_HOST, MQTT_PORT, MQTT_USER, MQTT_PASSWORD, MQTT_SSL)
