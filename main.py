@@ -10,9 +10,15 @@ from tydom_websocket import TydomWebSocketClient
 
 ############ HASSIO ADDON
 
+print('STARTING MAIN LOOP TYDOM2MQTT')
+
+print('Dectecting environnement......')
+for param in os.environ.keys():
+    print "%20s %s" % (param,os.environ[param])
+    
 try:
     with open('/data/options.json') as f:
-        print('/data/options.json detected, Hassio Addons Mode : parsing data....')
+        print('/data/options.json detected ! Hassio Addons Environnement : parsing options.json....')
         try:
             data = json.load(f)
             print(data)
@@ -26,7 +32,7 @@ try:
 
             ####### CREDENTIALS MQTT
             if data['MQTT_HOST'] != '':
-                MQTT_HOST = data['TYDOM_IP'] #, 'mediation.tydom.com') # Local ip address, default to mediation.tydom.com for remote connexion if not specified
+                MQTT_HOST = data['MQTT_HOST'] #, 'mediation.tydom.com') # Local ip address, default to mediation.tydom.com for remote connexion if not specified
             else:
                 MQTT_HOST = 'localhost'
             
@@ -51,7 +57,7 @@ except FileNotFoundError :
 loop = asyncio.get_event_loop()
 
 def loop_task():
-
+    print('Starting loop_task')
     tydom = None
     hassio = None
 
@@ -74,7 +80,7 @@ def loop_task():
     loop.run_until_complete(tydom.connect())
     # Giving back tydom client to MQTT client
     hassio.tydom = tydom
-
+    print('Broker and Tydom Websocket READY')
     print('Start websocket listener and heartbeat')
 
     tasks = [
