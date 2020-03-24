@@ -33,6 +33,7 @@ class MQTT_Hassio():
         try:
             print('Attempting MQTT connection...')
             print('MQTT host : ', self.broker_host)
+            print('MQTT user : ', self.user)
             adress = hostname+str(datetime.fromtimestamp(time.time()))
             print(adress)
 
