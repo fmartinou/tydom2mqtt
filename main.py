@@ -5,26 +5,10 @@ from datetime import datetime
 import os
 import sys
 
-
 from mqtt_client import MQTT_Hassio
 from tydom_websocket import TydomWebSocketClient
 
 
-
-# from tendo import singleton
-import socket
-
-
-
-# me = singleton.SingleInstance() # will sys.exit(-1) if other instance is running
-
-# HOW TO service it :
-# use supervisor !
-
-# hostname = socket.gethostname()    
-# IPAddr = socket.gethostbyname(hostname)
-# print("Hostname :", hostname)
-# print(IPAddr)
 
 loop = asyncio.get_event_loop()
 
@@ -47,12 +31,6 @@ def loop_task():
 
     tydom = None
     hassio = None
-
-    # if (hostname == 'maison-ThinkPad-X240'): #Local hostname of your host machine
-    #     local = True
-    # else:
-    #     local = False
-#    local = False
 
     if (MQTT_HOST == None):
         MQTT_HOST = "localhost"
