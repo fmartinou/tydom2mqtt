@@ -23,13 +23,31 @@ Opional packages : "pip3 install sdnotify" // If you want the systemd management
 - Add your credentials to main.py
 - TEST IT ! 'python3 main.py'
 
-If it works and you want the recommanded systemd mechanism :
+If it works and you want the systemd mechanism :
 
 - Put the tydom.service file in the folder of your choice (/usr/lib/systemd/system/ if you don't know where)
 - Change the path of the main.py file in tydom.service
 - with commandline, do "systemctl enable /pathto/tydom.service" // It will start on boot, it's a set and forget !
 - with commandline, do "systemctl start tydom.service"
 - with commandline, check "systemctl status tydom.service" or with journalctl.
+
+If you want the docker recommanded version :
+
+docker run \
+  --restart=always \
+  --net=host \
+  --name=tydom2mqtt \
+  -e TYDOM_MAC='xxxx' \
+  -e TYDOM_IP='xxxx' \
+  -e TYDOM_PASSWORD='xxxxx' \
+  -e MQTT_HOST=xxxx \
+  -e MQTT_USER=xxxx \
+  -e MQTT_PASSWORD='xxxx' \
+  -e SYS_CONTEXT=None \
+  mrwiwi/tydom2mqtt
+
+
+
 
 - To force a restart from your system, publish anything to hassio/tydom/kill, i will exit the script, systemd will restart it clean.
 
