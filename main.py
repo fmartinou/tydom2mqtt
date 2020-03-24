@@ -13,9 +13,6 @@ from tydom_websocket import TydomWebSocketClient
 print('STARTING MAIN LOOP TYDOM2MQTT')
 
 print('Dectecting environnement......')
-for param in os.environ.keys():
-    print "%20s %s" % (param,os.environ[param])
-    
 try:
     with open('/data/options.json') as f:
         print('/data/options.json detected ! Hassio Addons Environnement : parsing options.json....')
