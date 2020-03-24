@@ -4,50 +4,64 @@ import time
 from datetime import datetime
 import os
 import sys
+
+
 from mqtt_client import MQTT_Hassio
 from tydom_websocket import TydomWebSocketClient
+
+
+
+# from tendo import singleton
 import socket
 
 
-hostname = socket.gethostname()    
-IPAddr = socket.gethostbyname(hostname)
-print(hostname)
-print(IPAddr)
 
+# me = singleton.SingleInstance() # will sys.exit(-1) if other instance is running
 
+# HOW TO service it :
+# use supervisor !
+
+# hostname = socket.gethostname()    
+# IPAddr = socket.gethostbyname(hostname)
+# print("Hostname :", hostname)
+# print(IPAddr)
 
 loop = asyncio.get_event_loop()
 
+
 ####### CREDENTIALS TYDOM
-TYDOM_MAC = "" #MAC Address of Tydom Box
-TYDOM_IP = "192.168.x.x" # Local IP address // mediation.tydom.com for remote connexion
-TYDOM_PASSWORD = "" #Tydom password
+TYDOM_MAC = os.environ['TYDOM_MAC'] #MAC Address of Tydom Box
+TYDOM_IP = os.environ['TYDOM_IP', 'mediation.tydom.com'] # Local ip address or mediation.tydom.com for remote connexion
+TYDOM_PASSWORD = os.environ['TYDOM_PASSWORD'] #Tydom password
 
 ####### CREDENTIALS MQTT
-MQTT_USER = ''
-MQTT_PASSWORD = ''
+MQTT_HOST = os.environ['MQTT_HOST', 'localhost']
+MQTT_USER = os.environ['MQTT_USER']
+MQTT_PASSWORD = os.environ['MQTT_PASSWORD']
 
-SYS_CONTEXT = 'systemd' # None if you don't use systemd, preparing for docker....
+
+####### OPTIONS
+SYS_CONTEXT = os.environ['SYS_CONTEXT', None] # None if you don't use systemd, preparing for docker....
 
 def loop_task():
 
     tydom = None
     hassio = None
 
-    if (hostname == ''): #Local hostname of your host machine
-        local = True
-    else:
-        local = False
+    # if (hostname == 'maison-ThinkPad-X240'): #Local hostname of your host machine
+    #     local = True
+    # else:
+    #     local = False
 #    local = False
 
-    if (local == True):
+    if (MQTT_HOST == None):
         MQTT_HOST = "localhost"
-        MQTT_PORT = 1883
+        MQTT_PORT = 1883 #1884 for websocket without SSL
         MQTT_SSL = False
     else:
         # host = remote_adress
-        MQTT_HOST = 'xxxx.duckdns.org' 
-        MQTT_PORT = 8883
+        MQTT_HOST = MQTT_HOST
+        MQTT_PORT = 8883 #8884 for websocket
         MQTT_SSL = True
 
 
@@ -81,7 +95,6 @@ def loop_task():
 
 if __name__ == '__main__':
 
-   
     try:
         loop_task()
     except Exception as e:
