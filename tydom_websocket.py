@@ -26,8 +26,7 @@ from tydomMessagehandler import TydomMessageHandler
 
 class TydomWebSocketClient():
 
-    def __init__(self, mac, password, host='mediation.tydom.com', mqtt_client=None, sys_context=None):
-        print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
+    def __init__(self, mac, password, host='mediation.tydom.com', mqtt_client=None):
         print('Initialising TydomClient Class')
 
         self.password = password
@@ -38,14 +37,8 @@ class TydomWebSocketClient():
         self.remote_mode = True
         self.ssl_context = None
         self.cmd_prefix = "\x02"
-        self.sys_context = sys_context
 
     async def connect(self):
-        print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
-        print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
-        print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
-        print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
-        print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
         print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
         print('TYDOM WEBSOCKET CONNECTION INITIALISING....                     ')
 
@@ -134,7 +127,7 @@ class TydomWebSocketClient():
             while 1:
                 await self.notify_alive()
                 print('\o/ \o/ \o/ \o/ \o/ \o/ \o/ \o/ \o/ ')
-                print("Tydom Websocket is Connected !", self.connection)
+                print("Tydom Client is connected to websocket and ready !", self.connection)
                 return self.connection
 
         except Exception as e:
@@ -178,8 +171,6 @@ class TydomWebSocketClient():
                 # await self.get_ping()
                 await self.post_refresh()
                 await asyncio.sleep(40)
-
-
             except Exception as e:
                 print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 print('Connection with server closed')
@@ -351,7 +342,8 @@ class TydomWebSocketClient():
 
 
     async def notify_alive(self, msg='OK'):
-        pass
+        print('Still Alive !')
+        # pass
         # if self.sys_context == 'systemd':
         #     import sdnotify
         #     statestr = msg #+' : '+str(datetime.fromtimestamp(time.time()))

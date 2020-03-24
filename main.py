@@ -11,7 +11,7 @@ from tydom_websocket import TydomWebSocketClient
 
 ####### CREDENTIALS TYDOM
 TYDOM_MAC = os.getenv('TYDOM_MAC') #MAC Address of Tydom Box
-TYDOM_IP = os.getenv('TYDOM_IP', 'mediation.tydom.com') # Local ip address or mediation.tydom.com for remote connexion
+TYDOM_IP = os.getenv('TYDOM_IP', 'mediation.tydom.com') # Local ip address, default to mediation.tydom.com for remote connexion if not specified
 TYDOM_PASSWORD = os.getenv('TYDOM_PASSWORD') #Tydom password
 
 ####### CREDENTIALS MQTT
@@ -19,9 +19,8 @@ MQTT_HOST = os.getenv('MQTT_HOST', 'localhost')
 MQTT_USER = os.getenv('MQTT_USER')
 MQTT_PASSWORD = os.getenv('MQTT_PASSWORD')
 
-
 ####### OPTIONS
-SYS_CONTEXT = os.getenv('SYS_CONTEXT', None) # None if you don't use systemd, preparing for docker....
+# SYS_CONTEXT = os.getenv('SYS_CONTEXT', None) # None if you don't use systemd, preparing for docker....
 
 
 loop = asyncio.get_event_loop()
@@ -42,7 +41,7 @@ def loop_task():
     hassio = MQTT_Hassio(MQTT_HOST, MQTT_PORT, MQTT_USER, MQTT_PASSWORD, MQTT_SSL)
     # hassio_connection = loop.run_until_complete(hassio.connect())
     # Giving MQTT connection to tydom class for updating
-    tydom = TydomWebSocketClient(mac=TYDOM_MAC, host=TYDOM_IP, password=TYDOM_PASSWORD, mqtt_client=hassio, sys_context=SYS_CONTEXT)
+    tydom = TydomWebSocketClient(mac=TYDOM_MAC, host=TYDOM_IP, password=TYDOM_PASSWORD, mqtt_client=hassio)
 
     # Start connection and get client connection protocol
     loop.run_until_complete(tydom.mqtt_client.connect())
