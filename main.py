@@ -12,9 +12,10 @@ from tydom_websocket import TydomWebSocketClient
 
 try:
     with open('/data/options.json') as f:
-        print('/data/options.json detected, Hassio Addons Mode, parsing data to ')
+        print('/data/options.json detected, Hassio Addons Mode : parsing data....')
         try:
             data = json.load(f)
+            print(data)
             ####### CREDENTIALS TYDOM
             TYDOM_MAC = data['TYDOM_MAC'] #MAC Address of Tydom Box
             if data['TYDOM_IP'] != '':
@@ -34,7 +35,7 @@ try:
 
         except Exception as e:
             print('Parsing error', e)
-            
+
 except FileNotFoundError :
     print("No /data/options.json, seems where are not in hassio addon mode.")
     ####### CREDENTIALS TYDOM
