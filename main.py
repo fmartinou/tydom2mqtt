@@ -9,6 +9,8 @@ from mqtt_client import MQTT_Hassio
 from tydom_websocket import TydomWebSocketClient
 
 
+#TODO : an options.json and others adjustements to make a hassio addons, as a branch
+
 ####### CREDENTIALS TYDOM
 TYDOM_MAC = os.getenv('TYDOM_MAC') #MAC Address of Tydom Box
 TYDOM_IP = os.getenv('TYDOM_IP', 'mediation.tydom.com') # Local ip address, default to mediation.tydom.com for remote connexion if not specified
