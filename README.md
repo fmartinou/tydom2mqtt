@@ -13,7 +13,7 @@ For other home automation systems you just add devices like any MQTT devices, ch
 
 Based initialy on https://github.com/cth35/tydom_python
 
-############# DOCKER INSTALL
+Setup and install with docker :
 
 ```
 docker run \
@@ -23,36 +23,13 @@ docker run \
   -e TYDOM_MAC='xxxx' \
   -e TYDOM_IP='xxxx' \
   -e TYDOM_PASSWORD='xxxxx' \
-  -e MQTT_HOST=xxxx \
   -e MQTT_USER=xxxx \
   -e MQTT_PASSWORD='xxxx' \
-  -e SYS_CONTEXT=None \
   mrwiwi/tydom2mqtt
 ```
 
-##############" OLD
 
-
-Recommanded setup : any Linux OS with systemd management and python3.7
-
-Needed packages : "pip3 install websockets requests gmqtt"
-Opional packages : "pip3 install sdnotify" // If you want the systemd management (start, autorestart...)
-
-
-- Clone / Put all the *.py files in a folder of your choice (Hassio users : by default i've put them in the share folder of hassio for backup purposes "/usr/share/hassio/share/tydom/") // Not the local / www folder !
-- Add your credentials to main.py
-- TEST IT ! 'python3 main.py'
-
-If it works and you want the systemd mechanism :
-
-- Put the tydom.service file in the folder of your choice (/usr/lib/systemd/system/ if you don't know where)
-- Change the path of the main.py file in tydom.service
-- with commandline, do "systemctl enable /pathto/tydom.service" // It will start on boot, it's a set and forget !
-- with commandline, do "systemctl start tydom.service"
-- with commandline, check "systemctl status tydom.service" or with journalctl.
-
-
-
+MQTT_HOST and TYDOM_IP are optionals, defaulting to localhost and delta dore servers respectively.
 
 
 - To force a restart from your system, publish anything to hassio/tydom/kill, i will exit the script, systemd will restart it clean.
@@ -67,7 +44,7 @@ TODO (but i've got no more time...) :
 - Fix parsing of cdata msg type (will not crash anymore in the meantime), coming from an action from a alarm remote (and probably other things), we can get which remote had an action on alarm with it.
 - Add all the attributes as json for home assistant (can see defect, etc. on attributes)
 - X DONE ! Isolate parser in a class maybe...
-- HACS / Docker versions
+- HACS / Hassio addon version
 - Fork it to a proper Home Assistant integration with clean onboarding
 - Add climate, lights, etc.
 - Build a web frontend to see and test (use frontail for now)
