@@ -2,9 +2,8 @@
 
 https://community.home-assistant.io/t/tydom2mqtt-delta-dore-custom-component-wip/151333
 
-Link a Delta Dore's Tydom hub to a mqtt broker, working flawlessly here for days with the help of systemd's restarting mechanism.
-The script works in background, with remote mode by default (see todo), and rollback in local mode if necessary (offline mode).
-Disconnections from both servers are handled with automatic reconnections.
+Link a Delta Dore's Tydom hub to a mqtt broker.
+Disconnections from both servers are handled with automatic restart of the script.
 
 Not based on a poll mechanism but on push from websocket, i.e. it constantly pings the tydom hub to keep alive the connection and receive updates instantly.
 
@@ -27,6 +26,8 @@ docker run \
   -e MQTT_PASSWORD='xxxx' \
   mrwiwi/tydom2mqtt
 ```
+
+You need a functional MQTT broker before using it.
 
 
 MQTT_HOST and TYDOM_IP are optionals, defaulting to localhost and delta dore servers respectively.
