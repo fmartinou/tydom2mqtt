@@ -1,4 +1,7 @@
 # tydom2mqtt
+
+https://community.home-assistant.io/t/tydom2mqtt-delta-dore-custom-component-wip/151333
+
 Link a Delta Dore's Tydom hub to a mqtt broker, working flawlessly here for days with the help of systemd's restarting mechanism.
 The script works in background, with remote mode by default (see todo), and rollback in local mode if necessary (offline mode).
 Disconnections from both servers are handled with automatic reconnections.
