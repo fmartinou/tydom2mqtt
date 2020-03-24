@@ -4,38 +4,25 @@ import http.client
 from requests.auth import HTTPDigestAuth
 import sys
 import logging
-from http.client import HTTPResponse
-from io import BytesIO
-import urllib3
-import json
+
 import os
 import base64
 import time
-from http.server import BaseHTTPRequestHandler
 import ssl
 from datetime import datetime
 import subprocess, platform
 import sdnotify
+# import aiohttp
 
-
-from cover import Cover
-from alarm_control_panel import Alarm
-
+from tydomMessagehandler import TydomMessageHandler
 
 # Thanks https://stackoverflow.com/questions/49878953/issues-listening-incoming-messages-in-websocket-client-on-python-3-6
 
 
 # Logging
 # logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-
 # http.client.HTTPSConnection.debuglevel = 1
 # http.client.HTTPConnection.debuglevel = 1
-
-# Dicts
-deviceAlarmKeywords = ['alarmMode','alarmState','alarmSOS','zone1State','zone2State','zone3State','zone4State','zone5State','zone6State','zone7State','zone8State','gsmLevel','inactiveProduct','zone1State','liveCheckRunning','networkDefect','unitAutoProtect','unitBatteryDefect','unackedEvent','alarmTechnical','systAutoProtect','sysBatteryDefect','zsystSupervisionDefect','systOpenIssue','systTechnicalDefect','videoLinkDefect', 'outTemperature']
-# Device dict for parsing
-device_dict = dict()
-climateKeywords = ['temperature', 'authorization', 'hvacMode', 'setpoint']
 
 
 class TydomWebSocketClient():
@@ -71,22 +58,17 @@ class TydomWebSocketClient():
                 testlocal = subprocess.check_output("ping -{} 1 {}".format('n' if platform.system().lower()=="windows" else 'c', self.host), shell=True)
             except Exception as e:
                 print('Local control is down, will try to fallback to remote....')
+                try:
+                    print('Testing if mediation.tydom.com is reacheable...')
+                    test = subprocess.check_output("ping -{} 1 {}".format('n' if platform.system().lower()=="windows" else 'c', 'mediation.tydom.com'), shell=True)
+                    print('mediation.tydom.com is reacheable ! Using it to prevent code 1006 deconnections from local ip for now.')
+                    self.host = 'mediation.tydom.com'
+                except Exception as e:
+                    print('Remote control is down !')
 
-            try:
-                # raise Exception ## Uncomment to pure lcoal IP mode
-                print('Testing if mediation.tydom.com is reacheable...')
-                test = subprocess.check_output("ping -{} 1 {}".format('n' if platform.system().lower()=="windows" else 'c', 'mediation.tydom.com'), shell=True)
-                print('mediation.tydom.com is reacheable ! Using it to prevent code 1006 deconnections from local ip for now.')
-                self.host = 'mediation.tydom.com'
-            except Exception as e:
-
-                print('Remote control is down !')
-
-                if (testlocal == None) :
-                    print("Exiting to ensure systemd restart....")
-                    sys.exit()
-                else:
-                    print('Fallback to local ip for that connection, except code 1006 deconnections every 60 seconds...')
+                    if (testlocal == None) :
+                        print("Exiting to ensure systemd restart....")
+                        sys.exit()
 
            
         # Set Host, ssl context and prefix for remote or local connection
@@ -95,6 +77,7 @@ class TydomWebSocketClient():
             self.remote_mode = True
             self.ssl_context = None
             self.cmd_prefix = "\x02"
+            
         else:
             print('Setting local mode context.')
             self.remote_mode = False
@@ -138,7 +121,12 @@ class TydomWebSocketClient():
             print(self.host)
             
             self.connection = await websockets.client.connect('wss://{}:443/mediation/client?mac={}&appli=1'.format(self.host, self.mac),
-                                                    extra_headers=websocketHeaders, ssl=websocket_ssl_context)
+                                                    extra_headers=websocketHeaders, ssl=websocket_ssl_context, ping_timeout=None)
+
+            # session = aiohttp.ClientSession()
+            # self.connection = await session.ws_connect('wss://{}:443/mediation/client?mac={}&appli=1'.format(self.host, self.mac),
+            #                                          extra_headers=websocketHeaders, ssl=websocket_ssl_context)
+
 
             # async with websockets.client.connect('wss://{}:443/mediation/client?mac={}&appli=1'.format(self.host, self.mac),
             #                                       extra_headers=websocketHeaders, ssl=websocket_ssl_context) as self.connection:
@@ -158,6 +146,20 @@ class TydomWebSocketClient():
             # asyncio.sleep(8)
             # await self.connect()
 
+    async def receiveMessage(self):
+        '''
+            Receiving all server messages and pipe them to the handler
+        '''
+        while 1:
+            incoming_bytes_str = await self.connection.recv()
+            #Notify systemd watchdog
+            await self.notify_alive()
+            handler = TydomMessageHandler(incoming_bytes = incoming_bytes_str, tydom_client = self)
+            try:
+                await handler.incomingTriage()
+            except Exception as e:
+                print('Tydom Message Handler exception :', e)
+
     async def heartbeat(self):
         '''
         Sending heartbeat to server
@@ -173,22 +175,24 @@ class TydomWebSocketClient():
         while self.connection.open:
             try:
                 # await self.connection.send('ping')
-                # await get_ping(self)
-                # print('****** ping !')
+                # await self.get_ping()
                 await self.post_refresh()
                 await asyncio.sleep(40)
 
 
             except Exception as e:
                 print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
-                print('Heartbeat error')
                 print('Connection with server closed')
                 print(e)
                 print('Exiting to ensure systemd restart....')
                 sys.exit() #Exit all to ensure systemd restart
                 # print('Reconnecting...')
                 # await self.connect()
+
+
+
+############ Utils
+
 
 # Send Generic GET message
     async def send_message(self, websocket, msg):
@@ -201,7 +205,8 @@ class TydomWebSocketClient():
         str = self.cmd_prefix + "GET " + msg +" HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
         a_bytes = bytes(str, "ascii")
         await websocket.send(a_bytes)
-        print('GET Command send to websocket')
+        # print('GET Command send to websocket')
+        # print (a_bytes)
         return 0
 
 # Send Generic POST message
@@ -244,345 +249,7 @@ class TydomWebSocketClient():
         await self.connection.send(a_bytes)
         # name = await websocket.recv()
         # parse_response(name)
-
-
-
-
-    async def receiveMessage(self):
-        '''
-            Receiving all server messages and handling them
-        '''
-        while 1:
-
-            bytes_str = await self.connection.recv()
-            # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            # print(bytes_str)
-            first = str(bytes_str[:40]) # Scanning 1st characters
-            #Notify systemd watchdog
-            await self.notify_alive()
-            # n = sdnotify.SystemdNotifier()
-            # n.notify("WATCHDOG=1")
-
-
-            try:
-                if ("refresh" in first):
-                    print('OK refresh message detected !')
-                    try:
-                        pass
-                        #ish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
-                    except:
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                        print('RAW INCOMING :')
-                        print(bytes_str)
-                        print('END RAW')
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                elif ("PUT /devices/data" in first) or ("/devices/cdata" in first):
-                    print('PUT /devices/data message detected !')
-                    try:
-                        incoming = self.parse_put_response(bytes_str)
-                        # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                        await self.parse_response(incoming)
-                        # print('PUT message processed !')
-                        # print("##################################")
-                        #ish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
-                    except:
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                        print('RAW INCOMING :')
-                        print(bytes_str)
-                        print('END RAW')
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                elif ("scn" in first):
-                    try:
-                        # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                        incoming = get(bytes_str)
-                        await self.parse_response(incoming)
-                        print('Scenarii message processed !')
-                        print("##################################")
-                    except:
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                        print('RAW INCOMING :')
-                        print(bytes_str)
-                        print('END RAW')
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")            
-                elif ("POST" in first):
-                    try:
-                        # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                        incoming = self.parse_put_response(bytes_str)
-                        await self.parse_response(incoming)
-                        print('POST message processed !')
-                        # print("##################################")
-                    except:
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                        print('RAW INCOMING :')
-                        print(bytes_str)
-                        print('END RAW')
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                elif ("HTTP/1.1" in first): #(bytes_str != 0) and 
-                    response = self.response_from_bytes(bytes_str[len(self.cmd_prefix):])
-                    incoming = response.data.decode("utf-8")
-                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    # print(incoming)
-                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    try:
-                        # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                        await self.parse_response(incoming)
-                        # print('Pong !')
-                        # print("##################################")
-                    except:
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                        print('RAW INCOMING :')
-                        print(bytes_str)
-                        print('END RAW')
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                        # await parse_put_response(incoming)
-                else:
-                    print("Didn't detect incoming type, here it is :")
-                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    print('RAW INCOMING :')
-                    print(bytes_str)
-                    print('END RAW')
-                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-
-            except Exception as e:
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                print('receiveMessage error')
-                print('RAW :')
-                print(bytes_str)
-                print("Incoming payload :")
-                print(incoming)
-                print("Error :")
-                print(e)
-                print('Exiting to ensure systemd restart....')
-                sys.exit() #Exit all to ensure systemd restart
-                # print(bytes_str)
-                # print('Reconnecting in 8s')
-                # await asyncio.sleep(8)
-                # await self.connect()
-
-
-
-
-
-    # Basic response parsing. Typically GET responses + instanciate covers and alarm class for updating data
-    async def parse_response(self, incoming):
-        data = incoming
-        msg_type = None
-        first = str(data[:40])
-        
-        # Detect type of incoming data
-        if (data != ''):
-            if ("id" in first):
-                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                print('Incoming message type : data detected')
-                msg_type = 'msg_data'
-            elif ("date" in first):
-                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                print('Incoming message type : config detected')
-                msg_type = 'msg_config'
-            elif ("doctype" in first):
-                print('Incoming message type : html detected (probable 404)')
-                msg_type = 'msg_html'
-                print(data)
-            elif ("productName" in first):
-                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                print('Incoming message type : Info detected')
-                msg_type = 'msg_info'
-                # print(data)        
-            else:
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                print('Incoming message type : no type detected')
-                print(first)
-
-            if not (msg_type == None):
-                try:
-                    parsed = json.loads(data)
-                    # print(parsed)
-                    if (msg_type == 'msg_config'):
-                        for i in parsed["endpoints"]:
-                            # Get list of shutter
-                            if i["last_usage"] == 'shutter':
-                                # print('{} {}'.format(i["id_endpoint"],i["name"]))
-                                # device_dict[i["id_endpoint"]] = i["name"]
-                                device_dict[i["id_device"]] = i["name"]
-                                # TODO get other device type
-                            if i["last_usage"] == 'alarm':
-                                # print('{} {}'.format(i["id_endpoint"], i["name"]))
-                                device_dict[i["id_endpoint"]] = "Tyxal Alarm"
-                        print('Configuration updated')
-                        
-                    elif (msg_type == 'msg_data'):
-                        # print(parsed)
-                        for i in parsed:
-                            attr = {}
-
-                            if i["endpoints"][0]["error"] == 0:
-                                try:
-                                    for elem in i["endpoints"][0]["data"]:
-                                        # Get full name of this id
-                                        # endpoint_id = i["endpoints"][0]["id"]
-                                        endpoint_id = i["id"] # thanks @azrod 
-                                        # Element name
-                                        elementName = elem["name"]
-                                        # Element value
-                                        elementValue = elem["value"]
-                                        elementValidity = elem["validity"]
-                                        # print(elementName,elementValue,elementValidity)
-                                        # Get last known position (for shutter)
-                                        if elementName == 'position' and elementValidity == 'upToDate':
-                                            name_of_id = self.get_name_from_id(endpoint_id)
-                                            if len(name_of_id) != 0:
-                                                print_id = name_of_id
-                                            else:
-                                                print_id = endpoint_id
-                                            # print('{} : {}'.format(print_id, elementValue))
-                                            new_cover = "cover_tydom_"+str(endpoint_id)
-                                            new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
-                                            new_cover.update()
-
-                                        # Get last known state (for alarm) # NEW METHOD
-                                        if elementName in deviceAlarmKeywords and elementValidity == 'upToDate':
-                                            attr[elementName] = elementValue
-                                except Exception as e:
-                                    print('msg_data error in parsing !')
-                                    print(e)
-                                # Get last known state (for alarm) # NEW METHOD
-                                if attr != {}:
-                                    # print(attr)
-                                    state = None
-                                    sos_state = False
-                                    out = None
-                                    try:
-                                        if 'alarmState' in attr and attr['alarmState'] == "ON":
-                                            state = "triggered"
-                                        if 'alarmSOS' in attr and attr['alarmSOS'] == "true":
-                                            state = "triggered"
-                                            sos_state = True                                                                               
-                                        elif 'alarmMode' in attr and attr ["alarmMode"]  == "ON":
-                                            state = "armed_away"
-                                        elif 'alarmMode' in attr and attr["alarmMode"]  == "ZONE":
-                                            state = "armed_home"
-                                        elif 'alarmMode' in attr and attr["alarmMode"]  == "OFF":
-                                            state = "disarmed"
-
-                                        if 'outTemperature' in attr:
-                                            out = attr["outTemperature"]
-
-                                        if (sos_state == True):
-                                            print("SOS !")
-
-                                        if not (state == None):
-                                            # print(state)
-                                            alarm = "alarm_tydom_"+str(endpoint_id)
-                                            # print("Alarm created / updated : "+alarm)
-                                            alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, out_temp=out, attributes=attr, sos=str(sos_state), mqtt=self.mqtt_client)
-                                            alarm.update()
-
-                                    except Exception as e:
-                                        print("Error in alarm parsing !")
-                                        print(e)
-                                        pass
-
-
-
-                                    # Get last known state (for alarm) # OLD Method, probably compatible if you have multiple alarms
-                                    # if elementName in deviceAlarmKeywords:
-                                    #     # print(i["endpoints"][0]["data"])
-                                    #     alarm_data = '{} : {}'.format(elementName, elementValue)
-                                    #     # print(alarm_data)
-                                    #     # alarmMode  : ON or ZONE or OFF
-                                    #     # alarmState : ON = Triggered
-                                    #     # alarmSOS   : true = SOS triggered
-                                    #     state = None
-                                    #     sos_state = False
-                                    #     out = None
-                                    #     print(alarm_data)
-                                    #     if alarm_data == "alarmState : ON":
-                                    #         state = "triggered"
-                                    #     if alarm_data == "alarmSOS : true":
-                                    #         state = "triggered"
-                                    #         sos_state = True
-                                    #     if alarm_data == "alarmMode : ON":
-                                    #         state = "armed_away"
-                                    #     if alarm_data == "alarmMode : ZONE":
-                                    #         state = "armed_home"
-                                    #     if alarm_data == "alarmMode : OFF":
-                                    #         state = "disarmed"
-
-                                    #     if elementName == "outTemperature":
-                                    #         out = elementValue
-                                    #     else:
-                                    #         attr[elementName] = [elementValue]
-                                    #     #     attr[alarm_data]
-                                    #         # print(attr)
-                                    #     #device_dict[i["id_endpoint"]] = i["name"]
-                                    #     if (sos_state == True):
-                                    #         print("SOS !")
-                                    #     if not (state == None):
-                                    #         # print(state)
-                                    #         alarm = "alarm_tydom_"+str(endpoint_id)
-                                    #         # print("Alarm created / updated : "+alarm)
-                                    #         alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, out_temp=out, attributes=attr, sos=str(sos_state), mqtt=self.mqtt_client)
-                                    #         alarm.update()
-
-                    elif (msg_type == 'msg_html'):
-                        print("HTML Response ?")
-                    elif (msg_type == 'msg_info'):
-                        pass
-                    else:
-                        # Default json dump
-                        print()
-                        print(json.dumps(parsed, sort_keys=True, indent=4, separators=(',', ': ')))
-                except Exception as e:
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
-                    print('Cannot parse response !')
-                    # print('Response :')
-                    # print(data)
-                    if (e != 'Expecting value: line 1 column 1 (char 0)'):
-                        print("Error : ", e)
-                        print(parsed)
-
-
-    # PUT response DIRTY parsing
-    def parse_put_response(self, bytes_str):
-        # TODO : Find a cooler way to parse nicely the PUT HTTP response
-        resp = bytes_str[len(self.cmd_prefix):].decode("utf-8")
-        fields = resp.split("\r\n")
-        fields = fields[6:]  # ignore the PUT / HTTP/1.1
-        end_parsing = False
-        i = 0
-        output = str()
-        while not end_parsing:
-            field = fields[i]
-            if len(field) == 0 or field == '0':
-                end_parsing = True
-            else:
-                output += field
-                i = i + 2
-        parsed = json.loads(output)
-        return json.dumps(parsed)
-
-    ######### FUNCTIONS
-
-    def response_from_bytes(self, data):
-        sock = BytesIOSocket(data)
-        response = HTTPResponse(sock)
-        response.begin()
-        return urllib3.HTTPResponse.from_httplib(response)
-
-    def put_response_from_bytes(self, data):
-        request = HTTPRequest(data)
-        return request
-
-    # Get pretty name for a device id
-    def get_name_from_id(self, id):
-        name = ""
-        if len(device_dict) != 0:
-            name = device_dict[id]
-        return(name)
-
+            
     # Generate 16 bytes random key for Sec-WebSocket-Keyand convert it to base64
     def generate_random_key(self):
         return base64.b64encode(os.urandom(16))
@@ -634,9 +301,11 @@ class TydomWebSocketClient():
 
     # Get a ping (pong should be returned)
     async def get_ping(self):
-        msg_type = 'ping'
+        msg_type = '/ping'
         req = 'GET'
         await self.send_message(self.connection, msg_type)
+        print('****** ping !')
+
 
 
     # Get all devices metadata
@@ -686,7 +355,7 @@ class TydomWebSocketClient():
         #Notify systemd watchdog
         n = sdnotify.SystemdNotifier()
         n.notify("WATCHDOG=1")
-        print("Tydom HUB is still connected, systemd's watchdog notified...")
+        # print("Tydom HUB is still connected, systemd's watchdog notified...")
 
         # await self.POST_Hassio(sensorname='last_ping', state=statestr, friendlyname='Tydom Connection')
         # except Exception as e:
@@ -702,23 +371,4 @@ class TydomWebSocketClient():
         # except Exception as e:
         #     print('Hassio sensor down !'+e)
         sys.exit()
-
-class BytesIOSocket:
-    def __init__(self, content):
-        self.handle = BytesIO(content)
-
-    def makefile(self, mode):
-        return self.handle
-
-class HTTPRequest(BaseHTTPRequestHandler):
-    def __init__(self, request_text):
-        #self.rfile = StringIO(request_text)
-        self.raw_requestline = request_text
-        self.error_code = self.error_message = None
-        self.parse_request()
-
-    def send_error(self, code, message):
-        self.error_code = code
-        self.error_message = message
-
 
