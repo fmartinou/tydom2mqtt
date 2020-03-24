@@ -52,11 +52,11 @@ def loop_task():
     hassio.tydom = tydom
 
     print('Start websocket listener and heartbeat')
-    if SYS_CONTEXT == 'systemd':
-        import sdnotify
-        # Inform systemd that we've finished our startup sequence...
-        n = sdnotify.SystemdNotifier()
-        n.notify("READY=1")
+    # if SYS_CONTEXT == 'systemd':
+    #     import sdnotify
+    #     # Inform systemd that we've finished our startup sequence...
+    #     n = sdnotify.SystemdNotifier()
+    #     n.notify("READY=1")
 
     tasks = [
         tydom.receiveMessage(),

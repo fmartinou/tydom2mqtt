@@ -68,7 +68,7 @@ class TydomWebSocketClient():
 
         #             if (testlocal == None) :
         #                 print("Exiting to ensure restart....")
-        #                 raise Exception
+        #                 sys.exit()
 
            
         # Set Host, ssl context and prefix for remote or local connection
@@ -141,7 +141,7 @@ class TydomWebSocketClient():
             print('Websocket def connect error')
             print(e)
             print('Exiting to ensure restart....')
-            raise Exception #Exit all to ensure systemd restart
+            sys.exit() #Exit all to ensure systemd restart
             # print('Reconnecting...')
             # asyncio.sleep(8)
             # await self.connect()
@@ -185,7 +185,7 @@ class TydomWebSocketClient():
                 print('Connection with server closed')
                 print(e)
                 print('Exiting to ensure restart....')
-                raise Exception #Exit all to ensure systemd restart
+                sys.exit() #Exit all to ensure systemd restart
                 # print('Reconnecting...')
                 # await self.connect()
 
@@ -198,7 +198,7 @@ class TydomWebSocketClient():
     async def send_message(self, websocket, msg):
         if not self.connection.open:
             print('Exiting to ensure restart....')
-            raise Exception #Exit all to ensure systemd restart
+            sys.exit() #Exit all to ensure systemd restart
             # print('Websocket not opened, reconnect...')
             # await self.connect()
    
@@ -213,7 +213,7 @@ class TydomWebSocketClient():
     async def send_post_message(self, websocket, msg):
         if not self.connection.open:
             print('Exiting to ensure restart....')
-            raise Exception #Exit all to ensure systemd restart
+            sys.exit() #Exit all to ensure systemd restart
             # print('Websocket not opened, reconnect...')
             # await self.connect()
 
@@ -227,7 +227,7 @@ class TydomWebSocketClient():
     async def put_devices_data(self, endpoint_id, name, value):
         if not self.connection.open:
             print('Exiting to ensure restart....')
-            raise Exception #Exit all to ensure systemd restart
+            sys.exit() #Exit all to ensure systemd restart
             # print('Websocket not opened, reconnect...')
             # await self.connect()
 
@@ -279,7 +279,7 @@ class TydomWebSocketClient():
     async def post_refresh(self):
         if not (self.connection.open):
             print('Exiting to ensure restart....')
-            raise Exception #Exit all to ensure systemd restart
+            sys.exit() #Exit all to ensure systemd restart
         else:
             # print("Refresh....")
             msg_type = '/refresh/all'
@@ -333,7 +333,7 @@ class TydomWebSocketClient():
             print('get_data error !')
             # await self.exiting()wait self.exiting()
             print('Exiting to ensure restart....')
-            raise Exception #Exit all to ensure systemd restart
+            sys.exit() #Exit all to ensure systemd restart
 
         else:
             await self.get_configs_file()
@@ -351,12 +351,13 @@ class TydomWebSocketClient():
 
 
     async def notify_alive(self, msg='OK'):
-        if self.sys_context == 'systemd':
-            import sdnotify
-            statestr = msg #+' : '+str(datetime.fromtimestamp(time.time()))
-            #Notify systemd watchdog
-            n = sdnotify.SystemdNotifier()
-            n.notify("WATCHDOG=1")
-            # print("Tydom HUB is still connected, systemd's watchdog notified...")
+        pass
+        # if self.sys_context == 'systemd':
+        #     import sdnotify
+        #     statestr = msg #+' : '+str(datetime.fromtimestamp(time.time()))
+        #     #Notify systemd watchdog
+        #     n = sdnotify.SystemdNotifier()
+        #     n.notify("WATCHDOG=1")
+        #     # print("Tydom HUB is still connected, systemd's watchdog notified...")
 
 
