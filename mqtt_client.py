@@ -78,6 +78,7 @@ class MQTT_Hassio():
         elif ('kill' in str(topic)):
 #        if "update" in topic:
             print('Incoming MQTT kill request : ', topic, payload)
+            print('Exiting...')
             sys.exit()
         elif (topic == "homeassistant/requests/tydom/refresh"):
             print('Incoming MQTT refresh request : ', topic, payload)
