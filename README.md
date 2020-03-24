@@ -12,25 +12,14 @@ For other home automation systems you just add devices like any MQTT devices, ch
 
 Based initialy on https://github.com/cth35/tydom_python
 
-Setup and install with docker :
-
-```
-docker run \
-  --restart=always \
-  --net=host \
-  --name=tydom2mqtt \
-  -e TYDOM_MAC='xxxx' \
-  -e TYDOM_IP='xxxx' \
-  -e TYDOM_PASSWORD='xxxxx' \
-  -e MQTT_USER=xxxx \
-  -e MQTT_PASSWORD='xxxx' \
-  mrwiwi/tydom2mqtt
-```
-
 You need a functional MQTT broker before using it.
+You need a functional Docker before using it.
 
+You just need the install.sh to download, mod it with your credentials (Tydom and MQTT - MQTT_HOST and TYDOM_IP are optionals, defaulting to localhost and delta dore servers respectively.), then :
 
-MQTT_HOST and TYDOM_IP are optionals, defaulting to localhost and delta dore servers respectively.
+```
+sh install.sh
+```
 
 
 - To force a restart from your system, publish anything to hassio/tydom/kill, i will exit the script, systemd will restart it clean.
