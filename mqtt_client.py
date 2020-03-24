@@ -10,6 +10,7 @@ from gmqtt import Client as MQTTClient
 # Globals
 ####################################### MQTT
 tydom_topic = "+/tydom/#"
+z2m_topic = "zigbee2mqtt/#"
 refresh_topic = "homeassistant/requests/tydom/refresh"
 hostname = socket.gethostname()
 
@@ -62,6 +63,7 @@ class MQTT_Hassio():
             print("Subscribing to : ", tydom_topic)
             # client.subscribe('homeassistant/#', qos=0)
             client.subscribe(tydom_topic, qos=0)
+            client.subscribe(z2m_topic, qos=0) #If you want Z2M to log in tail...
         except Exception as e:
             print("Error on connect : ", e)
             
@@ -112,6 +114,9 @@ class MQTT_Hassio():
             else:
                 if not (str(json.loads(payload)) == ''):
                     await self.tydom.put_devices_data(str(get_id), 'position', str(json.loads(payload)))
+
+        elif ('zigbee' in str(topic)):
+            print('Z2M : ',topic, payload.decode())
 
         else:
             pass

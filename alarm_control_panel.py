@@ -34,7 +34,7 @@ class Alarm:
         self.config['name'] = self.name
         self.config['unique_id'] = self.id
         self.config['device'] = self.device
-        self.config['attributes'] = self.attributes
+        # self.config['attributes'] = self.attributes
         self.config['command_topic'] = alarm_command_topic.format(id=self.id)
         self.config['state_topic'] = alarm_state_topic.format(id=self.id)
         self.config['code_arm_required'] = 'false'
@@ -54,6 +54,22 @@ class Alarm:
         self.sos_config['unique_id'] =  self.sos_device['identifiers']
         self.sos_config['device'] = self.sos_device
         self.sos_config['state_topic'] = alarm_sos_state_topic.format(id=self.sos_config['unique_id'])
+
+        ### Temperature sensor
+        # self.sos_device = {}
+        # self.sos_device['manufacturer'] = 'Delta Dore'
+        # self.sos_device['model'] = 'Tyxal'
+        # self.sos_device['name'] = 'Outdoor Temperature Tyxal'
+        # self.sos_device['identifiers'] = self.id
+        # self.sos_device['device_class'] = 'problem'
+
+        # self.config_sos_topic = alarm_sos_config_topic.format(id=self.sos_device['identifiers'])
+
+        # self.sos_config = {}
+        # self.sos_config['name'] = self.sos_device['name']
+        # self.sos_config['unique_id'] =  self.sos_device['identifiers']
+        # self.sos_config['device'] = self.sos_device
+        # self.sos_config['state_topic'] = alarm_sos_state_topic.format(id=self.sos_config['unique_id'])
 
         # print(self.config)
         if (self.mqtt != None):
