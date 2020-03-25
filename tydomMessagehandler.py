@@ -201,7 +201,7 @@ class TydomMessageHandler():
                                             # print('{} : {}'.format(print_id, elementValue))
                                             new_cover = "cover_tydom_"+str(endpoint_id)
                                             new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
-                                            new_cover.update()
+                                            await new_cover.update()
 
                                         # Get last known state (for alarm) # NEW METHOD
                                         if elementName in deviceAlarmKeywords and elementValidity == 'upToDate':
@@ -239,7 +239,7 @@ class TydomMessageHandler():
                                             alarm = "alarm_tydom_"+str(endpoint_id)
                                             # print("Alarm created / updated : "+alarm)
                                             alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, out_temp=out, attributes=attr, sos=str(sos_state), mqtt=self.mqtt_client)
-                                            alarm.update()
+                                            await alarm.update()
 
                                     except Exception as e:
                                         print("Error in alarm parsing !")

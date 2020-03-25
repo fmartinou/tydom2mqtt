@@ -227,10 +227,41 @@ class TydomWebSocketClient():
         # endpoint_id is the endpoint = the device (shutter in this case) to open.
         str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/data HTTP/1.1\r\nContent-Length: ".format(str(endpoint_id),str(endpoint_id))+str(len(body))+"\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"+body+"\r\n\r\n"
         a_bytes = bytes(str_request, "ascii")
+        print(a_bytes)
         await self.connection.send(a_bytes)
-        print('PUT request send to Websocket !')
+        print('PUT /devices/data send to Websocket !')
         return 0
 
+    async def put_alarm_cdata(self, alarm_id, pwd, value, zones = None):
+
+        if not self.connection.open:
+            print('Connection closed, exiting to ensure restart....')
+            sys.exit()
+
+        if zones != None:
+            cmd = 'alarmCmd'
+            body="[{\"pwd\":\"" + pwd + "\",\"value\":\""+ value + "\"}]"
+        else:
+            cmd = 'zoneCmd'
+            body="[{\"pwd\":\"" + pwd + "\",\"value\":\""+ value + "\",\"zones\":\""+ zones + "\"}]"
+
+        
+        str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/cdata?name={} HTTP/1.1\r\nContent-Length: ".format(str(alarm_id),str(alarm_id),str(cmd))+str(len(body))+"\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"+body+"\r\n\r\n"
+        a_bytes = bytes(str_request, "ascii")
+        await self.connection.send(a_bytes)
+        print('PUT /devices/data send to Websocket !')
+        return 0
+
+
+    # await client.put(`/devices/${deviceId}/endpoints/${endpointId}/cdata?name=alarmCmd`, {
+      #     value: nextValue,
+      #     pwd: pin
+      #   });
+    # await client.put(`/devices/${deviceId}/endpoints/${endpointId}/cdata?name=zoneCmd`, {
+      #       value: nextValue,
+      #       pwd: pin,
+      #       zones: targetZones
+      #     });
     # Run scenario
     async def put_scenarios(self, scenario_id):
         body=""
@@ -342,8 +373,8 @@ class TydomWebSocketClient():
 
 
     async def notify_alive(self, msg='OK'):
-        print('Connection Still Alive !')
-        # pass
+        # print('Connection Still Alive !')
+        pass
         # if self.sys_context == 'systemd':
         #     import sdnotify
         #     statestr = msg #+' : '+str(datetime.fromtimestamp(time.time()))

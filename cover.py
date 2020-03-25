@@ -3,6 +3,7 @@ import time
 
 from datetime import datetime
 
+cover_command_topic = "cover/tydom/{id}/set_positionCmd"
 cover_config_topic = "homeassistant/cover/tydom/{id}/config"
 cover_position_topic = "cover/tydom/{id}/current_position"
 cover_set_postion_topic = "cover/tydom/{id}/set_position"
@@ -34,22 +35,24 @@ class Cover:
     # def attributes(self):
     #     return self.attributes
 
-    def setup(self):
+    async def setup(self):
         self.device = {}
         self.device['manufacturer'] = 'Delta Dore'
         self.device['model'] = 'Volet'
         self.device['name'] = self.name
         self.device['identifiers'] = self.id
+
         self.config_topic = cover_config_topic.format(id=self.id)
         self.config = {}
         self.config['name'] = self.name
         self.config['unique_id'] = self.id
         # self.config['attributes'] = self.attributes
-        self.config['command_topic'] = cover_set_postion_topic.format(id=self.id)
+        self.config['command_topic'] = cover_command_topic.format(id=self.id)
         self.config['set_position_topic'] = cover_set_postion_topic.format(id=self.id)
         self.config['position_topic'] = cover_position_topic.format(id=self.id)
-        self.config['payload_open'] = 100
-        self.config['payload_close'] = 0
+        self.config['payload_open'] = "UP"
+        self.config['payload_close'] = "DOWN"
+        self.config['payload_stop'] = "STOP"
         self.config['retain'] = 'false'
         self.config['device'] = self.device
         # print(self.config)
@@ -59,8 +62,8 @@ class Cover:
         # setup_pub = '(self.config_topic, json.dumps(self.config), qos=0)'
         # return(setup_pub)
 
-    def update(self):
-        self.setup()
+    async def update(self):
+        await self.setup()
         self.position_topic = cover_position_topic.format(id=self.id, current_position=self.current_position)
         
         if (self.mqtt != None):
@@ -73,3 +76,24 @@ class Cover:
         # self.attributes_topic = cover_attributes_topic.format(id=self.id, attributes=self.attributes)
         # hassio.publish(self.attributes_topic, self.attributes, qos=0)
 
+    async def put_position(tydom_client, cover_id, position):
+        print(cover_id, 'position', position)
+        if not tydom_client.connection.open:
+            print('MQTT req : Websocket not opened, reconnect...')
+            await tydom_client.connect()
+            await tydom_client.put_devices_data(cover_id, 'position', position)
+
+        else:
+            if not (position == ''):
+                await tydom_client.put_devices_data(cover_id, 'position', position)
+
+    async def put_positionCmd(tydom_client, cover_id, positionCmd):
+        print(cover_id, 'positionCmd', positionCmd)
+        if not tydom_client.connection.open:
+            print('MQTT req : Websocket not opened, reconnect...')
+            await tydom_client.connect()
+            await tydom_client.put_devices_data(cover_id, 'positionCmd', positionCmd)
+
+        else:
+            if not (positionCmd == ''):
+                await tydom_client.put_devices_data(cover_id, 'positionCmd', positionCmd)

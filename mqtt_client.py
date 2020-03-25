@@ -4,13 +4,14 @@ import json
 import socket
 import sys
 from datetime import datetime
-
 from gmqtt import Client as MQTTClient
+
+from cover import Cover
+from alarm_control_panel import Alarm
 
 # Globals
 ####################################### MQTT
 tydom_topic = "+/tydom/#"
-z2m_topic = "zigbee2mqtt/#"
 refresh_topic = "homeassistant/requests/tydom/refresh"
 hostname = socket.gethostname()
 
@@ -64,7 +65,6 @@ class MQTT_Hassio():
             print("Subscribing to : ", tydom_topic)
             # client.subscribe('homeassistant/#', qos=0)
             client.subscribe(tydom_topic, qos=0)
-            client.subscribe(z2m_topic, qos=0) #If you want Z2M to log in tail...
         except Exception as e:
             print("Error on connect : ", e)
             
@@ -91,35 +91,39 @@ class MQTT_Hassio():
             print('Incoming MQTT init request : ', topic, payload)
             await self.tydom.connect()
 
-        elif ('set_scenario' in str(topic)):
-            print('Incoming MQTT set_scenario request : ', topic, payload)
-            get_id = (topic.split("/"))[3] #extract id from mqtt
-            # print(tydom, str(get_id), 'position', json.loads(payload))
-            if not self.tydom.connection.open:
-                print('Websocket not opened, reconnect...')
-                await self.tydom.connect()
-                await self.tydom.put_devices_data(str(get_id), 'position', str(json.loads(payload)))
+        # elif ('set_scenario' in str(topic)):
+        #     print('Incoming MQTT set_scenario request : ', topic, payload)
+        #     get_id = (topic.split("/"))[3] #extract id from mqtt
+        #     # print(tydom, str(get_id), 'position', json.loads(payload))
+        #     if not self.tydom.connection.open:
+        #         print('Websocket not opened, reconnect...')
+        #         await self.tydom.connect()
+        #         await self.tydom.put_devices_data(str(get_id), 'position', str(json.loads(payload)))
 
-            else:
-                await self.tydom.put_devices_data(str(get_id), 'position', str(json.loads(payload)))
+        #     else:
+        #         await self.tydom.put_devices_data(str(get_id), 'position', str(json.loads(payload)))
         
-        elif ('set_position' in str(topic)) and not ('homeassistant'in str(topic)):
-
-            print('Incoming MQTT set_position request : ', topic, payload)
+        elif ('set_position' in str(topic)) and not ('set_positionCmd'in str(topic)):
+            
+            print('Incoming MQTT set_position request : ', topic, json.loads(payload))
+            value = json.loads(payload)
+            print(value)
             get_id = (topic.split("/"))[2] #extract id from mqtt
-            print(str(get_id), 'position', json.loads(payload))
-            if not self.tydom.connection.open:
-                print('MQTT req : Websocket not opened, reconnect...')
-                await self.tydom.connect()
-                await self.tydom.put_devices_data(str(get_id), 'position', str(json.loads(payload)))
+            await Cover.put_position(tydom_client=self.tydom, cover_id=get_id, position=str(value))
 
-            else:
-                if not (str(json.loads(payload)) == ''):
-                    await self.tydom.put_devices_data(str(get_id), 'position', str(json.loads(payload)))
+        elif 'set_positionCmd' in str(topic):
+            print('Incoming MQTT set_positionCmd request : ', topic, payload)
+            value = str(payload).strip('b').strip("'")
+            get_id = (topic.split("/"))[2] #extract id from mqtt
+            print(str(get_id), 'positionCmd', value)
+            await Cover.put_positionCmd(tydom_client=self.tydom, cover_id=get_id, positionCmd=str(value))
 
-        elif ('zigbee' in str(topic)):
-            print('Z2M : ',topic, payload.decode())
+        elif ('set_alarm_state' in str(topic)) and not ('homeassistant'in str(topic)):
+            get_id = (topic.split("/"))[2] #extract id from mqtt
+            ### TODO = Alarm commmand triage
 
+
+            await Alarm.put_alarm_state(tydom_client=self.tydom, alarm_id=get_id, command=str(json.loads(payload)))
         else:
             pass
             # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
