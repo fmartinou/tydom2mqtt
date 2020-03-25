@@ -59,7 +59,7 @@ except FileNotFoundError :
     TYDOM_MAC = os.getenv('TYDOM_MAC') #MAC Address of Tydom Box
     TYDOM_IP = os.getenv('TYDOM_IP', 'mediation.tydom.com') # Local ip address, default to mediation.tydom.com for remote connexion if not specified
     TYDOM_PASSWORD = os.getenv('TYDOM_PASSWORD') #Tydom password
-
+    TYDOM_ALARM_PIN = os.getenv('TYDOM_ALARM_PIN')
     ####### CREDENTIALS MQTT
     MQTT_HOST = os.getenv('MQTT_HOST', 'localhost')
     MQTT_USER = os.getenv('MQTT_USER')
