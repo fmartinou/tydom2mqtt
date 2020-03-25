@@ -7,8 +7,14 @@ docker run \
   -e TYDOM_IP='192.168.1.xx' \
   -e TYDOM_PASSWORD='TYDOM_PASSWORD' \
   -e MQTT_USER='MQTT_USER' \
-  -e MQTT_PASSWORD='MQTT_PASSWORD*' \
+  -e MQTT_PASSWORD='MQTT_PASSWORD' \
+  -e MQTT_PORT='MQTT_PORT' \
+  -e MQTT_SSL='MQTT_SSL' \
   mrwiwi/tydom2mqtt_edge
+
+# TYDOM_IP, MQTT_PORT and MQTT_SLL are optional.
+
+
 
 # ####### CREDENTIALS TYDOM
 # TYDOM_MAC = os.environ['TYDOM_MAC'] #MAC Address of Tydom Box
