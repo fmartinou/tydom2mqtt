@@ -1,4 +1,3 @@
-
 from cover import Cover
 from alarm_control_panel import Alarm
 # from sensor import Sensor
@@ -252,7 +251,7 @@ class TydomMessageHandler():
                                         if ('alarmState' in attr and attr['alarmState'] == "ON") or ('alarmState' in attr and attr['alarmState']) == "QUIET":
                                             state = "triggered"
                                         
-                                        elif attr and attr['alarmState'] == "DELAYED":
+                                        elif 'alarmState' in attr and attr['alarmState'] == "DELAYED":
                                             state = "pending"
 
                                         if 'alarmSOS' in attr and attr['alarmSOS'] == "true":
