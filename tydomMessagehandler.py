@@ -1,6 +1,8 @@
 
 from cover import Cover
 from alarm_control_panel import Alarm
+# from sensor import Sensor
+
 from http.server import BaseHTTPRequestHandler
 from http.client import HTTPResponse
 import urllib3
@@ -30,23 +32,23 @@ class TydomMessageHandler():
 
         bytes_str = self.incoming_bytes        
         incoming = None
-
         first = str(bytes_str[:40]) # Scanning 1st characters
 
         try:
             if ("refresh" in first):
-                print('OK refresh message detected !')
-                try:
-                    pass
-                    #ish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
-                except:
-                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    print('RAW INCOMING :')
-                    print(bytes_str)
-                    print('END RAW')
-                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                pass
+                # print('OK refresh message detected !')
+                # try:
+                #     pass
+                #     #ish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
+                # except:
+                #     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                #     print('RAW INCOMING :')
+                #     print(bytes_str)
+                #     print('END RAW')
+                #     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
             elif ("PUT /devices/data" in first) or ("/devices/cdata" in first):
-                print('PUT /devices/data message detected !')
+                # print('PUT /devices/data message detected !')
                 try:
                     incoming = self.parse_put_response(bytes_str)
 
@@ -122,15 +124,20 @@ class TydomMessageHandler():
             print(e)
             print('Exiting to ensure systemd restart....')
             sys.exit() #Exit all to ensure systemd restart
-            # print(bytes_str)
-            # print('Reconnecting in 8s')
-            # await asyncio.sleep(8)
-            # await self.connect()
 
     # Basic response parsing. Typically GET responses + instanciate covers and alarm class for updating data
     async def parse_response(self, incoming):
         data = incoming
         msg_type = None
+
+        # try:
+        #     parsed = json.loads(data)
+        #     # print(parsed)
+        # except Exception as e:
+        #     if not ('Expecting' in e):
+        #         print("Incoming Parse Error : ", e)
+        #         print(parsed)
+
         first = str(data[:40])
         
         # Detect type of incoming data
@@ -153,15 +160,14 @@ class TydomMessageHandler():
                 msg_type = 'msg_info'
                 # print(data)        
             else:
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 print('Incoming message type : no type detected')
                 print(first)
 
             if not (msg_type == None):
-                try:
-                    parsed = json.loads(data)
-                    # print(parsed)
+                try:                    
                     if (msg_type == 'msg_config'):
+                        parsed = json.loads(data)
+                        print(parsed)
                         for i in parsed["endpoints"]:
                             # Get list of shutter
                             if i["last_usage"] == 'shutter':
@@ -175,7 +181,9 @@ class TydomMessageHandler():
                         print('Configuration updated')
                         
                     elif (msg_type == 'msg_data'):
-                        # print(parsed)
+                        parsed = json.loads(data)
+                        print(parsed)
+
                         for i in parsed:
                             attr = {}
 
@@ -193,6 +201,17 @@ class TydomMessageHandler():
                                         # print(elementName,elementValue,elementValidity)
                                         # Get last known position (for shutter)
                                         if elementName == 'position' and elementValidity == 'upToDate':
+                                            # /*
+                                            # // https://github.com/mgcrea/homebridge-tydom/issues/2
+                                            # {name: 'thermicDefect', validity: 'upToDate', value: false},
+                                            # {name: 'position', validity: 'upToDate', value: 98},
+                                            # {name: 'onFavPos', validity: 'upToDate', value: false},
+                                            # {name: 'obstacleDefect', validity: 'upToDate', value: false},
+                                            # {name: 'intrusion', validity: 'upToDate', value: false},
+                                            # {name: 'battDefect', validity: 'upToDate', value: false}
+                                            # */
+                                            #TODO : Sensors with everything
+
                                             name_of_id = self.get_name_from_id(endpoint_id)
                                             if len(name_of_id) != 0:
                                                 print_id = name_of_id
@@ -214,18 +233,40 @@ class TydomMessageHandler():
                                     # print(attr)
                                     state = None
                                     sos_state = False
+                                    maintenance_mode = False
                                     out = None
                                     try:
-                                        if 'alarmState' in attr and attr['alarmState'] == "ON":
+                                        # {
+                                        # "name": "alarmState",
+                                        # "type": "string",
+                                        # "permission": "r",
+                                        # "enum_values": ["OFF", "DELAYED", "ON", "QUIET"]
+                                        # },
+                                        # {
+                                        # "name": "alarmMode",
+                                        # "type": "string",
+                                        # "permission": "r",
+                                        # "enum_values": ["OFF", "ON", "TEST", "ZONE", "MAINTENANCE"]
+                                        # }
+
+                                        if ('alarmState' in attr and attr['alarmState'] == "ON") or ('alarmState' in attr and attr['alarmState']) == "QUIET":
                                             state = "triggered"
+                                        
+                                        elif attr and attr['alarmState'] == "DELAYED":
+                                            state = "pending"
+
                                         if 'alarmSOS' in attr and attr['alarmSOS'] == "true":
                                             state = "triggered"
-                                            sos_state = True                                                                               
+                                            sos_state = True
+
                                         elif 'alarmMode' in attr and attr ["alarmMode"]  == "ON":
                                             state = "armed_away"
                                         elif 'alarmMode' in attr and attr["alarmMode"]  == "ZONE":
                                             state = "armed_home"
                                         elif 'alarmMode' in attr and attr["alarmMode"]  == "OFF":
+                                            state = "disarmed"
+                                        elif 'alarmMode' in attr and attr["alarmMode"]  == "MAINTENANCE":
+                                            maintenance_mode = True
                                             state = "disarmed"
 
                                         if 'outTemperature' in attr:
@@ -238,7 +279,7 @@ class TydomMessageHandler():
                                             # print(state)
                                             alarm = "alarm_tydom_"+str(endpoint_id)
                                             # print("Alarm created / updated : "+alarm)
-                                            alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, out_temp=out, attributes=attr, sos=str(sos_state), mqtt=self.mqtt_client)
+                                            alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, attributes=attr, mqtt=self.mqtt_client)
                                             await alarm.update()
 
                                     except Exception as e:
@@ -297,8 +338,6 @@ class TydomMessageHandler():
                         print()
                         print(json.dumps(parsed, sort_keys=True, indent=4, separators=(',', ': ')))
                 except Exception as e:
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
                     print('Cannot parse response !')
                     # print('Response :')
                     # print(data)

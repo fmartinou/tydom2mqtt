@@ -3,7 +3,6 @@ import websockets
 import http.client
 from requests.auth import HTTPDigestAuth
 import sys
-import logging
 
 import os
 import base64
@@ -18,20 +17,16 @@ from tydomMessagehandler import TydomMessageHandler
 # Thanks https://stackoverflow.com/questions/49878953/issues-listening-incoming-messages-in-websocket-client-on-python-3-6
 
 
-# Logging
-# logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-# http.client.HTTPSConnection.debuglevel = 1
-# http.client.HTTPConnection.debuglevel = 1
-
 
 class TydomWebSocketClient():
 
-    def __init__(self, mac, password, host='mediation.tydom.com', mqtt_client=None):
+    def __init__(self, mac, password, alarm_pin=None, host='mediation.tydom.com', mqtt_client=None):
         print('Initialising TydomClient Class')
 
         self.password = password
         self.mac = mac
         self.host = host
+        self.alarm_pin = alarm_pin
         self.mqtt_client = mqtt_client
         self.connection = None
         self.remote_mode = True
@@ -232,24 +227,29 @@ class TydomWebSocketClient():
         print('PUT /devices/data send to Websocket !')
         return 0
 
-    async def put_alarm_cdata(self, alarm_id, pwd, value, zones = None):
+    async def put_alarm_cdata(self, alarm_id, asked_state, zone=None):
 
         if not self.connection.open:
             print('Connection closed, exiting to ensure restart....')
             sys.exit()
 
-        if zones != None:
+        if self.alarm_pin == None:
+            print('TYDOM_ALARM_PIN not set !')
+            pass
+
+        if zone == None:
             cmd = 'alarmCmd'
-            body="[{\"pwd\":\"" + pwd + "\",\"value\":\""+ value + "\"}]"
+            body=" "+"{\"pwd\":\"" + str(self.alarm_pin) + "\",\"value\":\""+ asked_state + "\"}"
         else:
             cmd = 'zoneCmd'
-            body="[{\"pwd\":\"" + pwd + "\",\"value\":\""+ value + "\",\"zones\":\""+ zones + "\"}]"
+            body="{\"pwd\":\"" + str(self.alarm_pin) + "\",\"value\":\""+ 'ON' + "\",\"zones\":\""+ '1' + "\"}"
 
-        
-        str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/cdata?name={} HTTP/1.1\r\nContent-Length: ".format(str(alarm_id),str(alarm_id),str(cmd))+str(len(body))+"\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"+body+"\r\n\r\n"
+        str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/cdata?name={},".format(str(alarm_id),str(alarm_id),str(cmd)) + body +");"
+        # str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/cdata?name={} HTTP/1.1\r\nContent-Length: ".format(str(alarm_id),str(alarm_id),str(cmd))+str(len(body))+"\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"+body+"\r\n\r\n"
         a_bytes = bytes(str_request, "ascii")
+        print(a_bytes)
         await self.connection.send(a_bytes)
-        print('PUT /devices/data send to Websocket !')
+        print('PUT alarm cdata send to Websocket !',a)
         return 0
 
 

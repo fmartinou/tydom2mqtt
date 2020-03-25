@@ -1,6 +1,5 @@
 import json
 import time
-
 from datetime import datetime
 
 cover_command_topic = "cover/tydom/{id}/set_positionCmd"

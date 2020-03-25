@@ -21,6 +21,7 @@ TYDOM_IP = 'mediation.tydom.com'
 MQTT_HOST = 'localhost'
 MQTT_PORT = 1883
 MQTT_SSL = False
+TYDOM_ALARM_PIN = None
 
 try:
     with open('/data/options.json') as f:
@@ -35,7 +36,7 @@ try:
                 TYDOM_IP = data['TYDOM_IP'] #, 'mediation.tydom.com') # Local ip address, default to mediation.tydom.com for remote connexion if not specified
 
             TYDOM_PASSWORD = data['TYDOM_PASSWORD'] #Tydom password
-
+            TYDOM_ALARM_PIN = data['TYDOM_ALARM_PIN']
             ####### CREDENTIALS MQTT
             if data['MQTT_HOST'] != '':
                 MQTT_HOST = data['MQTT_HOST']
@@ -78,7 +79,7 @@ def loop_task():
     hassio = MQTT_Hassio(MQTT_HOST, MQTT_PORT, MQTT_USER, MQTT_PASSWORD, MQTT_SSL)
 
     # Giving MQTT connection to tydom class for updating
-    tydom = TydomWebSocketClient(mac=TYDOM_MAC, host=TYDOM_IP, password=TYDOM_PASSWORD, mqtt_client=hassio)
+    tydom = TydomWebSocketClient(mac=TYDOM_MAC, host=TYDOM_IP, password=TYDOM_PASSWORD, alarm_pin=TYDOM_ALARM_PIN, mqtt_client=hassio)
 
     # Start connection and get client connection protocol
     loop.run_until_complete(tydom.mqtt_client.connect())

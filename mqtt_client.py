@@ -19,13 +19,14 @@ hostname = socket.gethostname()
 # STOP = asyncio.Event()
 class MQTT_Hassio():
 
-    def __init__(self, broker_host, port, user, password, mqtt_ssl, tydom = None):
+    def __init__(self, broker_host, port, user, password, mqtt_ssl, tydom = None, tydom_alarm_pin = None):
         self.broker_host = broker_host
         self.port = port
         self.user = user
         self.password = password
         self.ssl = mqtt_ssl
         self.tydom = tydom
+        self.tydom_alarm_pin = tydom_alarm_pin
         self.mqtt_client = None
 
 
@@ -103,6 +104,13 @@ class MQTT_Hassio():
         #     else:
         #         await self.tydom.put_devices_data(str(get_id), 'position', str(json.loads(payload)))
         
+        elif 'set_positionCmd' in str(topic):
+            print('Incoming MQTT set_positionCmd request : ', topic, payload)
+            value = str(payload).strip('b').strip("'")
+            get_id = (topic.split("/"))[2] #extract id from mqtt
+            print(str(get_id), 'positionCmd', value)
+            await Cover.put_positionCmd(tydom_client=self.tydom, cover_id=get_id, positionCmd=str(value))
+
         elif ('set_position' in str(topic)) and not ('set_positionCmd'in str(topic)):
             
             print('Incoming MQTT set_position request : ', topic, json.loads(payload))
@@ -111,19 +119,31 @@ class MQTT_Hassio():
             get_id = (topic.split("/"))[2] #extract id from mqtt
             await Cover.put_position(tydom_client=self.tydom, cover_id=get_id, position=str(value))
 
-        elif 'set_positionCmd' in str(topic):
-            print('Incoming MQTT set_positionCmd request : ', topic, payload)
-            value = str(payload).strip('b').strip("'")
-            get_id = (topic.split("/"))[2] #extract id from mqtt
-            print(str(get_id), 'positionCmd', value)
-            await Cover.put_positionCmd(tydom_client=self.tydom, cover_id=get_id, positionCmd=str(value))
-
-        elif ('set_alarm_state' in str(topic)) and not ('homeassistant'in str(topic)):
-            get_id = (topic.split("/"))[2] #extract id from mqtt
-            ### TODO = Alarm commmand triage
 
 
-            await Alarm.put_alarm_state(tydom_client=self.tydom, alarm_id=get_id, command=str(json.loads(payload)))
+        # elif ('set_alarm_state' in str(topic)) and not ('homeassistant'in str(topic)):
+        #     # print(topic, payload, qos, properties)
+        #     command = str(payload).strip('b').strip("'")
+        #     get_id = (topic.split("/"))[2] #extract id from mqtt
+
+        #     await Alarm.put_alarm_state(tydom_client=self.tydom, alarm_id=get_id, asked_state=command)
+
+            # if 'alarmState' in attr and attr['alarmState'] == "ON":
+            #         state = "triggered"
+            #     if 'alarmSOS' in attr and attr['alarmSOS'] == "true":
+            #         state = "triggered"
+            #         sos_state = True                                                                               
+            #     elif 'alarmMode' in attr and attr ["alarmMode"]  == "ON":
+            #         state = "armed_away"
+            #     elif 'alarmMode' in attr and attr["alarmMode"]  == "ZONE":
+            #         state = "armed_home"
+            #     elif 'alarmMode' in attr and attr["alarmMode"]  == "OFF":
+            #         state = "disarmed"
+
+
+
+
+
         else:
             pass
             # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
