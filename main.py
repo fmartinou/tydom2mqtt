@@ -29,12 +29,21 @@ try:
 
             ####### CREDENTIALS MQTT
             if data['MQTT_HOST'] != '':
-                MQTT_HOST = data['MQTT_HOST'] #, 'mediation.tydom.com') # Local ip address, default to mediation.tydom.com for remote connexion if not specified
+                MQTT_HOST = data['MQTT_HOST']
             else:
                 MQTT_HOST = 'localhost'
             
             MQTT_USER = data['MQTT_USER']
             MQTT_PASSWORD = data['MQTT_PASSWORD']
+            if data['MQTT_PORT'] != '':
+                MQTT_HOST = data['MQTT_PORT']
+            else:
+                MQTT_HOST = '1883'
+
+            if data['MQTT_SSL'] == 'true':
+                MQTT_SSL = True
+            else:
+                MQTT_SSL = False
 
         except Exception as e:
             print('Parsing error', e)
@@ -50,6 +59,8 @@ except FileNotFoundError :
     MQTT_HOST = os.getenv('MQTT_HOST', 'localhost')
     MQTT_USER = os.getenv('MQTT_USER')
     MQTT_PASSWORD = os.getenv('MQTT_PASSWORD')
+    MQTT_PORT = os.getenv('MQTT_PORT', '1883') #1883 #1884 for websocket without SSL
+    MQTT_SSL = os.getenv('MQTT_SSL', False)
 
 loop = asyncio.get_event_loop()
 
@@ -58,12 +69,12 @@ def loop_task():
     tydom = None
     hassio = None
 
-    if (MQTT_HOST == 'localhost'):
-        MQTT_PORT = 1883 #1884 for websocket without SSL
-        MQTT_SSL = False
-    else:
-        MQTT_PORT = 8883 #8884 for websocket
-        MQTT_SSL = True
+    # if (MQTT_HOST == 'localhost'):
+    #     MQTT_PORT = 1883 #1884 for websocket without SSL
+    #     MQTT_SSL = False
+    # else:
+    #     MQTT_PORT = 8883 #8884 for websocket
+    #     MQTT_SSL = True
 
     # Creating client object
     hassio = MQTT_Hassio(MQTT_HOST, MQTT_PORT, MQTT_USER, MQTT_PASSWORD, MQTT_SSL)
