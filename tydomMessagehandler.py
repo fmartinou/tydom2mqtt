@@ -9,11 +9,16 @@ from io import BytesIO
 import json
 import sys
 
-
 # Dicts
 deviceAlarmKeywords = ['alarmMode','alarmState','alarmSOS','zone1State','zone2State','zone3State','zone4State','zone5State','zone6State','zone7State','zone8State','gsmLevel','inactiveProduct','zone1State','liveCheckRunning','networkDefect','unitAutoProtect','unitBatteryDefect','unackedEvent','alarmTechnical','systAutoProtect','sysBatteryDefect','zsystSupervisionDefect','systOpenIssue','systTechnicalDefect','videoLinkDefect', 'outTemperature']
+deviceAlarmDetailsKeywords = ['alarmSOS','zone1State','zone2State','zone3State','zone4State','zone5State','zone6State','zone7State','zone8State','gsmLevel','inactiveProduct','zone1State','liveCheckRunning','networkDefect','unitAutoProtect','unitBatteryDefect','unackedEvent','alarmTechnical','systAutoProtect','sysBatteryDefect','zsystSupervisionDefect','systOpenIssue','systTechnicalDefect','videoLinkDefect', 'outTemperature']
+
+deviceCoverKeywords = ['position','onFavPos','thermicDefect','obstacleDefect','intrusion','battDefect']
+deviceCoverDetailsKeywords = ['onFavPos','thermicDefect','obstacleDefect','intrusion','battDefect']
+
 # Device dict for parsing
 device_dict = dict()
+
 climateKeywords = ['temperature', 'authorization', 'hvacMode', 'setpoint']
 
 
@@ -30,99 +35,100 @@ class TydomMessageHandler():
     async def incomingTriage(self):
 
         bytes_str = self.incoming_bytes        
-        incoming = None
-        first = str(bytes_str[:40]) # Scanning 1st characters
+        if self.mqtt_client == None: #If not MQTT client, return incoming message to use it with anything.
+            return bytes_str
+        else:
+            incoming = None
+            first = str(bytes_str[:40]) # Scanning 1st characters
+            try:
+                if ("refresh" in first):
+                    pass
+                    # print('OK refresh message detected !')
+                    # try:
+                    #     pass
+                    #     #ish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
+                    # except:
+                    #     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                    #     print('RAW INCOMING :')
+                    #     print(bytes_str)
+                    #     print('END RAW')
+                    #     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                elif ("PUT /devices/data" in first) or ("/devices/cdata" in first):
+                    # print('PUT /devices/data message detected !')
+                    try:
+                        incoming = self.parse_put_response(bytes_str)
+                        await self.parse_response(incoming)
+                    except:
+                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        print('RAW INCOMING :')
+                        print(bytes_str)
+                        print('END RAW')
+                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                elif ("scn" in first):
+                    try:
+                        # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        incoming = get(bytes_str)
+                        await self.parse_response(incoming)
+                        print('Scenarii message processed !')
+                        print("##################################")
+                    except:
+                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        print('RAW INCOMING :')
+                        print(bytes_str)
+                        print('END RAW')
+                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")            
+                elif ("POST" in first):
+                    try:
+                        # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        incoming = self.parse_put_response(bytes_str)
+                        await self.parse_response(incoming)
+                        print('POST message processed !')
+                        # print("##################################")
+                    except:
+                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        print('RAW INCOMING :')
+                        print(bytes_str)
+                        print('END RAW')
+                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                elif ("HTTP/1.1" in first): #(bytes_str != 0) and 
+                    response = self.response_from_bytes(bytes_str[len(self.cmd_prefix):])
+                    incoming = response.data.decode("utf-8")
+                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                    # print(incoming)
+                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                    try:
+                        # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        await self.parse_response(incoming)
+                        # print('Pong !')
+                        # print("##################################")
+                    except:
+                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        print('RAW INCOMING :')
+                        print(bytes_str)
+                        print('END RAW')
+                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        # await parse_put_response(incoming)
+                else:
+                    print("Didn't detect incoming type, here it is :")
+                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                    print('RAW INCOMING :')
+                    print(bytes_str)
+                    print('END RAW')
+                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 
-        try:
-            if ("refresh" in first):
-                pass
-                # print('OK refresh message detected !')
-                # try:
-                #     pass
-                #     #ish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
-                # except:
-                #     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                #     print('RAW INCOMING :')
-                #     print(bytes_str)
-                #     print('END RAW')
-                #     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            elif ("PUT /devices/data" in first) or ("/devices/cdata" in first):
-                # print('PUT /devices/data message detected !')
-                try:
-                    incoming = self.parse_put_response(bytes_str)
-
-                    await self.parse_response(incoming)
-                except:
-                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    print('RAW INCOMING :')
-                    print(bytes_str)
-                    print('END RAW')
-                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            elif ("scn" in first):
-                try:
-                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    incoming = get(bytes_str)
-                    await self.parse_response(incoming)
-                    print('Scenarii message processed !')
-                    print("##################################")
-                except:
-                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    print('RAW INCOMING :')
-                    print(bytes_str)
-                    print('END RAW')
-                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")            
-            elif ("POST" in first):
-                try:
-                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    incoming = self.parse_put_response(bytes_str)
-                    await self.parse_response(incoming)
-                    print('POST message processed !')
-                    # print("##################################")
-                except:
-                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    print('RAW INCOMING :')
-                    print(bytes_str)
-                    print('END RAW')
-                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            elif ("HTTP/1.1" in first): #(bytes_str != 0) and 
-                response = self.response_from_bytes(bytes_str[len(self.cmd_prefix):])
-                incoming = response.data.decode("utf-8")
-                # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                # print(incoming)
-                # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                try:
-                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    await self.parse_response(incoming)
-                    # print('Pong !')
-                    # print("##################################")
-                except:
-                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    print('RAW INCOMING :')
-                    print(bytes_str)
-                    print('END RAW')
-                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    # await parse_put_response(incoming)
-            else:
-                print("Didn't detect incoming type, here it is :")
-                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                print('RAW INCOMING :')
+            except Exception as e:
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print('receiveMessage error')
+                print('RAW :')
                 print(bytes_str)
-                print('END RAW')
-                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-
-        except Exception as e:
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            print('receiveMessage error')
-            print('RAW :')
-            print(bytes_str)
-            print("Incoming payload :")
-            print(incoming)
-            print("Error :")
-            print(e)
-            print('Exiting to ensure systemd restart....')
-            sys.exit() #Exit all to ensure systemd restart
+                print("Incoming payload :")
+                print(incoming)
+                print("Error :")
+                print(e)
+                print('Exiting to ensure systemd restart....')
+                sys.exit() #Exit all to ensure systemd restart
 
     # Basic response parsing. Typically GET responses + instanciate covers and alarm class for updating data
     async def parse_response(self, incoming):
@@ -166,168 +172,13 @@ class TydomMessageHandler():
                 try:                    
                     if (msg_type == 'msg_config'):
                         parsed = json.loads(data)
-                        print(parsed)
-                        for i in parsed["endpoints"]:
-                            # Get list of shutter
-                            if i["last_usage"] == 'shutter':
-                                # print('{} {}'.format(i["id_endpoint"],i["name"]))
-                                # device_dict[i["id_endpoint"]] = i["name"]
-                                device_dict[i["id_device"]] = i["name"]
-                                # TODO get other device type
-                            if i["last_usage"] == 'alarm':
-                                # print('{} {}'.format(i["id_endpoint"], i["name"]))
-                                device_dict[i["id_endpoint"]] = "Tyxal Alarm"
-                        print('Configuration updated')
+                        # print(parsed)
+                        await self.parse_config_data(parsed=parsed)
                         
                     elif (msg_type == 'msg_data'):
                         parsed = json.loads(data)
-                        print(parsed)
-
-                        for i in parsed:
-                            attr = {}
-
-                            if i["endpoints"][0]["error"] == 0:
-                                try:
-                                    for elem in i["endpoints"][0]["data"]:
-                                        # Get full name of this id
-                                        # endpoint_id = i["endpoints"][0]["id"]
-                                        endpoint_id = i["id"] # thanks @azrod 
-                                        # Element name
-                                        elementName = elem["name"]
-                                        # Element value
-                                        elementValue = elem["value"]
-                                        elementValidity = elem["validity"]
-                                        # print(elementName,elementValue,elementValidity)
-                                        # Get last known position (for shutter)
-                                        if elementName == 'position' and elementValidity == 'upToDate':
-                                            # /*
-                                            # // https://github.com/mgcrea/homebridge-tydom/issues/2
-                                            # {name: 'thermicDefect', validity: 'upToDate', value: false},
-                                            # {name: 'position', validity: 'upToDate', value: 98},
-                                            # {name: 'onFavPos', validity: 'upToDate', value: false},
-                                            # {name: 'obstacleDefect', validity: 'upToDate', value: false},
-                                            # {name: 'intrusion', validity: 'upToDate', value: false},
-                                            # {name: 'battDefect', validity: 'upToDate', value: false}
-                                            # */
-                                            #TODO : Sensors with everything
-
-                                            name_of_id = self.get_name_from_id(endpoint_id)
-                                            if len(name_of_id) != 0:
-                                                print_id = name_of_id
-                                            else:
-                                                print_id = endpoint_id
-                                            # print('{} : {}'.format(print_id, elementValue))
-                                            new_cover = "cover_tydom_"+str(endpoint_id)
-                                            new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
-                                            await new_cover.update()
-
-                                        # Get last known state (for alarm) # NEW METHOD
-                                        if elementName in deviceAlarmKeywords and elementValidity == 'upToDate':
-                                            attr[elementName] = elementValue
-                                except Exception as e:
-                                    print('msg_data error in parsing !')
-                                    print(e)
-                                # Get last known state (for alarm) # NEW METHOD
-                                if attr != {}:
-                                    # print(attr)
-                                    state = None
-                                    sos_state = False
-                                    maintenance_mode = False
-                                    out = None
-                                    try:
-                                        # {
-                                        # "name": "alarmState",
-                                        # "type": "string",
-                                        # "permission": "r",
-                                        # "enum_values": ["OFF", "DELAYED", "ON", "QUIET"]
-                                        # },
-                                        # {
-                                        # "name": "alarmMode",
-                                        # "type": "string",
-                                        # "permission": "r",
-                                        # "enum_values": ["OFF", "ON", "TEST", "ZONE", "MAINTENANCE"]
-                                        # }
-
-                                        if ('alarmState' in attr and attr['alarmState'] == "ON") or ('alarmState' in attr and attr['alarmState']) == "QUIET":
-                                            state = "triggered"
-                                        
-                                        elif 'alarmState' in attr and attr['alarmState'] == "DELAYED":
-                                            state = "pending"
-
-                                        if 'alarmSOS' in attr and attr['alarmSOS'] == "true":
-                                            state = "triggered"
-                                            sos_state = True
-
-                                        elif 'alarmMode' in attr and attr ["alarmMode"]  == "ON":
-                                            state = "armed_away"
-                                        elif 'alarmMode' in attr and attr["alarmMode"]  == "ZONE":
-                                            state = "armed_home"
-                                        elif 'alarmMode' in attr and attr["alarmMode"]  == "OFF":
-                                            state = "disarmed"
-                                        elif 'alarmMode' in attr and attr["alarmMode"]  == "MAINTENANCE":
-                                            maintenance_mode = True
-                                            state = "disarmed"
-
-                                        if 'outTemperature' in attr:
-                                            out = attr["outTemperature"]
-
-                                        if (sos_state == True):
-                                            print("SOS !")
-
-                                        if not (state == None):
-                                            # print(state)
-                                            alarm = "alarm_tydom_"+str(endpoint_id)
-                                            # print("Alarm created / updated : "+alarm)
-                                            alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, attributes=attr, mqtt=self.mqtt_client)
-                                            await alarm.update()
-
-                                    except Exception as e:
-                                        print("Error in alarm parsing !")
-                                        print(e)
-                                        pass
-
-
-
-                                    # Get last known state (for alarm) # OLD Method, probably compatible if you have multiple alarms
-                                    # if elementName in deviceAlarmKeywords:
-                                    #     # print(i["endpoints"][0]["data"])
-                                    #     alarm_data = '{} : {}'.format(elementName, elementValue)
-                                    #     # print(alarm_data)
-                                    #     # alarmMode  : ON or ZONE or OFF
-                                    #     # alarmState : ON = Triggered
-                                    #     # alarmSOS   : true = SOS triggered
-                                    #     state = None
-                                    #     sos_state = False
-                                    #     out = None
-                                    #     print(alarm_data)
-                                    #     if alarm_data == "alarmState : ON":
-                                    #         state = "triggered"
-                                    #     if alarm_data == "alarmSOS : true":
-                                    #         state = "triggered"
-                                    #         sos_state = True
-                                    #     if alarm_data == "alarmMode : ON":
-                                    #         state = "armed_away"
-                                    #     if alarm_data == "alarmMode : ZONE":
-                                    #         state = "armed_home"
-                                    #     if alarm_data == "alarmMode : OFF":
-                                    #         state = "disarmed"
-
-                                    #     if elementName == "outTemperature":
-                                    #         out = elementValue
-                                    #     else:
-                                    #         attr[elementName] = [elementValue]
-                                    #     #     attr[alarm_data]
-                                    #         # print(attr)
-                                    #     #device_dict[i["id_endpoint"]] = i["name"]
-                                    #     if (sos_state == True):
-                                    #         print("SOS !")
-                                    #     if not (state == None):
-                                    #         # print(state)
-                                    #         alarm = "alarm_tydom_"+str(endpoint_id)
-                                    #         # print("Alarm created / updated : "+alarm)
-                                    #         alarm = Alarm(id=endpoint_id,name="Tyxal Alarm", current_state=state, out_temp=out, attributes=attr, sos=str(sos_state), mqtt=self.mqtt_client)
-                                    #         alarm.update()
-
+                        # print(parsed)
+                        await self.parse_devices_data(parsed=parsed)
                     elif (msg_type == 'msg_html'):
                         print("HTML Response ?")
                     elif (msg_type == 'msg_info'):
@@ -343,8 +194,157 @@ class TydomMessageHandler():
                     if (e != 'Expecting value: line 1 column 1 (char 0)'):
                         print("Error : ", e)
                         print(parsed)
+            print('Incoming data parsed')
+            return(0)
+    async def parse_config_data(self, parsed):
+        for i in parsed["endpoints"]:
+            # Get list of shutter
+            if i["last_usage"] == 'shutter':
+                # print('{} {}'.format(i["id_endpoint"],i["name"]))
+                # device_dict[i["id_endpoint"]] = i["name"]
+                device_dict[i["id_device"]] = i["name"]
+                # TODO get other device type
+            if i["last_usage"] == 'alarm':
+                # print('{} {}'.format(i["id_endpoint"], i["name"]))
+                device_dict[i["id_endpoint"]] = "Tyxal Alarm"
+        print('Configuration updated')
+        
+    async def parse_devices_data(self, parsed):
+        for i in parsed:
+            if i["endpoints"][0]["error"] == 0:
+                try:
+                    attr_alarm = {}
+                    attr_alarm_details = {}
+                    attr_cover = {}
+                    attr_cover_details = {}
+
+                    for elem in i["endpoints"][0]["data"]:
+                        # Get full name of this id
+                        # endpoint_id = i["endpoints"][0]["id"]
+                        endpoint_id = i["id"] # thanks @azrod
+                        # Element name
+                        elementName = elem["name"]
+                        # Element value
+                        elementValue = elem["value"]
+                        elementValidity = elem["validity"]
+                        # print(elementName,elementValue,elementValidity)
+                        ##### COVERS
+                        if elementName in deviceCoverKeywords and elementValidity == 'upToDate': #NEW METHOD
+                            
+                        # if elementName == 'position' and elementValidity == 'upToDate':
+                            # /*
+                            # // https://github.com/mgcrea/homebridge-tydom/issues/2
+                            # {name: 'thermicDefect', validity: 'upToDate', value: false},
+                            # {name: 'position', validity: 'upToDate', value: 98},
+                            # {name: 'onFavPos', validity: 'upToDate', value: false},
+                            # {name: 'obstacleDefect', validity: 'upToDate', value: false},
+                            # {name: 'intrusion', validity: 'upToDate', value: false},
+                            # {name: 'battDefect', validity: 'upToDate', value: false}
+                            # */
+                            #TODO : Sensors with everything
+                            print_id = None
+                            name_of_id = self.get_name_from_id(endpoint_id)
+                            if len(name_of_id) != 0:
+                                print_id = name_of_id
+                            else:
+                                print_id = endpoint_id
+
+                            attr_cover['id'] = i["id"]
+                            attr_cover['cover_name'] = print_id
+                            attr_cover['device_type'] = 'cover'
+                            if elementName in deviceCoverDetailsKeywords:
+                                attr_cover_details[elementName] = elementValue
+                            else:
+                                attr_cover[elementName] = elementValue
+                            attr_cover['attributes'] = attr_cover_details
+                        ##### ALARM
+
+                        # Get last known state (for alarm) # NEW METHOD
+                        elif elementName in deviceAlarmKeywords and elementValidity == 'upToDate':
+                            # print(elementName,elementValue)
+                            attr_alarm['id'] = i["id"]
+                            attr_alarm['device_type'] = 'alarm_control_panel'
+                            if elementName in deviceAlarmDetailsKeywords:
+                                attr_alarm_details[elementName] = elementValue
+                            else:
+
+                                attr_alarm[elementName] = elementValue
+                            attr_alarm['attributes'] = attr_alarm_details #KEEPING original details for attributes
+                            # print(attr_alarm['attributes'])
+                except Exception as e:
+                    print('msg_data error in parsing !')
+                    print(e)
+
+                if 'device_type' in attr_cover and attr_cover['device_type'] == 'cover':
+                    # print(attr_cover)
+                    new_cover = "cover_tydom_"+str(endpoint_id)
+                    new_cover = Cover(id=attr_cover['id'],name=attr_cover['cover_name'], current_position=attr_cover['position'], attributes=attr_cover['attributes'], mqtt=self.mqtt_client) #NEW METHOD
+                    # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
+                    await new_cover.update()
+
+                # Get last known state (for alarm) # NEW METHOD
+                elif 'device_type' in attr_alarm and attr_alarm['device_type'] == 'alarm_control_panel':
+                    print(attr_alarm)
+                    state = None
+                    sos_state = False
+                    maintenance_mode = False
+                    out = None
+                    try:
+                        # {
+                        # "name": "alarmState",
+                        # "type": "string",
+                        # "permission": "r",
+                        # "enum_values": ["OFF", "DELAYED", "ON", "QUIET"]
+                        # },
+                        # {
+                        # "name": "alarmMode",
+                        # "type": "string",
+                        # "permission": "r",
+                        # "enum_values": ["OFF", "ON", "TEST", "ZONE", "MAINTENANCE"]
+                        # }
+
+                        if ('alarmState' in attr_alarm and attr_alarm['alarmState'] == "ON") or ('alarmState' in attr_alarm and attr_alarm['alarmState']) == "QUIET":
+                            state = "triggered"
+                        
+                        elif 'alarmState' in attr_alarm and attr_alarm['alarmState'] == "DELAYED":
+                            state = "pending"
+
+                        if 'alarmSOS' in attr_alarm['attributes'] and attr_alarm['attributes']['alarmSOS'] == "true":
+                            state = "triggered"
+                            sos_state = True
+
+                        elif 'alarmMode' in attr_alarm and attr_alarm ["alarmMode"]  == "ON":
+                            state = "armed_away"
+                        elif 'alarmMode' in attr_alarm and attr_alarm["alarmMode"]  == "ZONE":
+                            state = "armed_home"
+                        elif 'alarmMode' in attr_alarm and attr_alarm["alarmMode"]  == "OFF":
+                            state = "disarmed"
+                        elif 'alarmMode' in attr_alarm and attr_alarm["alarmMode"]  == "MAINTENANCE":
+                            maintenance_mode = True
+                            state = "disarmed"
+
+                        if 'outTemperature' in attr_alarm:
+                            out = attr_alarm["outTemperature"]
+
+                        if (sos_state == True):
+                            print("SOS !")
+
+                        if not (state == None):
+                            # print(state)
+                            alarm = "alarm_tydom_"+str(endpoint_id)
+                            # print("Alarm created / updated : "+alarm)
+                            alarm = Alarm(id=attr_alarm['id'],name="Tyxal Alarm", current_state=state, attributes=attr_alarm['attributes'], mqtt=self.mqtt_client)
+                            await alarm.update()
+
+                    except Exception as e:
+                        print("Error in alarm parsing !")
+                        print(e)
+                        pass
 
 
+
+                else:
+                    pass
     # PUT response DIRTY parsing
     def parse_put_response(self, bytes_str):
         # TODO : Find a cooler way to parse nicely the PUT HTTP response
