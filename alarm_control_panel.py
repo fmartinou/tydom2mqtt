@@ -47,22 +47,28 @@ class Alarm:
 
         print("Alarm created / updated : ", self.name, self.id, self.current_state)
 
-    async def put_alarm_state(tydom_client, alarm_id, asked_state=None):
+
+
+    async def put_alarm_state(tydom_client, alarm_id, home_zone, night_zone, asked_state=None):
         print(tydom_client, alarm_id, asked_state)
 
-        state = None
-        zone = None
-        if asked_state == 'ARM_AWAY':
-            state = 'ON'
-            zone = None
-        elif asked_state == 'ARM_HOME' or asked_state == 'ARM_NIGHT': #TODO : Separate both and let user specify with zone is what
-            state = "ON"
-            zone = "zone1"
-        elif asked_state == 'DISARM':
-            state = 'OFF'
-            zone = None
+        value = None
+        zone_id = None
 
-        await tydom_client.put_alarm_cdata(alarm_id=alarm_id, asked_state=state, zone=zone)
+        if asked_state == 'ARM_AWAY':
+            value = 'ON'
+            zone_id = None
+        elif asked_state == 'ARM_HOME': #TODO : Separate both and let user specify with zone is what
+            value = "ON"
+            zone_id = home_zone
+        elif asked_state == 'ARM_NIGHT': #TODO : Separate both and let user specify with zone is what
+            value = "ON"
+            zone_id = night_zone
+        elif asked_state == 'DISARM':
+            value = 'OFF'
+            zone_id = None
+
+        await tydom_client.put_alarm_cdata(alarm_id=alarm_id, value=value, zone_id=zone_id)
 
         # update_pub = '(self.state_topic, self.current_state, qos=0, retain=True)'
         # return(update_pub)

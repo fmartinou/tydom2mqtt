@@ -10,7 +10,7 @@ from tydom_websocket import TydomWebSocketClient
 
 ############ HASSIO ADDON
 
-print('STARTING MAIN LOOP TYDOM2MQTT')
+print('STARTING TYDOM2MQTT')
 
 print('Dectecting environnement......')
 
@@ -22,6 +22,9 @@ MQTT_HOST = 'localhost'
 MQTT_PORT = 1883
 MQTT_SSL = False
 TYDOM_ALARM_PIN = None
+TYDOM_ALARM_HOME_ZONE = 1
+TYDOM_ALARM_NIGHT_ZONE = 2
+
 
 try:
     with open('/data/options.json') as f:
@@ -37,6 +40,10 @@ try:
 
             TYDOM_PASSWORD = data['TYDOM_PASSWORD'] #Tydom password
             TYDOM_ALARM_PIN = data['TYDOM_ALARM_PIN']
+
+            TYDOM_ALARM_HOME_ZONE = data['TYDOM_ALARM_HOME_ZONE']
+            TYDOM_ALARM_NIGHT_ZONE = data['TYDOM_ALARM_NIGHT_ZONE']
+
             ####### CREDENTIALS MQTT
             if data['MQTT_HOST'] != '':
                 MQTT_HOST = data['MQTT_HOST']
@@ -60,6 +67,8 @@ except FileNotFoundError :
     TYDOM_IP = os.getenv('TYDOM_IP', 'mediation.tydom.com') # Local ip address, default to mediation.tydom.com for remote connexion if not specified
     TYDOM_PASSWORD = os.getenv('TYDOM_PASSWORD') #Tydom password
     TYDOM_ALARM_PIN = os.getenv('TYDOM_ALARM_PIN')
+    TYDOM_ALARM_HOME_ZONE = os.getenv('TYDOM_ALARM_HOME_ZONE', 1)
+    TYDOM_ALARM_NIGHT_ZONE = os.getenv('TYDOM_ALARM_NIGHT_ZONE', 2)
     ####### CREDENTIALS MQTT
     MQTT_HOST = os.getenv('MQTT_HOST', 'localhost')
     MQTT_USER = os.getenv('MQTT_USER')
@@ -74,11 +83,9 @@ def loop_task():
     tydom = None
     hassio = None
 
-
     # Creating client object
-    hassio = MQTT_Hassio(MQTT_HOST, MQTT_PORT, MQTT_USER, MQTT_PASSWORD, MQTT_SSL)
-
-    # Giving MQTT connection to tydom class for updating
+    hassio = MQTT_Hassio(broker_host=MQTT_HOST, port=MQTT_PORT, user=MQTT_USER, password=MQTT_PASSWORD, mqtt_ssl=MQTT_SSL, home_zone=TYDOM_ALARM_HOME_ZONE, night_zone=TYDOM_ALARM_NIGHT_ZONE)
+    # Giving MQTT connection to tydom client
     tydom = TydomWebSocketClient(mac=TYDOM_MAC, host=TYDOM_IP, password=TYDOM_PASSWORD, alarm_pin=TYDOM_ALARM_PIN, mqtt_client=hassio)
 
     # Start connection and get client connection protocol

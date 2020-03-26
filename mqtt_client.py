@@ -19,7 +19,7 @@ hostname = socket.gethostname()
 # STOP = asyncio.Event()
 class MQTT_Hassio():
 
-    def __init__(self, broker_host, port, user, password, mqtt_ssl, tydom = None, tydom_alarm_pin = None):
+    def __init__(self, broker_host, port, user, password, mqtt_ssl, home_zone=1, night_zone=2, tydom = None, tydom_alarm_pin = None):
         self.broker_host = broker_host
         self.port = port
         self.user = user
@@ -28,7 +28,8 @@ class MQTT_Hassio():
         self.tydom = tydom
         self.tydom_alarm_pin = tydom_alarm_pin
         self.mqtt_client = None
-
+        self.home_zone = home_zone
+        self.night_zone = night_zone
 
     async def connect(self):
 
@@ -121,28 +122,12 @@ class MQTT_Hassio():
 
 
 
-        # elif ('set_alarm_state' in str(topic)) and not ('homeassistant'in str(topic)):
-        #     # print(topic, payload, qos, properties)
-        #     command = str(payload).strip('b').strip("'")
-        #     get_id = (topic.split("/"))[2] #extract id from mqtt
+        elif ('set_alarm_state' in str(topic)) and not ('homeassistant'in str(topic)):
+            # print(topic, payload, qos, properties)
+            command = str(payload).strip('b').strip("'")
+            get_id = (topic.split("/"))[2] #extract id from mqtt
 
-        #     await Alarm.put_alarm_state(tydom_client=self.tydom, alarm_id=get_id, asked_state=command)
-
-            # if 'alarmState' in attr and attr['alarmState'] == "ON":
-            #         state = "triggered"
-            #     if 'alarmSOS' in attr and attr['alarmSOS'] == "true":
-            #         state = "triggered"
-            #         sos_state = True                                                                               
-            #     elif 'alarmMode' in attr and attr ["alarmMode"]  == "ON":
-            #         state = "armed_away"
-            #     elif 'alarmMode' in attr and attr["alarmMode"]  == "ZONE":
-            #         state = "armed_home"
-            #     elif 'alarmMode' in attr and attr["alarmMode"]  == "OFF":
-            #         state = "disarmed"
-
-
-
-
+            await Alarm.put_alarm_state(tydom_client=self.tydom, alarm_id=get_id, asked_state=command, home_zone=self.home_zone, night_zone=self.night_zone)
 
         else:
             pass

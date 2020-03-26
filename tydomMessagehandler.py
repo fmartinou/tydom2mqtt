@@ -267,7 +267,6 @@ class TydomMessageHandler():
                             if elementName in deviceAlarmDetailsKeywords:
                                 attr_alarm_details[elementName] = elementValue
                             else:
-
                                 attr_alarm[elementName] = elementValue
                             attr_alarm['attributes'] = attr_alarm_details #KEEPING original details for attributes
                             # print(attr_alarm['attributes'])
@@ -284,7 +283,7 @@ class TydomMessageHandler():
 
                 # Get last known state (for alarm) # NEW METHOD
                 elif 'device_type' in attr_alarm and attr_alarm['device_type'] == 'alarm_control_panel':
-                    print(attr_alarm)
+                    # print(attr_alarm)
                     state = None
                     sos_state = False
                     maintenance_mode = False

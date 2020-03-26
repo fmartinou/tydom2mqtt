@@ -227,7 +227,20 @@ class TydomWebSocketClient():
         print('PUT /devices/data send to Websocket !')
         return 0
 
-    async def put_alarm_cdata(self, alarm_id, asked_state, zone=None):
+    async def put_alarm_cdata(self, alarm_id=None, value=None, zone_id=None):
+
+        # Credits to @mgcrea on github !
+        # AWAY # "PUT /devices/{}/endpoints/{}/cdata?name=alarmCmd HTTP/1.1\r\ncontent-length: 29\r\ncontent-type: application/json; charset=utf-8\r\ntransac-id: request_124\r\n\r\n\r\n{"value":"ON","pwd":{}}\r\n\r\n"
+        # HOME "PUT /devices/{}/endpoints/{}/cdata?name=zoneCmd HTTP/1.1\r\ncontent-length: 41\r\ncontent-type: application/json; charset=utf-8\r\ntransac-id: request_46\r\n\r\n\r\n{"value":"ON","pwd":"{}","zones":[1]}\r\n\r\n"
+        # DISARM "PUT /devices/{}/endpoints/{}/cdata?name=alarmCmd HTTP/1.1\r\ncontent-length: 30\r\ncontent-type: application/json; charset=utf-8\r\ntransac-id: request_7\r\n\r\n\r\n{"value":"OFF","pwd":"{}"}\r\n\r\n"
+
+        # variables:
+        # id
+        # Cmd
+        # value
+        # pwd
+        # zones
+
 
         if not self.connection.open:
             print('Connection closed, exiting to ensure restart....')
@@ -236,33 +249,34 @@ class TydomWebSocketClient():
         if self.alarm_pin == None:
             print('TYDOM_ALARM_PIN not set !')
             pass
+        try:
+            Cmd = None
 
-        if zone == None:
-            cmd = 'alarmCmd'
-            body=" "+"{\"pwd\":\"" + str(self.alarm_pin) + "\",\"value\":\""+ asked_state + "\"}"
-        else:
-            cmd = 'zoneCmd'
-            body="{\"pwd\":\"" + str(self.alarm_pin) + "\",\"value\":\""+ 'ON' + "\",\"zones\":\""+ '1' + "\"}"
+            if zone_id == None:
+                Cmd = 'alarmCmd'
+                body="{\"value\":\"" + str(value) + "\",\"pwd\":\""+ str(self.alarm_pin) + "\"}"
+                # body= {"value":"OFF","pwd":"123456"}
+            else:
+                Cmd = 'zoneCmd'
+                body="{\"value\":\"" + str(value) + "\",\"pwd\":\""+ str(self.alarm_pin) + "\",\"zones\":\"["+ str(zone_id) + "]\"}"
 
-        str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/cdata?name={},".format(str(alarm_id),str(alarm_id),str(cmd)) + body +");"
-        # str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/cdata?name={} HTTP/1.1\r\nContent-Length: ".format(str(alarm_id),str(alarm_id),str(cmd))+str(len(body))+"\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"+body+"\r\n\r\n"
-        a_bytes = bytes(str_request, "ascii")
-        print(a_bytes)
-        await self.connection.send(a_bytes)
-        print('PUT alarm cdata send to Websocket !',a)
-        return 0
+            # str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/cdata?name={},".format(str(alarm_id),str(alarm_id),str(cmd)) + body +");"
+            str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/cdata?name={} HTTP/1.1\r\nContent-Length: ".format(str(alarm_id),str(alarm_id),str(Cmd))+str(len(body))+"\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"+body+"\r\n\r\n"
+            
+            
+            a_bytes = bytes(str_request, "ascii")
+            # print(a_bytes)
+            await self.connection.send(a_bytes)
+            print('PUT alarm cdata send to Websocket !')
+            return 0
+        except Exception as e:
+            print('put_alarm_cdata ERROR !')
+            print(e)
+            print(a_bytes)
 
 
-    # await client.put(`/devices/${deviceId}/endpoints/${endpointId}/cdata?name=alarmCmd`, {
-      #     value: nextValue,
-      #     pwd: pin
-      #   });
-    # await client.put(`/devices/${deviceId}/endpoints/${endpointId}/cdata?name=zoneCmd`, {
-      #       value: nextValue,
-      #       pwd: pin,
-      #       zones: targetZones
-      #     });
-    # Run scenario
+
+
     async def put_scenarios(self, scenario_id):
         body=""
         # scenario_id is the id of scenario got from the get_scenarios command
