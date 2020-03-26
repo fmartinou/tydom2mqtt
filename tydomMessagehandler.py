@@ -194,7 +194,7 @@ class TydomMessageHandler():
                     if (e != 'Expecting value: line 1 column 1 (char 0)'):
                         print("Error : ", e)
                         print(parsed)
-            print('Incoming data parsed')
+            print('Incoming data parsed successfully !')
             return(0)
     async def parse_config_data(self, parsed):
         for i in parsed["endpoints"]:
@@ -252,23 +252,27 @@ class TydomMessageHandler():
                             attr_cover['id'] = i["id"]
                             attr_cover['cover_name'] = print_id
                             attr_cover['device_type'] = 'cover'
-                            if elementName in deviceCoverDetailsKeywords:
-                                attr_cover_details[elementName] = elementValue
-                            else:
-                                attr_cover[elementName] = elementValue
-                            attr_cover['attributes'] = attr_cover_details
+                            attr_cover[elementName] = elementValue
+
+                            # if elementName in deviceCoverDetailsKeywords:
+                            #     attr_cover_details[elementName] = elementValue
+                            # else:
+                            #     attr_cover[elementName] = elementValue
+                            # attr_cover['attributes'] = attr_cover_details
                         ##### ALARM
 
                         # Get last known state (for alarm) # NEW METHOD
                         elif elementName in deviceAlarmKeywords and elementValidity == 'upToDate':
                             # print(elementName,elementValue)
                             attr_alarm['id'] = i["id"]
+                            attr_alarm['alarm_name']="Tyxal Alarm"
                             attr_alarm['device_type'] = 'alarm_control_panel'
-                            if elementName in deviceAlarmDetailsKeywords:
-                                attr_alarm_details[elementName] = elementValue
-                            else:
-                                attr_alarm[elementName] = elementValue
-                            attr_alarm['attributes'] = attr_alarm_details #KEEPING original details for attributes
+                            attr_alarm[elementName] = elementValue
+                            # if elementName in deviceAlarmDetailsKeywords:
+                            #     attr_alarm_details[elementName] = elementValue
+                            # else:
+                            #     attr_alarm[elementName] = elementValue
+                            # attr_alarm['attributes'] = attr_alarm_details #KEEPING original details for attributes
                             # print(attr_alarm['attributes'])
                 except Exception as e:
                     print('msg_data error in parsing !')
@@ -277,7 +281,7 @@ class TydomMessageHandler():
                 if 'device_type' in attr_cover and attr_cover['device_type'] == 'cover':
                     # print(attr_cover)
                     new_cover = "cover_tydom_"+str(endpoint_id)
-                    new_cover = Cover(id=attr_cover['id'],name=attr_cover['cover_name'], current_position=attr_cover['position'], attributes=attr_cover['attributes'], mqtt=self.mqtt_client) #NEW METHOD
+                    new_cover = Cover(tydom_attributes=attr_cover, mqtt=self.mqtt_client) #NEW METHOD
                     # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                     await new_cover.update()
 
@@ -308,7 +312,7 @@ class TydomMessageHandler():
                         elif 'alarmState' in attr_alarm and attr_alarm['alarmState'] == "DELAYED":
                             state = "pending"
 
-                        if 'alarmSOS' in attr_alarm['attributes'] and attr_alarm['attributes']['alarmSOS'] == "true":
+                        if 'alarmSOS' in attr_alarm and attr_alarm['alarmSOS'] == "true":
                             state = "triggered"
                             sos_state = True
 
@@ -332,7 +336,7 @@ class TydomMessageHandler():
                             # print(state)
                             alarm = "alarm_tydom_"+str(endpoint_id)
                             # print("Alarm created / updated : "+alarm)
-                            alarm = Alarm(id=attr_alarm['id'],name="Tyxal Alarm", current_state=state, attributes=attr_alarm['attributes'], mqtt=self.mqtt_client)
+                            alarm = Alarm(current_state=state, tydom_attributes=attr_alarm, mqtt=self.mqtt_client)
                             await alarm.update()
 
                     except Exception as e:

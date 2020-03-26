@@ -10,13 +10,14 @@ cover_attributes_topic = "cover/tydom/{id}/attributes"
 
 
 class Cover:
-    def __init__(self, id, name, current_position=None, set_position=None, attributes=None, mqtt=None):
+    def __init__(self, tydom_attributes, set_position=None, mqtt=None):
         
-        self.id = id
-        self.name = name
-        self.current_position = current_position
+        self.attributes = tydom_attributes
+
+        self.id = self.attributes['id']
+        self.name = self.attributes['cover_name']
+        self.current_position = self.attributes['position']
         self.set_position = set_position
-        self.attributes = attributes
         self.mqtt = mqtt
 
     # def id(self):
@@ -49,6 +50,8 @@ class Cover:
         self.config['command_topic'] = cover_command_topic.format(id=self.id)
         self.config['set_position_topic'] = cover_set_postion_topic.format(id=self.id)
         self.config['position_topic'] = cover_position_topic.format(id=self.id)
+        self.config['json_attributes_topic'] = cover_attributes_topic.format(id=self.id)
+
         self.config['payload_open'] = "UP"
         self.config['payload_close'] = "DOWN"
         self.config['payload_stop'] = "STOP"
@@ -67,15 +70,20 @@ class Cover:
         
         if (self.mqtt != None):
             self.mqtt.mqtt_client.publish(self.position_topic, self.current_position, qos=0, retain=True)
-            self.mqtt.mqtt_client.publish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
-            self.attributes_topic = cover_attributes_topic.format(id=self.id, attributes=self.attributes)
-            self.mqtt.mqtt_client.publish(self.attributes_topic, self.attributes, qos=0)
+            # self.mqtt.mqtt_client.publish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
+            self.mqtt.mqtt_client.publish(self.config['json_attributes_topic'], self.attributes, qos=0)
 
         print("Cover created / updated : ", self.name, self.id, self.current_position)
 
         # update_pub = '(self.position_topic, self.current_position, qos=0, retain=True)'
         # return(update_pub)
        
+
+
+
+
+
+
     async def put_position(tydom_client, cover_id, position):
         print(cover_id, 'position', position)
         if not tydom_client.connection.open:

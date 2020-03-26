@@ -10,11 +10,12 @@ alarm_attributes_topic = "alarm_control_panel/tydom/{id}/attributes"
 
 class Alarm:
 
-    def __init__(self, id, name, current_state=None, attributes=None, mqtt=None):
-        self.id = id
-        self.name = name
+    def __init__(self, current_state, tydom_attributes=None, mqtt=None):
+        self.attributes = tydom_attributes
+        
+        self.id = self.attributes['id']
+        self.name = self.attributes['alarm_name']
         self.current_state = current_state
-        self.attributes = attributes
         self.mqtt = mqtt
 
     async def setup(self):
@@ -34,6 +35,7 @@ class Alarm:
         self.config['command_topic'] = alarm_command_topic.format(id=self.id)
         self.config['state_topic'] = alarm_state_topic.format(id=self.id)
         self.config['code_arm_required'] = 'false'
+        self.config['json_attributes_topic'] = alarm_attributes_topic.format(id=self.id)
 
         if (self.mqtt != None):
             self.mqtt.mqtt_client.publish(self.config_alarm_topic, json.dumps(self.config), qos=0) #Alarm Config
@@ -44,6 +46,7 @@ class Alarm:
         self.state_topic = alarm_state_topic.format(id=self.id, state=self.current_state)
         if (self.mqtt != None):
             self.mqtt.mqtt_client.publish(self.state_topic, self.current_state, qos=0, retain=True) #Alarm State
+            self.mqtt.mqtt_client.publish(self.config['json_attributes_topic'], self.attributes, qos=0)
 
         print("Alarm created / updated : ", self.name, self.id, self.current_state)
 
