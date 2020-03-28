@@ -29,7 +29,7 @@ class sensor:
 
 
         self.binary = False
-        self.device_class = None
+        # self.device_class = None
         self.config_topic = sensor_config_topic.format(id=self.id)
         if self.elem_value == False or self.elem_value == True:
             self.binary = True
@@ -42,8 +42,8 @@ class sensor:
             #     self.device_class = 'signal_strength'
         else:
             self.config_topic = sensor_config_topic.format(id=self.id)
-            if 'emperature' in self.elem_name:
-                self.device_class = 'temperature'
+            # if 'emperature' in self.elem_name:
+            #     self.device_class = 'temperature'
        
 
 
@@ -95,7 +95,7 @@ class sensor:
         self.config = {}
         self.config['name'] = self.name
         self.config['unique_id'] = self.id
-        self.config['device_class'] = self.device_class
+        # self.config['device_class'] = self.device_class
         self.config['value_template'] = "{{ value_json."+self.elem_name+" }}"
         # self.config['device'] = self.device
         # self.config['attributes'] = self.attributes
