@@ -29,22 +29,22 @@ class sensor:
 
 
         self.binary = False
+        self.device_class = None
         self.config_topic = sensor_config_topic.format(id=self.id)
         if self.elem_value == False or self.elem_value == True:
             self.binary = True
             self.config_topic = binary_sensor_config_topic.format(id=self.id)
+            if 'efect' in self.elem_name:
+                self.device_class = 'problem'
+            elif 'ntrusion' in self.elem_name or 'zone' in self.elem_name or 'alarm' in self.elem_name:
+                self.device_class = 'safety'
+            elif 'gsm' in self.elem_name:
+                self.device_class = 'signal_strength'
         else:
             self.config_topic = sensor_config_topic.format(id=self.id)
-
-        self.device_class = 'problem'
-        if 'emperature' in self.elem_name:
-            self.device_class = 'temperature'
-        elif 'efect' in self.elem_name:
-            self.device_class = 'problem'
-        elif 'ntrusion' in self.elem_name or 'zone' in self.elem_name or 'alarm' in self.elem_name:
-            self.device_class = 'safety'
-        elif 'gsm' in self.elem_name:
-            self.device_class = 'signal_strength'
+            if 'emperature' in self.elem_name:
+                self.device_class = 'temperature'
+       
 
 
     # SENSOR:
