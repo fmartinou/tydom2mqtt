@@ -15,7 +15,7 @@ class Alarm:
         self.attributes = tydom_attributes
         
         self.id = self.attributes['id']
-        self.name = self.attributes['alarm_name']
+        self.name = self.attributes['name']
         self.current_state = current_state
         self.mqtt = mqtt
 
@@ -67,9 +67,10 @@ class Alarm:
             #     j == False
             # sensor_name = "tydom_alarm_sensor_"+i
             # print("name "+sensor_name, "elem_name "+i, "attributes_topic_from_device ",self.config['json_attributes_topic'], "mqtt",self.mqtt)
-            new_sensor = None
-            new_sensor = sensor(elem_name=i, tydom_attributes_payload=self.attributes, attributes_topic_from_device=self.config['json_attributes_topic'], mqtt=self.mqtt)
-            await new_sensor.update()
+            if not i == 'device_type' or not i == 'id':
+                new_sensor = None
+                new_sensor = sensor(elem_name=i, tydom_attributes_payload=self.attributes, attributes_topic_from_device=self.config['json_attributes_topic'], mqtt=self.mqtt)
+                await new_sensor.update()
     # def __init__(self, name, elem_name, tydom_attributes_payload, attributes_topic_from_device, mqtt=None):
 
     async def put_alarm_state(tydom_client, alarm_id, home_zone, night_zone, asked_state=None):

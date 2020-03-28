@@ -13,16 +13,17 @@ binary_sensor_config_topic = "homeassistant/binary_sensor/tydom/{id}/config"
 class sensor:
 
     def __init__(self, elem_name, tydom_attributes_payload, attributes_topic_from_device, mqtt=None):
+        self.elem_name = elem_name
+            
+        
         self.attributes = tydom_attributes_payload
 
         self.sensor_state_topic = attributes_topic_from_device
         self.id = elem_name+'_tydom_'+str(self.attributes['id'])
-        self.name = elem_name+'_tydom_'+str(self.attributes['id'])+'_'+self.attributes['device_type']
+        self.name = elem_name+'_tydom_'+'_'+str(self.attributes['name']).replace(" ", "_")
         
-        self.elem_name = elem_name
-        
-        # print(self.elem_name)
-        # print(self.attributes[self.elem_name])
+
+
         self.mqtt = mqtt
         self.elem_value = self.attributes[self.elem_name]
 
@@ -101,7 +102,7 @@ class sensor:
         self.config['state_topic'] = self.sensor_state_topic
 
         if (self.mqtt != None):
-            self.mqtt.mqtt_client.publish(self.config_topic, json.dumps(self.config), qos=0) #sensor Config
+            self.mqtt.mqtt_client.publish((self.config_topic).lower(), json.dumps(self.config), qos=0) #sensor Config
 
 
     async def update(self):
@@ -110,14 +111,16 @@ class sensor:
             # config to config config_sensor_topic + config payload is the schema
             # state payload to state topic in config with all attributes
 
-
-        await self.setup()
-
-        # self.state_topic = sensor_state_topic.format(id=self.id, state=self.attributes)
-        # if (self.mqtt != None):
-        #     self.mqtt.mqtt_client.publish(self.sensor_state_topic, self.attributes, qos=0, retain=True) #sensor State
-            # self.mqtt.mqtt_client.publish(self.config['json_attributes_topic'], self.attributes, qos=0)
-        if self.binary == False:
-            print("Sensor created / updated : ", self.name)
+        if 'name' in self.elem_name or 'device_type' in self.elem_name:
+            pass #OOOOOOOOOH that's quick and dirty
         else:
-            print("Binary sensor created / updated : ", self.name)
+            await self.setup()
+
+            # self.state_topic = sensor_state_topic.format(id=self.id, state=self.attributes)
+            # if (self.mqtt != None):
+            #     self.mqtt.mqtt_client.publish(self.sensor_state_topic, self.attributes, qos=0, retain=True) #sensor State
+                # self.mqtt.mqtt_client.publish(self.config['json_attributes_topic'], self.attributes, qos=0)
+            if self.binary == False:
+                print("Sensor created / updated : ", self.name)
+            else:
+                print("Binary sensor created / updated : ", self.name)

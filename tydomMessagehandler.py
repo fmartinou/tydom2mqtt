@@ -251,6 +251,7 @@ class TydomMessageHandler():
 
                             attr_cover['id'] = i["id"]
                             attr_cover['cover_name'] = print_id
+                            attr_cover['name'] = print_id
                             attr_cover['device_type'] = 'cover'
                             attr_cover[elementName] = elementValue
 
@@ -266,6 +267,7 @@ class TydomMessageHandler():
                             # print(elementName,elementValue)
                             attr_alarm['id'] = i["id"]
                             attr_alarm['alarm_name']="Tyxal Alarm"
+                            attr_alarm['name']="Tyxal Alarm"
                             attr_alarm['device_type'] = 'alarm_control_panel'
                             attr_alarm[elementName] = elementValue
                             # if elementName in deviceAlarmDetailsKeywords:
