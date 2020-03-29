@@ -84,11 +84,11 @@ class sensor:
     # window: on means open, off means closed
 
     async def setup(self):
-        # self.device = {}
-        # self.device['manufacturer'] = 'Delta Dore'
-        # self.device['model'] = 'Sensor'
-        # self.device['name'] = self.name
-        # self.device['identifiers'] = self.id
+        self.device = {}
+        self.device['manufacturer'] = 'Delta Dore'
+        self.device['model'] = 'Sensor'
+        self.device['name'] = self.name
+        # self.device['identifiers'] = self.attributes['id']
 
         self.config_sensor_topic = sensor_config_topic.format(id=self.id)
 
@@ -97,7 +97,8 @@ class sensor:
         self.config['unique_id'] = self.id
         # self.config['device_class'] = self.device_class
         self.config['value_template'] = "{{ value_json."+self.elem_name+" }}"
-        # self.config['device'] = self.device
+        self.config['force_update'] = True
+        self.config['device'] = self.device
         # self.config['attributes'] = self.attributes
         self.config['state_topic'] = self.sensor_state_topic
 
@@ -111,11 +112,10 @@ class sensor:
             # config to config config_sensor_topic + config payload is the schema
             # state payload to state topic in config with all attributes
 
-        if 'name' in self.elem_name or 'device_type' in self.elem_name:
+        if 'name' in self.elem_name or 'device_type' in self.elem_name or self.elem_value == None:
             pass #OOOOOOOOOH that's quick and dirty
         else:
             await self.setup()
-
             # self.state_topic = sensor_state_topic.format(id=self.id, state=self.attributes)
             # if (self.mqtt != None):
             #     self.mqtt.mqtt_client.publish(self.sensor_state_topic, self.attributes, qos=0, retain=True) #sensor State
