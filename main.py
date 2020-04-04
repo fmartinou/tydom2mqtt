@@ -119,6 +119,7 @@ if __name__ == '__main__':
         try:
             loop_task()
         except Exception as e:
-            print("Restarting main loop....")
-            loop_task()
-            # sys.exit()
+            print(e)
+            # print("Restarting main loop....")
+            # loop_task()
+            sys.exit()

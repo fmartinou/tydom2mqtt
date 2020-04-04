@@ -129,6 +129,8 @@ class TydomWebSocketClient():
                 print("Tydom Client is connected to websocket and ready !", self.connection)
                 return self.connection
 
+            print("Tydom client disconnected ?")
+
         except Exception as e:
             print('Websocket def connect error')
             print(e)
