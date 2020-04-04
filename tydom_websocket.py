@@ -56,7 +56,7 @@ class TydomWebSocketClient():
 
         #             if (testlocal == None) :
         #                 print("Exiting to ensure restart....")
-        #                 sys.exit()
+        #                 raise Exception
 
            
         # Set Host, ssl context and prefix for remote or local connection
@@ -72,36 +72,40 @@ class TydomWebSocketClient():
             self.ssl_context = ssl._create_unverified_context()
             self.cmd_prefix = ""
 
-        print('Building headers, getting 1st handshake and authentication....')
-        '''
-            Connecting to webSocket server
-            websockets.client.connect returns a WebSocketClientProtocol, which is used to send and receive messages
-        '''
-        httpHeaders =  {"Connection": "Upgrade",
-                        "Upgrade": "websocket",
-                        "Host": self.host + ":443",
-                        "Accept": "*/*",
-                        "Sec-WebSocket-Key": self.generate_random_key(),
-                        "Sec-WebSocket-Version": "13"
-                        }
-        conn = http.client.HTTPSConnection(self.host, 443, context=self.ssl_context)
-        # Get first handshake
-        conn.request("GET", "/mediation/client?mac={}&appli=1".format(self.mac), None, httpHeaders)
-        res = conn.getresponse()
-        # Get authentication
-        nonce = res.headers["WWW-Authenticate"].split(',', 3)
-        # read response
-        res.read()
-        # Close HTTPS Connection
-        conn.close()
-        print('Upgrading http connection to websocket....')
-        # Build websocket headers
-        websocketHeaders = {'Authorization': self.build_digest_headers(nonce)}
-        if self.ssl_context is not None:
-            websocket_ssl_context = self.ssl_context
-        else:
-            websocket_ssl_context = True # Verify certificate
-
+        try:
+            print('Building headers, getting 1st handshake and authentication....')
+            '''
+                Connecting to webSocket server
+                websockets.client.connect returns a WebSocketClientProtocol, which is used to send and receive messages
+            '''
+            httpHeaders =  {"Connection": "Upgrade",
+                            "Upgrade": "websocket",
+                            "Host": self.host + ":443",
+                            "Accept": "*/*",
+                            "Sec-WebSocket-Key": self.generate_random_key(),
+                            "Sec-WebSocket-Version": "13"
+                            }
+            conn = http.client.HTTPSConnection(self.host, 443, context=self.ssl_context)
+            # Get first handshake
+            conn.request("GET", "/mediation/client?mac={}&appli=1".format(self.mac), None, httpHeaders)
+            res = conn.getresponse()
+            # Get authentication
+            nonce = res.headers["WWW-Authenticate"].split(',', 3)
+            # read response
+            res.read()
+            # Close HTTPS Connection
+            conn.close()
+            print('Upgrading http connection to websocket....')
+            # Build websocket headers
+            websocketHeaders = {'Authorization': self.build_digest_headers(nonce)}
+            if self.ssl_context is not None:
+                websocket_ssl_context = self.ssl_context
+            else:
+                websocket_ssl_context = True # Verify certificate
+        except Exception as e:
+            print("It seems we can't reach tydom hub !")
+            print(e)
+            raise Exception
 
         try:
             print('Attempting websocket connection with tydom hub.......................')
@@ -129,7 +133,7 @@ class TydomWebSocketClient():
             print('Websocket def connect error')
             print(e)
             print('Exiting to ensure restart....')
-            sys.exit() #Exit all to ensure systemd restart
+            raise Exception #Exit all to ensure systemd restart
             # print('Reconnecting...')
             # asyncio.sleep(8)
             # await self.connect()
@@ -171,7 +175,7 @@ class TydomWebSocketClient():
                 print('Connection with server closed')
                 print(e)
                 print('Exiting to ensure restart....')
-                sys.exit() #Exit all to ensure systemd restart
+                raise Exception #Exit all to ensure systemd restart
                 # print('Reconnecting...')
                 # await self.connect()
 
@@ -183,10 +187,9 @@ class TydomWebSocketClient():
 # Send Generic GET message
     async def send_message(self, websocket, msg):
         if not self.connection.open:
-            print('Exiting to ensure restart....')
-            sys.exit() #Exit all to ensure systemd restart
-            # print('Websocket not opened, reconnect...')
-            # await self.connect()
+
+            print('Connection closed on GET trial, exiting to ensure restart....')
+            raise Exception
    
         str = self.cmd_prefix + "GET " + msg +" HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
         a_bytes = bytes(str, "ascii")
@@ -198,8 +201,9 @@ class TydomWebSocketClient():
 # Send Generic POST message
     async def send_post_message(self, websocket, msg):
         if not self.connection.open:
-            print('Exiting to ensure restart....')
-            sys.exit() #Exit all to ensure systemd restart
+
+            print('Connection closed on POST trial, exiting to ensure restart....')
+            raise Exception #Exit all to ensure systemd restart
             # print('Websocket not opened, reconnect...')
             # await self.connect()
 
@@ -212,8 +216,9 @@ class TydomWebSocketClient():
     # Give order (name + value) to endpoint
     async def put_devices_data(self, endpoint_id, name, value):
         if not self.connection.open:
-            print('Exiting to ensure restart....')
-            sys.exit() #Exit all to ensure systemd restart
+
+            print('Connection closed on PUT trial, exiting to ensure restart....')
+            raise Exception #Exit all to ensure systemd restart
             # print('Websocket not opened, reconnect...')
             # await self.connect()
 
@@ -244,7 +249,7 @@ class TydomWebSocketClient():
 
         if not self.connection.open:
             print('Connection closed, exiting to ensure restart....')
-            sys.exit()
+            raise Exception
 
         if self.alarm_pin == None:
             print('TYDOM_ALARM_PIN not set !')
@@ -314,8 +319,9 @@ class TydomWebSocketClient():
     # Refresh (all)
     async def post_refresh(self):
         if not (self.connection.open):
-            print('Exiting to ensure restart....')
-            sys.exit() #Exit all to ensure systemd restart
+
+            print('Connection closed, exiting to ensure restart....')
+            raise Exception #Exit all to ensure systemd restart
         else:
             # print("Refresh....")
             msg_type = '/refresh/all'
@@ -368,13 +374,12 @@ class TydomWebSocketClient():
         if not self.connection.open:
             print('get_data error !')
             # await self.exiting()wait self.exiting()
-            print('Exiting to ensure restart....')
-            sys.exit() #Exit all to ensure systemd restart
+            raise Exception #Exit all to ensure systemd restart
 
-        else:
-            await self.get_configs_file()
-            await asyncio.sleep(2)
-            await self.get_devices_data()
+        
+        await self.get_configs_file()
+        await asyncio.sleep(1)
+        await self.get_devices_data()
 
     # Give order to endpoint
     async def get_device_data(self, id):

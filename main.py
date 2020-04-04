@@ -9,6 +9,9 @@ from mqtt_client import MQTT_Hassio
 from tydom_websocket import TydomWebSocketClient
 
 ############ HASSIO ADDON
+print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
 print('STARTING TYDOM2MQTT')
 
@@ -79,36 +82,43 @@ except FileNotFoundError :
 loop = asyncio.get_event_loop()
 
 def loop_task():
-    print('Starting loop_task')
-    tydom = None
-    hassio = None
-
-    # Creating client object
-    hassio = MQTT_Hassio(broker_host=MQTT_HOST, port=MQTT_PORT, user=MQTT_USER, password=MQTT_PASSWORD, mqtt_ssl=MQTT_SSL, home_zone=TYDOM_ALARM_HOME_ZONE, night_zone=TYDOM_ALARM_NIGHT_ZONE)
-    # Giving MQTT connection to tydom client
-    tydom = TydomWebSocketClient(mac=TYDOM_MAC, host=TYDOM_IP, password=TYDOM_PASSWORD, alarm_pin=TYDOM_ALARM_PIN, mqtt_client=hassio)
-
-    # Start connection and get client connection protocol
-    loop.run_until_complete(tydom.mqtt_client.connect())
-
-    loop.run_until_complete(tydom.connect())
-    # Giving back tydom client to MQTT client
-    hassio.tydom = tydom
-    print('Broker and Tydom Websocket READY')
-    print('Start websocket listener and heartbeat')
-
-    tasks = [
-        tydom.receiveMessage(),
-        tydom.heartbeat()
-    ]
-
-    loop.run_until_complete(asyncio.wait(tasks))
-    # loop.run_forever()
-
-if __name__ == '__main__':
     try:
-        loop_task()
+        print('Starting loop_task')
+        tydom = None
+        hassio = None
+
+        # Creating client object
+        hassio = MQTT_Hassio(broker_host=MQTT_HOST, port=MQTT_PORT, user=MQTT_USER, password=MQTT_PASSWORD, mqtt_ssl=MQTT_SSL, home_zone=TYDOM_ALARM_HOME_ZONE, night_zone=TYDOM_ALARM_NIGHT_ZONE)
+        # Giving MQTT connection to tydom client
+        tydom = TydomWebSocketClient(mac=TYDOM_MAC, host=TYDOM_IP, password=TYDOM_PASSWORD, alarm_pin=TYDOM_ALARM_PIN, mqtt_client=hassio)
+
+        # Start connection and get client connection protocol
+        loop.run_until_complete(tydom.connect())
+
+        loop.run_until_complete(tydom.mqtt_client.connect())
+
+        # Giving back tydom client to MQTT client
+        hassio.tydom = tydom
+
+        print('Broker and Tydom Websocket READY')
+        print('Start websocket listener and heartbeat')
+
+        tasks = [
+            tydom.receiveMessage(),
+            tydom.heartbeat()
+        ]
+
+        loop.run_until_complete(asyncio.wait(tasks))
+    # loop.run_forever()
     except Exception as e:
-        error = "FATAL ERROR ! {}".format(e)
+        error = "FATAL MAIN LOOP ERROR : {}".format(e)
         print(error)
-        sys.exit()
+        
+if __name__ == '__main__':
+    while True:
+        try:
+            loop_task()
+        except Exception as e:
+            print("Restarting main loop....")
+            loop_task()
+            # sys.exit()

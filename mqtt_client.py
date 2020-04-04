@@ -34,14 +34,15 @@ class MQTT_Hassio():
     async def connect(self):
 
         try:
+            print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
             print('Attempting MQTT connection...')
             print('MQTT host : ', self.broker_host)
             print('MQTT user : ', self.user)
             adress = hostname+str(datetime.fromtimestamp(time.time()))
-            print(adress)
+            # print(adress)
 
             client = MQTTClient(adress)
-            print(client)
+            # print(client)
 
             client.on_connect = self.on_connect
             client.on_message = self.on_message

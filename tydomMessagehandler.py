@@ -219,6 +219,12 @@ class TydomMessageHandler():
                     attr_cover_details = {}
 
                     for elem in i["endpoints"][0]["data"]:
+                        
+                        endpoint_id = None
+                        elementName = None
+                        elementValue = None
+                        elementValidity = None
+
                         # Get full name of this id
                         # endpoint_id = i["endpoints"][0]["id"]
                         endpoint_id = i["id"] # thanks @azrod

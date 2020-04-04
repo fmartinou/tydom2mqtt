@@ -88,7 +88,7 @@ class sensor:
         self.device['manufacturer'] = 'Delta Dore'
         self.device['model'] = 'Sensor'
         self.device['name'] = self.name
-        # self.device['identifiers'] = self.attributes['id']
+        self.device['identifiers'] = str(self.attributes['id'])+'_sensors'
 
         self.config_sensor_topic = sensor_config_topic.format(id=self.id)
 
@@ -96,14 +96,27 @@ class sensor:
         self.config['name'] = self.name
         self.config['unique_id'] = self.id
         # self.config['device_class'] = self.device_class
-        self.config['value_template'] = "{{ value_json."+self.elem_name+" }}"
+        # self.config['value_template'] = "{{ value_json."+self.elem_name+" }}"
+
+        # self.config['value_template'] = "{{ value_json."+self.elem_name+" }}"
+        value_json = "value_json."+self.elem_name+'"'
+        # value_json = value_json.replace("'\'", "")
+
+        self.config['value_template'] = "{% if "+value_json+" is defined and "+value_json+" != '' %} {{ value_json."+value_json+" }} {% else %} {{ states('sensor." + self.name + "') }} {% endif %}"
+
+        # {% if value_json is defined and value_json.id == 137 %}
+        #     {{ value_json.temperature_C }}
+        # {% else %}
+        #     {{ states('sensor.aussen_temp_nexus') }}
+        # {% endif %}
+
         self.config['force_update'] = True
         self.config['device'] = self.device
         # self.config['attributes'] = self.attributes
         self.config['state_topic'] = self.sensor_state_topic
 
         if (self.mqtt != None):
-            self.mqtt.mqtt_client.publish((self.config_topic).lower(), json.dumps(self.config), qos=0) #sensor Config
+            self.mqtt.mqtt_client.publish((self.config_topic).lower(), json.dumps(self.config), qos=0, retain=True) #sensor Config
 
 
     async def update(self):
