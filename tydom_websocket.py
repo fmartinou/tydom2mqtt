@@ -56,7 +56,7 @@ class TydomWebSocketClient():
 
         #             if (testlocal == None) :
         #                 print("Exiting to ensure restart....")
-        #                 raise Exception
+        #                 sys.exit()
 
            
         # Set Host, ssl context and prefix for remote or local connection
@@ -105,7 +105,7 @@ class TydomWebSocketClient():
         except Exception as e:
             print("It seems we can't reach tydom hub !")
             print(e)
-            raise Exception
+            sys.exit()
 
         try:
             print('Attempting websocket connection with tydom hub.......................')
@@ -133,7 +133,7 @@ class TydomWebSocketClient():
             print('Websocket def connect error')
             print(e)
             print('Exiting to ensure restart....')
-            raise Exception #Exit all to ensure systemd restart
+            sys.exit() #Exit all to ensure systemd restart
             # print('Reconnecting...')
             # asyncio.sleep(8)
             # await self.connect()
@@ -175,7 +175,7 @@ class TydomWebSocketClient():
                 print('Connection with server closed')
                 print(e)
                 print('Exiting to ensure restart....')
-                raise Exception #Exit all to ensure systemd restart
+                sys.exit() #Exit all to ensure systemd restart
                 # print('Reconnecting...')
                 # await self.connect()
 
@@ -189,7 +189,7 @@ class TydomWebSocketClient():
         if not self.connection.open:
 
             print('Connection closed on GET trial, exiting to ensure restart....')
-            raise Exception
+            sys.exit()
    
         str = self.cmd_prefix + "GET " + msg +" HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
         a_bytes = bytes(str, "ascii")
@@ -203,7 +203,7 @@ class TydomWebSocketClient():
         if not self.connection.open:
 
             print('Connection closed on POST trial, exiting to ensure restart....')
-            raise Exception #Exit all to ensure systemd restart
+            sys.exit() #Exit all to ensure systemd restart
             # print('Websocket not opened, reconnect...')
             # await self.connect()
 
@@ -218,7 +218,7 @@ class TydomWebSocketClient():
         if not self.connection.open:
 
             print('Connection closed on PUT trial, exiting to ensure restart....')
-            raise Exception #Exit all to ensure systemd restart
+            sys.exit() #Exit all to ensure systemd restart
             # print('Websocket not opened, reconnect...')
             # await self.connect()
 
@@ -249,7 +249,7 @@ class TydomWebSocketClient():
 
         if not self.connection.open:
             print('Connection closed, exiting to ensure restart....')
-            raise Exception
+            sys.exit()
 
         if self.alarm_pin == None:
             print('TYDOM_ALARM_PIN not set !')
@@ -321,7 +321,7 @@ class TydomWebSocketClient():
         if not (self.connection.open):
 
             print('Connection closed, exiting to ensure restart....')
-            raise Exception #Exit all to ensure systemd restart
+            sys.exit() #Exit all to ensure systemd restart
         else:
             # print("Refresh....")
             msg_type = '/refresh/all'
@@ -374,7 +374,7 @@ class TydomWebSocketClient():
         if not self.connection.open:
             print('get_data error !')
             # await self.exiting()wait self.exiting()
-            raise Exception #Exit all to ensure systemd restart
+            sys.exit() #Exit all to ensure systemd restart
 
         
         await self.get_configs_file()
