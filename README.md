@@ -20,7 +20,7 @@ HASSIO USERS (recommended choice - multiarch) :
 - Use MQTT auto discovery, no further config necessary ! 
 
 
-DOCKER USERS (x86 only):
+DOCKER USERS (x86 only - fork it and change base image in Dockerfile):
 
 You need a functional Docker before using it.
 
