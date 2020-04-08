@@ -14,9 +14,13 @@ PREREQ :
 
 - You need a fully functional MQTT broker before using it (MQTT official addon, mosquitto on linux, etc.) and a user/pass to access it.
 
+HASSIO USERS (recommended choice - multiarch) :
+
+- Addon repository : https://github.com/WiwiWillou/hassio_addons.git
+- Use MQTT auto discovery, no further config necessary ! 
 
 
-DOCKER USERS :
+DOCKER USERS (x86 only):
 
 You need a functional Docker before using it.
 
@@ -26,10 +30,6 @@ You just need the install.sh to download, mod it with your credentials (Tydom an
 sh install.sh
 ```
 
-HASSIO / HOME ASSISTANT CORE USERS :
-
-- Addon repository : https://github.com/WiwiWillou/hassio_addons.git
-- Use MQTT auto discovery, no further config necessary ! 
 
 NOT ON HASSIO :
 
