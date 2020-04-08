@@ -58,7 +58,7 @@ WHAT WE CAN'T DO ?
 
 Home Assistant User :
 
-To fix the not updating / ask update on restart (because the config part as already happenned when hassio boot), create that script on hass, and create an automation to execute it when hass start ! - We could use birth payload be it ask for some configuration in yaml...
+To fix the not updating / ask update on restart (because the config part has already happenned when hassio boot), create that script on hass, and create an automation to execute it when hass start ! - We could use birth payload be it ask for some configuration in yaml...
 
 ```
 update_tydom2mqtt:
