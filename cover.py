@@ -14,7 +14,8 @@ class Cover:
     def __init__(self, tydom_attributes, set_position=None, mqtt=None):
         
         self.attributes = tydom_attributes
-
+        self.device_id = self.attributes['device_id']
+        self.endpoint_id = self.attributes['endpoint_id']
         self.id = self.attributes['id']
         self.name = self.attributes['cover_name']
         self.current_position = self.attributes['position']
@@ -99,28 +100,12 @@ class Cover:
     # def __init__(self, name, elem_name, tydom_attributes_payload, attributes_topic_from_device, mqtt=None):
 
 
-
-
-
-
-    async def put_position(tydom_client, cover_id, position):
+    async def put_position(tydom_client, device_id, cover_id, position):
         print(cover_id, 'position', position)
-        if not tydom_client.connection.open:
-            print('MQTT req : Websocket not opened, reconnect...')
-            await tydom_client.connect()
-            await tydom_client.put_devices_data(cover_id, 'position', position)
+        if not (position == ''):
+            await tydom_client.put_devices_data(device_id, cover_id, 'position', position)
 
-        else:
-            if not (position == ''):
-                await tydom_client.put_devices_data(cover_id, 'position', position)
-
-    async def put_positionCmd(tydom_client, cover_id, positionCmd):
+    async def put_positionCmd(tydom_client, device_id, cover_id, positionCmd):
         print(cover_id, 'positionCmd', positionCmd)
-        if not tydom_client.connection.open:
-            print('MQTT req : Websocket not opened, reconnect...')
-            await tydom_client.connect()
-            await tydom_client.put_devices_data(cover_id, 'positionCmd', positionCmd)
-
-        else:
-            if not (positionCmd == ''):
-                await tydom_client.put_devices_data(cover_id, 'positionCmd', positionCmd)
+        if not (positionCmd == ''):
+            await tydom_client.put_devices_data(device_id, cover_id, 'positionCmd', positionCmd)

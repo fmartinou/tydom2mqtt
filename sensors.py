@@ -104,6 +104,7 @@ class sensor:
         self.config['unique_id'] = self.id
         # self.config['device_class'] = self.device_class
         
+        #
         # self.config['value_template'] = "{{ value_json."+self.elem_name+" }}"
         # self.config['attributes'] = self.attributes
 

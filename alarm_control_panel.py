@@ -13,7 +13,8 @@ class Alarm:
 
     def __init__(self, current_state, tydom_attributes=None, mqtt=None):
         self.attributes = tydom_attributes
-        
+        self.device_id = self.attributes['device_id']
+        self.endpoint_id = self.attributes['endpoint_id']
         self.id = self.attributes['id']
         self.name = self.attributes['name']
         self.current_state = current_state
@@ -73,8 +74,8 @@ class Alarm:
                 await new_sensor.update()
     # def __init__(self, name, elem_name, tydom_attributes_payload, attributes_topic_from_device, mqtt=None):
 
-    async def put_alarm_state(tydom_client, alarm_id, home_zone, night_zone, asked_state=None):
-        print(tydom_client, alarm_id, asked_state)
+    async def put_alarm_state(tydom_client, device_id, alarm_id, home_zone, night_zone, asked_state=None):
+        # print(tydom_client, device_id, alarm_id, asked_state)
 
         value = None
         zone_id = None
@@ -92,35 +93,7 @@ class Alarm:
             value = 'OFF'
             zone_id = None
 
-        await tydom_client.put_alarm_cdata(alarm_id=alarm_id, value=value, zone_id=zone_id)
+        await tydom_client.put_alarm_cdata(device_id=device_id, alarm_id=alarm_id, value=value, zone_id=zone_id)
 
-        # update_pub = '(self.state_topic, self.current_state, qos=0, retain=True)'
-        # return(update_pub)
-        # self.attributes_topic = alarm_attributes_topic.format(id=self.id, attributes=self.attributes)
-        # hassio.publish(self.attributes_topic, self.attributes, qos=0)
 
-## if (!pin) {
-      #   callback(null);
-      #   return;
-      # }
-      # if ([SecuritySystemTargetState.AWAY_ARM, SecuritySystemTargetState.DISARM].includes(value as number)) {
-      #   const nextValue = value === SecuritySystemTargetState.DISARM ? 'OFF' : 'ON';
-      #   await client.put(`/devices/${deviceId}/endpoints/${endpointId}/cdata?name=alarmCmd`, {
-      #     value: nextValue,
-      #     pwd: pin
-      #   });
-      #   debugSetResult('SecuritySystemTargetState', {name, id, value: nextValue});
-      # }
-      # if ([SecuritySystemTargetState.STAY_ARM, SecuritySystemTargetState.NIGHT_ARM].includes(value as number)) {
-      #   const nextValue = value === SecuritySystemTargetState.DISARM ? 'OFF' : 'ON';
-      #   const targetZones = value === SecuritySystemTargetState.STAY_ARM ? aliases.stay : aliases.night;
-      #   if (Array.isArray(targetZones) && targetZones.length > 0) {
-      #     await client.put(`/devices/${deviceId}/endpoints/${endpointId}/cdata?name=zoneCmd`, {
-      #       value: nextValue,
-      #       pwd: pin,
-      #       zones: targetZones
-      #     });
-      #   }
-        
-        
 

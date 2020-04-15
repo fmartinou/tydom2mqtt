@@ -15,24 +15,49 @@ deviceAlarmDetailsKeywords = ['alarmSOS','zone1State','zone2State','zone3State',
 
 deviceCoverKeywords = ['position','onFavPos','thermicDefect','obstacleDefect','intrusion','battDefect']
 deviceCoverDetailsKeywords = ['onFavPos','thermicDefect','obstacleDefect','intrusion','battDefect']
-
-# Device dict for parsing
-device_dict = dict()
-
 climateKeywords = ['temperature', 'authorization', 'hvacMode', 'setpoint']
 
+# Device dict for parsing
+device_name = dict()
+device_endpoint = dict()
+# Thanks @Max013 !
 
 class TydomMessageHandler():
 
 
-    def __init__(self, incoming_bytes, tydom_client):
+    def __init__(self, incoming_bytes, tydom_client, mqtt_client):
             # print('New tydom incoming message')
             self.incoming_bytes = incoming_bytes
             self.tydom_client = tydom_client
             self.cmd_prefix = tydom_client.cmd_prefix
-            self.mqtt_client = tydom_client.mqtt_client
+            self.mqtt_client = mqtt_client
 
     async def incomingTriage(self):
+
+        # if (data != ''):
+        #     if ("Uri-Origin: /refresh/all" in first):
+        #         pass
+        #     elif ("Uri-Origin: /devices/data" in first):
+        #         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+        #         print('Incoming message type : data detected')
+        #         msg_type = 'msg_data'
+        #     elif ("Uri-Origin: /configs/" in first):
+        #         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+        #         print('Incoming message type : config detected')
+        #         msg_type = 'msg_config'
+        #     elif ("doctype" in first):
+        #         print('Incoming message type : html detected (probable 404)')
+        #         msg_type = 'msg_html'
+        #         print(data)
+        #     elif ("Uri-Origin: /info" in first):
+        #         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+        #         print('Incoming message type : Info detected')
+        #         msg_type = 'msg_info'
+        #         # print(data)        
+        #     else:
+        #         print('Incoming message type : no type detected')
+        #         print(first)
+
 
         bytes_str = self.incoming_bytes        
         if self.mqtt_client == None: #If not MQTT client, return incoming message to use it with anything.
@@ -41,7 +66,7 @@ class TydomMessageHandler():
             incoming = None
             first = str(bytes_str[:40]) # Scanning 1st characters
             try:
-                if ("refresh" in first):
+                if ("Uri-Origin: /refresh/all" in first in first):
                     pass
                     # print('OK refresh message detected !')
                     # try:
@@ -135,14 +160,6 @@ class TydomMessageHandler():
         data = incoming
         msg_type = None
 
-        # try:
-        #     parsed = json.loads(data)
-        #     # print(parsed)
-        # except Exception as e:
-        #     if not ('Expecting' in e):
-        #         print("Incoming Parse Error : ", e)
-        #         print(parsed)
-
         first = str(data[:40])
         
         # Detect type of incoming data
@@ -196,17 +213,20 @@ class TydomMessageHandler():
                         print(parsed)
             print('Incoming data parsed successfully !')
             return(0)
+
     async def parse_config_data(self, parsed):
         for i in parsed["endpoints"]:
             # Get list of shutter
             if i["last_usage"] == 'shutter':
                 # print('{} {}'.format(i["id_endpoint"],i["name"]))
-                # device_dict[i["id_endpoint"]] = i["name"]
-                device_dict[i["id_device"]] = i["name"]
+                # device_name[i["id_endpoint"]] = i["name"]
+                device_name[i["id_device"]] = i["name"]
+                device_endpoint[i["id_device"]] = i["id_endpoint"]
                 # TODO get other device type
             if i["last_usage"] == 'alarm':
                 # print('{} {}'.format(i["id_endpoint"], i["name"]))
-                device_dict[i["id_endpoint"]] = "Tyxal Alarm"
+                device_name[i["id_endpoint"]] = "Tyxal Alarm"
+                device_endpoint[i["id_device"]] = i["id_endpoint"]
         print('Configuration updated')
         
     async def parse_devices_data(self, parsed):
@@ -221,13 +241,16 @@ class TydomMessageHandler():
                     for elem in i["endpoints"][0]["data"]:
                         
                         endpoint_id = None
+                        device_id = None
+
                         elementName = None
                         elementValue = None
                         elementValidity = None
 
                         # Get full name of this id
                         # endpoint_id = i["endpoints"][0]["id"]
-                        endpoint_id = i["id"] # thanks @azrod
+                        device_id = i["id"]
+                        
                         # Element name
                         elementName = elem["name"]
                         # Element value
@@ -235,6 +258,16 @@ class TydomMessageHandler():
                         elementValidity = elem["validity"]
                         # print(elementName,elementValue,elementValidity)
                         ##### COVERS
+                        print_id = None
+                        name_of_id = self.get_name_from_id(device_id)
+                        if len(name_of_id) != 0:
+                            print_id = name_of_id
+                            endpoint_id = device_endpoint[device_id]
+                        else:
+                            print_id = device_id
+                            endpoint_id = device_endpoint[device_id]
+
+                        
                         if elementName in deviceCoverKeywords and elementValidity == 'upToDate': #NEW METHOD
                             
                         # if elementName == 'position' and elementValidity == 'upToDate':
@@ -247,15 +280,10 @@ class TydomMessageHandler():
                             # {name: 'intrusion', validity: 'upToDate', value: false},
                             # {name: 'battDefect', validity: 'upToDate', value: false}
                             # */
-                            #TODO : Sensors with everything
-                            print_id = None
-                            name_of_id = self.get_name_from_id(endpoint_id)
-                            if len(name_of_id) != 0:
-                                print_id = name_of_id
-                            else:
-                                print_id = endpoint_id
 
-                            attr_cover['id'] = i["id"]
+                            attr_cover['device_id'] = device_id
+                            attr_cover['endpoint_id'] = endpoint_id
+                            attr_cover['id'] = str(device_id)+'_'+str(endpoint_id)
                             attr_cover['cover_name'] = print_id
                             attr_cover['name'] = print_id
                             attr_cover['device_type'] = 'cover'
@@ -271,7 +299,9 @@ class TydomMessageHandler():
                         # Get last known state (for alarm) # NEW METHOD
                         elif elementName in deviceAlarmKeywords and elementValidity == 'upToDate':
                             # print(elementName,elementValue)
-                            attr_alarm['id'] = i["id"]
+                            attr_alarm['device_id'] = device_id
+                            attr_alarm['endpoint_id'] = endpoint_id
+                            attr_alarm['id'] = str(device_id)+'_'+str(endpoint_id)
                             attr_alarm['alarm_name']="Tyxal Alarm"
                             attr_alarm['name']="Tyxal Alarm"
                             attr_alarm['device_type'] = 'alarm_control_panel'
@@ -282,6 +312,7 @@ class TydomMessageHandler():
                             #     attr_alarm[elementName] = elementValue
                             # attr_alarm['attributes'] = attr_alarm_details #KEEPING original details for attributes
                             # print(attr_alarm['attributes'])
+
                 except Exception as e:
                     print('msg_data error in parsing !')
                     print(e)
@@ -351,11 +382,9 @@ class TydomMessageHandler():
                         print("Error in alarm parsing !")
                         print(e)
                         pass
-
-
-
                 else:
                     pass
+
     # PUT response DIRTY parsing
     def parse_put_response(self, bytes_str):
         # TODO : Find a cooler way to parse nicely the PUT HTTP response
@@ -390,11 +419,9 @@ class TydomMessageHandler():
     # Get pretty name for a device id
     def get_name_from_id(self, id):
         name = ""
-        if len(device_dict) != 0:
-            name = device_dict[id]
+        if len(device_name) != 0:
+            name = device_name[id]
         return(name)
-
-
 
 
 class BytesIOSocket:

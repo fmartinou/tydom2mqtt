@@ -109,26 +109,37 @@ class MQTT_Hassio():
         elif 'set_positionCmd' in str(topic):
             print('Incoming MQTT set_positionCmd request : ', topic, payload)
             value = str(payload).strip('b').strip("'")
-            get_id = (topic.split("/"))[2] #extract id from mqtt
+
+            get_id = (topic.split("/"))[2] #extract ids from mqtt
+            device_id = (get_id.split("_"))[0] #extract id from mqtt
+            endpoint_id = (get_id.split("_"))[1] #extract id from mqtt
+
             print(str(get_id), 'positionCmd', value)
-            await Cover.put_positionCmd(tydom_client=self.tydom, cover_id=get_id, positionCmd=str(value))
+            await Cover.put_positionCmd(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id, positionCmd=str(value))
+
 
         elif ('set_position' in str(topic)) and not ('set_positionCmd'in str(topic)):
             
             print('Incoming MQTT set_position request : ', topic, json.loads(payload))
             value = json.loads(payload)
-            print(value)
-            get_id = (topic.split("/"))[2] #extract id from mqtt
-            await Cover.put_position(tydom_client=self.tydom, cover_id=get_id, position=str(value))
-
+            # print(value)
+            get_id = (topic.split("/"))[2] #extract ids from mqtt
+            device_id = (get_id.split("_"))[0] #extract id from mqtt
+            endpoint_id = (get_id.split("_"))[1] #extract id from mqtt
+            
+            await Cover.put_position(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id, position=str(value))
+ 
 
 
         elif ('set_alarm_state' in str(topic)) and not ('homeassistant'in str(topic)):
             # print(topic, payload, qos, properties)
             command = str(payload).strip('b').strip("'")
-            get_id = (topic.split("/"))[2] #extract id from mqtt
 
-            await Alarm.put_alarm_state(tydom_client=self.tydom, alarm_id=get_id, asked_state=command, home_zone=self.home_zone, night_zone=self.night_zone)
+            get_id = (topic.split("/"))[2] #extract ids from mqtt
+            device_id = (get_id.split("_"))[0] #extract id from mqtt
+            endpoint_id = (get_id.split("_"))[1] #extract id from mqtt
+
+            await Alarm.put_alarm_state(tydom_client=self.tydom, device_id=device_id, alarm_id=endpoint_id, asked_state=command, home_zone=self.home_zone, night_zone=self.night_zone)
 
         else:
             pass
