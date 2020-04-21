@@ -6,6 +6,7 @@ import os
 import sys
 import json
 import socket
+import websockets
 
 from mqtt_client import MQTT_Hassio
 from tydomConnector import TydomWebSocketClient
