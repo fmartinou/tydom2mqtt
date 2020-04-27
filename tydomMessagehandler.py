@@ -195,12 +195,12 @@ class TydomMessageHandler():
                 try:                    
                     if (msg_type == 'msg_config'):
                         parsed = json.loads(data)
-                        print(parsed)
+                        #print(parsed)
                         await self.parse_config_data(parsed=parsed)
                         
                     elif (msg_type == 'msg_data'):
                         parsed = json.loads(data)
-                        print(parsed)
+                        #print(parsed)
                         await self.parse_devices_data(parsed=parsed)
                     elif (msg_type == 'msg_html'):
                         print("HTML Response ?")
