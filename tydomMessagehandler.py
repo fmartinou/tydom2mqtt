@@ -1,4 +1,5 @@
 from cover import Cover
+from light import Light
 from alarm_control_panel import Alarm
 # from sensor import Sensor
 
@@ -13,13 +14,18 @@ import sys
 deviceAlarmKeywords = ['alarmMode','alarmState','alarmSOS','zone1State','zone2State','zone3State','zone4State','zone5State','zone6State','zone7State','zone8State','gsmLevel','inactiveProduct','zone1State','liveCheckRunning','networkDefect','unitAutoProtect','unitBatteryDefect','unackedEvent','alarmTechnical','systAutoProtect','sysBatteryDefect','zsystSupervisionDefect','systOpenIssue','systTechnicalDefect','videoLinkDefect', 'outTemperature']
 deviceAlarmDetailsKeywords = ['alarmSOS','zone1State','zone2State','zone3State','zone4State','zone5State','zone6State','zone7State','zone8State','gsmLevel','inactiveProduct','zone1State','liveCheckRunning','networkDefect','unitAutoProtect','unitBatteryDefect','unackedEvent','alarmTechnical','systAutoProtect','sysBatteryDefect','zsystSupervisionDefect','systOpenIssue','systTechnicalDefect','videoLinkDefect', 'outTemperature']
 
+deviceLightKeywords = ['level','onFavPos','thermicDefect','battDefect','loadDefect','cmdDefect','onPresenceDetected','onDusk']
+deviceLightDetailsKeywords = ['onFavPos','thermicDefect','battDefect','loadDefect','cmdDefect','onPresenceDetected','onDusk']
+
 deviceCoverKeywords = ['position','onFavPos','thermicDefect','obstacleDefect','intrusion','battDefect']
 deviceCoverDetailsKeywords = ['onFavPos','thermicDefect','obstacleDefect','intrusion','battDefect']
+
 climateKeywords = ['temperature', 'authorization', 'hvacMode', 'setpoint']
 
 # Device dict for parsing
 device_name = dict()
 device_endpoint = dict()
+device_type = dict()
 # Thanks @Max013 !
 
 class TydomMessageHandler():
@@ -189,12 +195,12 @@ class TydomMessageHandler():
                 try:                    
                     if (msg_type == 'msg_config'):
                         parsed = json.loads(data)
-                        # print(parsed)
+                        #print(parsed)
                         await self.parse_config_data(parsed=parsed)
                         
                     elif (msg_type == 'msg_data'):
                         parsed = json.loads(data)
-                        # print(parsed)
+                        #print(parsed)
                         await self.parse_devices_data(parsed=parsed)
                     elif (msg_type == 'msg_html'):
                         print("HTML Response ?")
@@ -217,15 +223,18 @@ class TydomMessageHandler():
     async def parse_config_data(self, parsed):
         for i in parsed["endpoints"]:
             # Get list of shutter
-            if i["last_usage"] == 'shutter':
+            # print(i)
+            if i["last_usage"] == 'shutter' or i["last_usage"] == 'light':
                 # print('{} {}'.format(i["id_endpoint"],i["name"]))
                 # device_name[i["id_endpoint"]] = i["name"]
                 device_name[i["id_device"]] = i["name"]
+                device_type[i["id_device"]] = i["last_usage"]
                 device_endpoint[i["id_device"]] = i["id_endpoint"]
-                # TODO get other device type
+
             if i["last_usage"] == 'alarm':
                 # print('{} {}'.format(i["id_endpoint"], i["name"]))
                 device_name[i["id_endpoint"]] = "Tyxal Alarm"
+                device_type[i["id_device"]] = 'alarm'
                 device_endpoint[i["id_device"]] = i["id_endpoint"]
         print('Configuration updated')
         
@@ -237,11 +246,18 @@ class TydomMessageHandler():
                     attr_alarm_details = {}
                     attr_cover = {}
                     attr_cover_details = {}
-
+                    attr_light = {}
+                    attr_light_details = {}
+                    device_id = i["id"]
+                    name_of_id = self.get_name_from_id(device_id)
+                    type_of_id = self.get_type_from_id(device_id)
+                    # print("======[ NEW DEVICE ]======")
+                    # print("Name {}".format(name_of_id))
+                    # print("Type {}".format(type_of_id))
+                    # print("==========================")
                     for elem in i["endpoints"][0]["data"]:
                         
                         endpoint_id = None
-                        device_id = None
 
                         elementName = None
                         elementValue = None
@@ -249,45 +265,47 @@ class TydomMessageHandler():
 
                         # Get full name of this id
                         # endpoint_id = i["endpoints"][0]["id"]
-                        device_id = i["id"]
-                        
+
                         # Element name
                         elementName = elem["name"]
                         # Element value
                         elementValue = elem["value"]
                         elementValidity = elem["validity"]
-                        # print(elementName,elementValue,elementValidity)
-                        ##### COVERS
                         print_id = None
-                        name_of_id = self.get_name_from_id(device_id)
+
+
                         if len(name_of_id) != 0:
                             print_id = name_of_id
                             endpoint_id = device_endpoint[device_id]
                         else:
                             print_id = device_id
                             endpoint_id = device_endpoint[device_id]
+                        if type_of_id == 'light':
+                            if elementName in deviceLightKeywords and elementValidity == 'upToDate':  # NEW METHOD
 
-                        
-                        if elementName in deviceCoverKeywords and elementValidity == 'upToDate': #NEW METHOD
-                            
-                        # if elementName == 'position' and elementValidity == 'upToDate':
-                            # /*
-                            # // https://github.com/mgcrea/homebridge-tydom/issues/2
-                            # {name: 'thermicDefect', validity: 'upToDate', value: false},
-                            # {name: 'position', validity: 'upToDate', value: 98},
-                            # {name: 'onFavPos', validity: 'upToDate', value: false},
-                            # {name: 'obstacleDefect', validity: 'upToDate', value: false},
-                            # {name: 'intrusion', validity: 'upToDate', value: false},
-                            # {name: 'battDefect', validity: 'upToDate', value: false}
-                            # */
+                                attr_light['device_id'] = device_id
+                                attr_light['endpoint_id'] = endpoint_id
+                                attr_light['id'] = str(device_id) + '_' + str(endpoint_id)
+                                attr_light['light_name'] = print_id
+                                attr_light['name'] = print_id
+                                attr_light['device_type'] = 'light'
+                                attr_light[elementName] = elementValue
 
-                            attr_cover['device_id'] = device_id
-                            attr_cover['endpoint_id'] = endpoint_id
-                            attr_cover['id'] = str(device_id)+'_'+str(endpoint_id)
-                            attr_cover['cover_name'] = print_id
-                            attr_cover['name'] = print_id
-                            attr_cover['device_type'] = 'cover'
-                            attr_cover[elementName] = elementValue
+                                # if elementName in deviceCoverDetailsKeywords:
+                                #     attr_cover_details[elementName] = elementValue
+                                # else:
+                                #     attr_cover[elementName] = elementValue
+                                # attr_cover['attributes'] = attr_cover_details
+                        if type_of_id == 'shutter':
+                            if elementName in deviceCoverKeywords and elementValidity == 'upToDate': #NEW METHOD
+
+                                attr_cover['device_id'] = device_id
+                                attr_cover['endpoint_id'] = endpoint_id
+                                attr_cover['id'] = str(device_id)+'_'+str(endpoint_id)
+                                attr_cover['cover_name'] = print_id
+                                attr_cover['name'] = print_id
+                                attr_cover['device_type'] = 'cover'
+                                attr_cover[elementName] = elementValue
 
                             # if elementName in deviceCoverDetailsKeywords:
                             #     attr_cover_details[elementName] = elementValue
@@ -296,22 +314,22 @@ class TydomMessageHandler():
                             # attr_cover['attributes'] = attr_cover_details
                         ##### ALARM
 
-                        # Get last known state (for alarm) # NEW METHOD
-                        elif elementName in deviceAlarmKeywords and elementValidity == 'upToDate':
-                            # print(elementName,elementValue)
-                            attr_alarm['device_id'] = device_id
-                            attr_alarm['endpoint_id'] = endpoint_id
-                            attr_alarm['id'] = str(device_id)+'_'+str(endpoint_id)
-                            attr_alarm['alarm_name']="Tyxal Alarm"
-                            attr_alarm['name']="Tyxal Alarm"
-                            attr_alarm['device_type'] = 'alarm_control_panel'
-                            attr_alarm[elementName] = elementValue
-                            # if elementName in deviceAlarmDetailsKeywords:
-                            #     attr_alarm_details[elementName] = elementValue
-                            # else:
-                            #     attr_alarm[elementName] = elementValue
-                            # attr_alarm['attributes'] = attr_alarm_details #KEEPING original details for attributes
-                            # print(attr_alarm['attributes'])
+                        if type_of_id == 'alarm':
+                            if elementName in deviceAlarmKeywords and elementValidity == 'upToDate':
+                                # print(elementName,elementValue)
+                                attr_alarm['device_id'] = device_id
+                                attr_alarm['endpoint_id'] = endpoint_id
+                                attr_alarm['id'] = str(device_id)+'_'+str(endpoint_id)
+                                attr_alarm['alarm_name']="Tyxal Alarm"
+                                attr_alarm['name']="Tyxal Alarm"
+                                attr_alarm['device_type'] = 'alarm_control_panel'
+                                attr_alarm[elementName] = elementValue
+                                # if elementName in deviceAlarmDetailsKeywords:
+                                #     attr_alarm_details[elementName] = elementValue
+                                # else:
+                                #     attr_alarm[elementName] = elementValue
+                                # attr_alarm['attributes'] = attr_alarm_details #KEEPING original details for attributes
+                                # print(attr_alarm['attributes'])
 
                 except Exception as e:
                     print('msg_data error in parsing !')
@@ -323,7 +341,12 @@ class TydomMessageHandler():
                     new_cover = Cover(tydom_attributes=attr_cover, mqtt=self.mqtt_client) #NEW METHOD
                     # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                     await new_cover.update()
-
+                elif 'device_type' in attr_light and attr_light['device_type'] == 'light':
+                    # print(attr_cover)
+                    new_light = "light_tydom_"+str(endpoint_id)
+                    new_light = Light(tydom_attributes=attr_light, mqtt=self.mqtt_client) #NEW METHOD
+                    # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
+                    await new_light.update()
                 # Get last known state (for alarm) # NEW METHOD
                 elif 'device_type' in attr_alarm and attr_alarm['device_type'] == 'alarm_control_panel':
                     # print(attr_alarm)
@@ -415,6 +438,9 @@ class TydomMessageHandler():
     def put_response_from_bytes(self, data):
         request = HTTPRequest(data)
         return request
+
+    def get_type_from_id(self, id):
+        return(device_type[id])
 
     # Get pretty name for a device id
     def get_name_from_id(self, id):
