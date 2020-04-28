@@ -6,7 +6,7 @@ Link a Delta Dore's Tydom hub to a mqtt broker. Unofficial with no public API, s
 
 Disconnections from both servers are handled with automatic reconnections.
 
-Not based on a pull mechanism but on push from websocket, i.e. it regulary ask the tydom hub to refresh to keep alive the connection and receive updates instantly.
+Not based on a pull mechanism but on push from websocket, i.e. it regulary ask the tydom hub to refresh to keep alive the connection and it receives updates instantly.
 
 Based initialy on https://github.com/cth35/tydom_python
 
