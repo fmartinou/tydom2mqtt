@@ -385,7 +385,7 @@ class TydomMessageHandler():
                     new_door = sensor(elem_name='openState', tydom_attributes_payload=attr_door, attributes_topic_from_device='useless', mqtt=self.mqtt_client)
                     # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                     await new_door.update()
-                elif 'device_type' in attr_window and attr_door['device_type'] == 'sensor':
+                elif 'device_type' in attr_window and attr_window['device_type'] == 'sensor':
                     # print(attr_cover)
                     new_window = "window_tydom_"+str(endpoint_id)
                     new_window = sensor(elem_name='openState', tydom_attributes_payload=attr_window, attributes_topic_from_device='useless', mqtt=self.mqtt_client)
