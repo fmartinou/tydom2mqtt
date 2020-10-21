@@ -250,6 +250,7 @@ class TydomMessageHandler():
                     attr_cover = {}
                     attr_cover_details = {}
                     attr_door ={}
+                    attr_window ={}
                     attr_light = {}
                     attr_light_details = {}
                     device_id = i["id"]
@@ -325,8 +326,25 @@ class TydomMessageHandler():
                                 attr_door['id'] = str(device_id)+'_'+str(endpoint_id)
                                 attr_door['door_name'] = print_id
                                 attr_door['name'] = print_id
-                                attr_door['device_type'] = 'binary_sensor'
+                                attr_door['device_type'] = 'sensor'
                                 attr_door[elementName] = elementValue
+
+                            # if elementName in deviceCoverDetailsKeywords:
+                            #     attr_cover_details[elementName] = elementValue
+                            # else:
+                            #     attr_cover[elementName] = elementValue
+                            # attr_cover['attributes'] = attr_cover_details
+
+                        if type_of_id == 'windowFrench' or type_of_id == 'window':
+                            if elementName in deviceDoorKeywords and elementValidity == 'upToDate': #NEW METHOD
+
+                                attr_window['device_id'] = device_id
+                                attr_window['endpoint_id'] = endpoint_id
+                                attr_window['id'] = str(device_id)+'_'+str(endpoint_id)
+                                attr_window['door_name'] = print_id
+                                attr_window['name'] = print_id
+                                attr_window['device_type'] = 'sensor'
+                                attr_window[elementName] = elementValue
 
                             # if elementName in deviceCoverDetailsKeywords:
                             #     attr_cover_details[elementName] = elementValue
@@ -361,12 +379,18 @@ class TydomMessageHandler():
                     new_cover = Cover(tydom_attributes=attr_cover, mqtt=self.mqtt_client) #NEW METHOD
                     # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                     await new_cover.update()
-                if 'device_type' in attr_door and attr_door['device_type'] == 'binary_sensor':
+                elif 'device_type' in attr_door and attr_door['device_type'] == 'sensor':
                     # print(attr_cover)
-                    new_cover = "door_tydom_"+str(endpoint_id)
-                    new_cover = sensor(elem_name='openState', tydom_attributes_payload=attr_door, attributes_topic_from_device='useless', mqtt=self.mqtt_client)
+                    new_door = "door_tydom_"+str(endpoint_id)
+                    new_door = sensor(elem_name='openState', tydom_attributes_payload=attr_door, attributes_topic_from_device='useless', mqtt=self.mqtt_client)
                     # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
-                    await new_cover.update()
+                    await new_door.update()
+                elif 'device_type' in attr_window and attr_door['device_type'] == 'sensor':
+                    # print(attr_cover)
+                    new_window = "window_tydom_"+str(endpoint_id)
+                    new_window = sensor(elem_name='openState', tydom_attributes_payload=attr_window, attributes_topic_from_device='useless', mqtt=self.mqtt_client)
+                    # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
+                    await new_window.update()
                 elif 'device_type' in attr_light and attr_light['device_type'] == 'light':
                     # print(attr_cover)
                     new_light = "light_tydom_"+str(endpoint_id)
