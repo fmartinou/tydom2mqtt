@@ -18,10 +18,6 @@ class sensor:
         self.elem_name = elem_name
         self.elem_value = tydom_attributes_payload[self.elem_name]
 
-        #Doors case
-        if self.elem_name == 'openState' :
-            self.elem_value = True if self.elem_value == 'LOCKED' else False 
-
         # init a state json
         state_dict = {}
         state_dict[elem_name] = self.elem_value
