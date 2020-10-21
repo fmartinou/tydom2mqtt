@@ -14,29 +14,27 @@ binary_sensor_json_attributes_topic = "binary_sensor/tydom/{id}/state"
 # State topic can be the same as the original device attributes topic !
 class sensor:
 
-    def __init__(self, elem_name, tydom_attributes_payload, attributes_topic_from_device, mqtt=None):
-        self.elem_name = elem_name
-        self.elem_value = tydom_attributes_payload[self.elem_name]
+    def __init__(self, tydom_attributes, mqtt=None):
+        self.attributes = tydom_attributes
+        self.id = self.attributes['id']
+        self.name = self.attributes['cover_name']
+        self.tydom_state = self.attributes['openState']
+        print("Etat de la porte:" + self.tydom_state)
+        self.state = self.tydom_state == 'LOCKED' ? True : False
+        print("Etat de la porte booleen:" + self.state)
 
         # init a state json
         state_dict = {}
-        state_dict[elem_name] = self.elem_value
+        state_dict[self.name] = self.state
         self.attributes = state_dict
         # print(self.attributes)
 
         # self.json_attributes_topic = attributes_topic_from_device #State extracted from json, but it will make sensor not in payload to be considerd offline....
-        self.parent_device_id = str(tydom_attributes_payload['id'])
-        self.id = elem_name+'_tydom_'+str(tydom_attributes_payload['id'])
-        self.name = elem_name+'_tydom_'+'_'+str(tydom_attributes_payload['name']).replace(" ", "_")
-        
         self.mqtt = mqtt
- 
-
-
         self.binary = False
         # self.device_class = None
         self.config_topic = sensor_config_topic.format(id=self.id)
-        if self.elem_value == False or self.elem_value == True:
+        if self.state == False or self.state == True:
             self.binary = True
             self.json_attributes_topic = binary_sensor_json_attributes_topic.format(id=self.id)
             self.config_topic = binary_sensor_config_topic.format(id=self.id)
