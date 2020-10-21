@@ -20,7 +20,7 @@ class sensor:
         self.name = self.attributes['cover_name']
         self.tydom_state = self.attributes['openState']
         print("Etat de la porte:" + self.tydom_state)
-        self.state = self.tydom_state == 'LOCKED' ? True : False
+        self.state = True if self.tydom_state == 'LOCKED' else False
         print("Etat de la porte booleen:" + self.state)
 
         # init a state json
