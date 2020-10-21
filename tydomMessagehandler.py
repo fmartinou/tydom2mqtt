@@ -17,6 +17,9 @@ deviceAlarmDetailsKeywords = ['alarmSOS','zone1State','zone2State','zone3State',
 deviceLightKeywords = ['level','onFavPos','thermicDefect','battDefect','loadDefect','cmdDefect','onPresenceDetected','onDusk']
 deviceLightDetailsKeywords = ['onFavPos','thermicDefect','battDefect','loadDefect','cmdDefect','onPresenceDetected','onDusk']
 
+deviceDoorKeywords = ['openState']
+deviceDoorDetailsKeywords = ['onFavPos','thermicDefect','obstacleDefect','intrusion','battDefect']
+
 deviceCoverKeywords = ['position','onFavPos','thermicDefect','obstacleDefect','intrusion','battDefect']
 deviceCoverDetailsKeywords = ['onFavPos','thermicDefect','obstacleDefect','intrusion','battDefect']
 
@@ -315,7 +318,7 @@ class TydomMessageHandler():
                             # attr_cover['attributes'] = attr_cover_details
 
                         if type_of_id == 'belmDoor':
-                            if elementName in deviceCoverKeywords and elementValidity == 'upToDate': #NEW METHOD
+                            if elementName in deviceDoorKeywords and elementValidity == 'upToDate': #NEW METHOD
 
                                 attr_door['device_id'] = device_id
                                 attr_door['endpoint_id'] = endpoint_id
@@ -361,7 +364,7 @@ class TydomMessageHandler():
                 if 'device_type' in attr_door and attr_door['device_type'] == 'binary_sensor':
                     # print(attr_cover)
                     new_cover = "door_tydom_"+str(endpoint_id)
-                    new_cover = sensor(tydom_attributes=attr_door, mqtt=self.mqtt_client) #NEW METHOD
+                    new_cover = sensor(elem_name='openState', tydom_attributes_payload=attr_door, attributes_topic_from_device='useless', mqtt=self.mqtt_client)
                     # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                     await new_cover.update()
                 elif 'device_type' in attr_light and attr_light['device_type'] == 'light':
