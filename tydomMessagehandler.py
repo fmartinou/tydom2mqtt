@@ -201,7 +201,7 @@ class TydomMessageHandler():
                         #print(parsed)
                         await self.parse_config_data(parsed=parsed)
                         
-                    elif (msg_type == 'msg_data'):
+                    elif (msg_type == 'msg_data' and data != 'PUT /devices/data HTTP/1.1\r\n\r\n'):
                         parsed = json.loads(data)
                         #print(parsed)
                         await self.parse_devices_data(parsed=parsed)
