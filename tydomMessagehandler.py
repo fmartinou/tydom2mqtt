@@ -11,6 +11,8 @@ import json
 import sys
 import logging
 
+_LOGGER = logging.getLogger(__name__)
+
 # Dicts
 deviceAlarmKeywords = ['alarmMode','alarmState','alarmSOS','zone1State','zone2State','zone3State','zone4State','zone5State','zone6State','zone7State','zone8State','gsmLevel','inactiveProduct','zone1State','liveCheckRunning','networkDefect','unitAutoProtect','unitBatteryDefect','unackedEvent','alarmTechnical','systAutoProtect','sysBatteryDefect','zsystSupervisionDefect','systOpenIssue','systTechnicalDefect','videoLinkDefect', 'outTemperature']
 deviceAlarmDetailsKeywords = ['alarmSOS','zone1State','zone2State','zone3State','zone4State','zone5State','zone6State','zone7State','zone8State','gsmLevel','inactiveProduct','zone1State','liveCheckRunning','networkDefect','unitAutoProtect','unitBatteryDefect','unackedEvent','alarmTechnical','systAutoProtect','sysBatteryDefect','zsystSupervisionDefect','systOpenIssue','systTechnicalDefect','videoLinkDefect', 'outTemperature']
@@ -258,14 +260,14 @@ class TydomMessageHandler():
                     name_of_id = self.get_name_from_id(device_id)
                     type_of_id = self.get_type_from_id(device_id)
                     
-                    logging.debug("======[ DEVICE INFOS ]======")
-                    logging.debug("ID {}".format(device_id))
-                    logging.debug("Name {}".format(name_of_id))
-                    logging.debug("Type {}".format(type_of_id))
-                    logging.debug("==========================")
+                    _LOGGER.debug("======[ DEVICE INFOS ]======")
+                    _LOGGER.debug("ID {}".format(device_id))
+                    _LOGGER.debug("Name {}".format(name_of_id))
+                    _LOGGER.debug("Type {}".format(type_of_id))
+                    _LOGGER.debug("==========================")
                     
                     for elem in i["endpoints"][0]["data"]:
-                        logging.debug("CURRENT ELEM={}".format(elem))
+                        _LOGGER.debug("CURRENT ELEM={}".format(elem))
                         endpoint_id = None
 
                         elementName = None
@@ -292,7 +294,7 @@ class TydomMessageHandler():
 
                         if type_of_id == 'light':
                             if elementName in deviceLightKeywords and elementValidity == 'upToDate':  # NEW METHOD
-                                logging.debug('ITS A LIGHT!')
+                                _LOGGER.debug('ITS A LIGHT!')
                                 attr_light['device_id'] = device_id
                                 attr_light['endpoint_id'] = endpoint_id
                                 attr_light['id'] = str(device_id) + '_' + str(endpoint_id)
@@ -308,7 +310,7 @@ class TydomMessageHandler():
                                 # attr_cover['attributes'] = attr_cover_details
                         if type_of_id == 'shutter':
                             if elementName in deviceCoverKeywords and elementValidity == 'upToDate': #NEW METHOD
-                                logging.debug('ITS A SHUTTER!')
+                                _LOGGER.debug('ITS A SHUTTER!')
                                 attr_cover['device_id'] = device_id
                                 attr_cover['endpoint_id'] = endpoint_id
                                 attr_cover['id'] = str(device_id)+'_'+str(endpoint_id)
@@ -325,7 +327,7 @@ class TydomMessageHandler():
 
                         if type_of_id == 'belmDoor':
                             if elementName in deviceDoorKeywords and elementValidity == 'upToDate': #NEW METHOD
-                                logging.debug('ITS A DOOR!')
+                                _LOGGER.debug('ITS A DOOR!')
                                 attr_door['device_id'] = device_id
                                 attr_door['endpoint_id'] = endpoint_id
                                 attr_door['id'] = str(device_id)+'_'+str(endpoint_id)
@@ -336,7 +338,7 @@ class TydomMessageHandler():
 
                         if type_of_id == 'windowFrench' or type_of_id == 'window':
                             if elementName in deviceDoorKeywords and elementValidity == 'upToDate': #NEW METHOD
-                                logging.debug('ITS A WINDOW!')
+                                _LOGGER.debug('ITS A WINDOW!')
                                 attr_window['device_id'] = device_id
                                 attr_window['endpoint_id'] = endpoint_id
                                 attr_window['id'] = str(device_id)+'_'+str(endpoint_id)
@@ -347,7 +349,7 @@ class TydomMessageHandler():
 
                         if type_of_id == 'alarm':
                             if elementName in deviceAlarmKeywords and elementValidity == 'upToDate':
-                                logging.debug('ITS AN ALARM!')
+                                _LOGGER.debug('ITS AN ALARM!')
                                 attr_alarm['device_id'] = device_id
                                 attr_alarm['endpoint_id'] = endpoint_id
                                 attr_alarm['id'] = str(device_id)+'_'+str(endpoint_id)
