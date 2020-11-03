@@ -246,8 +246,7 @@ class TydomMessageHandler():
         
     async def parse_devices_data(self, parsed):
         for i in parsed:
-            print("DEBUG PARSED I= {}".format(i))
-            if i["endpoints"][0]["error"] == 0:
+            if i["endpoints"][0]["error"] == 0 and len(i["endpoints"][0]["data"]) > 0:
                 try:
                     attr_alarm = {}
                     attr_alarm_details = {}
@@ -258,10 +257,9 @@ class TydomMessageHandler():
                     attr_light = {}
                     attr_light_details = {}
                     device_id = i["id"]
-                    print("before resolving name by id")
                     name_of_id = self.get_name_from_id(device_id)
-                    print("before resolving type by id")
                     type_of_id = self.get_type_from_id(device_id)
+
                     
                     _LOGGER.debug("======[ DEVICE INFOS ]======")
                     _LOGGER.debug("ID {}".format(device_id))
@@ -297,7 +295,6 @@ class TydomMessageHandler():
 
                         if type_of_id == 'light':
                             if elementName in deviceLightKeywords and elementValidity == 'upToDate':  # NEW METHOD
-                                _LOGGER.debug('ITS A LIGHT!')
                                 attr_light['device_id'] = device_id
                                 attr_light['endpoint_id'] = endpoint_id
                                 attr_light['id'] = str(device_id) + '_' + str(endpoint_id)
@@ -313,7 +310,6 @@ class TydomMessageHandler():
                                 # attr_cover['attributes'] = attr_cover_details
                         if type_of_id == 'shutter':
                             if elementName in deviceCoverKeywords and elementValidity == 'upToDate': #NEW METHOD
-                                _LOGGER.debug('ITS A SHUTTER!')
                                 attr_cover['device_id'] = device_id
                                 attr_cover['endpoint_id'] = endpoint_id
                                 attr_cover['id'] = str(device_id)+'_'+str(endpoint_id)
@@ -330,7 +326,6 @@ class TydomMessageHandler():
 
                         if type_of_id == 'belmDoor':
                             if elementName in deviceDoorKeywords and elementValidity == 'upToDate': #NEW METHOD
-                                _LOGGER.debug('ITS A DOOR!')
                                 attr_door['device_id'] = device_id
                                 attr_door['endpoint_id'] = endpoint_id
                                 attr_door['id'] = str(device_id)+'_'+str(endpoint_id)
@@ -341,7 +336,6 @@ class TydomMessageHandler():
 
                         if type_of_id == 'windowFrench' or type_of_id == 'window':
                             if elementName in deviceDoorKeywords and elementValidity == 'upToDate': #NEW METHOD
-                                _LOGGER.debug('ITS A WINDOW!')
                                 attr_window['device_id'] = device_id
                                 attr_window['endpoint_id'] = endpoint_id
                                 attr_window['id'] = str(device_id)+'_'+str(endpoint_id)
@@ -352,7 +346,6 @@ class TydomMessageHandler():
 
                         if type_of_id == 'alarm':
                             if elementName in deviceAlarmKeywords and elementValidity == 'upToDate':
-                                _LOGGER.debug('ITS AN ALARM!')
                                 attr_alarm['device_id'] = device_id
                                 attr_alarm['endpoint_id'] = endpoint_id
                                 attr_alarm['id'] = str(device_id)+'_'+str(endpoint_id)
@@ -488,13 +481,21 @@ class TydomMessageHandler():
         return request
 
     def get_type_from_id(self, id):
-        return(device_type[id])
+        deviceType = ""
+        if len(device_type) != 0 and id in device_type.keys():
+            deviceType = device_type[id]
+        else:
+            print('{} not in dic device_type'.format(id))
+
+        return(deviceType)
 
     # Get pretty name for a device id
     def get_name_from_id(self, id):
         name = ""
-        if len(device_name) != 0:
+        if len(device_name) != 0 and id in device_name.keys():
             name = device_name[id]
+        else:
+            print('{} not in dic device_name'.format(id))
         return(name)
 
 
