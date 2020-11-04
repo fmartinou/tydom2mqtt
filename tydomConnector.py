@@ -285,7 +285,7 @@ class TydomWebSocketClient():
 
     async def get_data(self):
         await self.get_configs_file()
-        await asyncio.sleep(1)
+        await asyncio.sleep(5)
         await self.get_devices_data()
 
     # Give order to endpoint

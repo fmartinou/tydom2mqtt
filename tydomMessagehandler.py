@@ -195,7 +195,7 @@ class TydomMessageHandler():
                 # print(data)        
             else:
                 print('Incoming message type : no type detected')
-                print(first)
+                print(data)
 
             if not (msg_type == None):
                 try:                    
