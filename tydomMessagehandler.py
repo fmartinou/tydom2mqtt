@@ -9,6 +9,9 @@ import urllib3
 from io import BytesIO
 import json
 import sys
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 # Dicts
 deviceAlarmKeywords = ['alarmMode','alarmState','alarmSOS','zone1State','zone2State','zone3State','zone4State','zone5State','zone6State','zone7State','zone8State','gsmLevel','inactiveProduct','zone1State','liveCheckRunning','networkDefect','unitAutoProtect','unitBatteryDefect','unackedEvent','alarmTechnical','systAutoProtect','sysBatteryDefect','zsystSupervisionDefect','systOpenIssue','systTechnicalDefect','videoLinkDefect', 'outTemperature']
@@ -42,32 +45,6 @@ class TydomMessageHandler():
             self.mqtt_client = mqtt_client
 
     async def incomingTriage(self):
-
-        # if (data != ''):
-        #     if ("Uri-Origin: /refresh/all" in first):
-        #         pass
-        #     elif ("Uri-Origin: /devices/data" in first):
-        #         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-        #         print('Incoming message type : data detected')
-        #         msg_type = 'msg_data'
-        #     elif ("Uri-Origin: /configs/" in first):
-        #         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-        #         print('Incoming message type : config detected')
-        #         msg_type = 'msg_config'
-        #     elif ("doctype" in first):
-        #         print('Incoming message type : html detected (probable 404)')
-        #         msg_type = 'msg_html'
-        #         print(data)
-        #     elif ("Uri-Origin: /info" in first):
-        #         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-        #         print('Incoming message type : Info detected')
-        #         msg_type = 'msg_info'
-        #         # print(data)        
-        #     else:
-        #         print('Incoming message type : no type detected')
-        #         print(first)
-
-
         bytes_str = self.incoming_bytes        
         if self.mqtt_client == None: #If not MQTT client, return incoming message to use it with anything.
             return bytes_str
@@ -77,16 +54,6 @@ class TydomMessageHandler():
             try:
                 if ("Uri-Origin: /refresh/all" in first in first):
                     pass
-                    # print('OK refresh message detected !')
-                    # try:
-                    #     pass
-                    #     #ish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
-                    # except:
-                    #     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    #     print('RAW INCOMING :')
-                    #     print(bytes_str)
-                    #     print('END RAW')
-                    #     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 elif ("PUT /devices/data" in first) or ("/devices/cdata" in first):
                     # print('PUT /devices/data message detected !')
                     try:
@@ -100,7 +67,6 @@ class TydomMessageHandler():
                         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 elif ("scn" in first):
                     try:
-                        # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                         incoming = get(bytes_str)
                         await self.parse_response(incoming)
                         print('Scenarii message processed !')
@@ -113,11 +79,9 @@ class TydomMessageHandler():
                         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")            
                 elif ("POST" in first):
                     try:
-                        # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                         incoming = self.parse_put_response(bytes_str)
                         await self.parse_response(incoming)
                         print('POST message processed !')
-                        # print("##################################")
                     except:
                         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                         print('RAW INCOMING :')
@@ -127,23 +91,14 @@ class TydomMessageHandler():
                 elif ("HTTP/1.1" in first): #(bytes_str != 0) and 
                     response = self.response_from_bytes(bytes_str[len(self.cmd_prefix):])
                     incoming = response.data.decode("utf-8")
-                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    # print(incoming)
-                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                     try:
-                        # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                         await self.parse_response(incoming)
-                        # print('Pong !')
-                        # print("##################################")
                     except:
                         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                         print('RAW INCOMING :')
                         print(bytes_str)
                         print('END RAW')
                         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                        # await parse_put_response(incoming)
                 else:
                     print("Didn't detect incoming type, here it is :")
                     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
@@ -177,7 +132,7 @@ class TydomMessageHandler():
                 print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 print('Incoming message type : data detected')
                 msg_type = 'msg_data'
-            elif ("date" in first):
+            elif (("date" in first) or ("ios" in first)): #ios for tonioa case (maybe for all iOs users)
                 print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 print('Incoming message type : config detected')
                 msg_type = 'msg_config'
@@ -192,7 +147,7 @@ class TydomMessageHandler():
                 # print(data)        
             else:
                 print('Incoming message type : no type detected')
-                print(first)
+                print(data)
 
             if not (msg_type == None):
                 try:                    
@@ -201,7 +156,7 @@ class TydomMessageHandler():
                         #print(parsed)
                         await self.parse_config_data(parsed=parsed)
                         
-                    elif (msg_type == 'msg_data' and data != 'PUT /devices/data HTTP/1.1\r\n\r\n'):
+                    elif (msg_type == 'msg_data'):
                         parsed = json.loads(data)
                         #print(parsed)
                         await self.parse_devices_data(parsed=parsed)
@@ -243,7 +198,7 @@ class TydomMessageHandler():
         
     async def parse_devices_data(self, parsed):
         for i in parsed:
-            if i["endpoints"][0]["error"] == 0:
+            if i["endpoints"][0]["error"] == 0 and len(i["endpoints"][0]["data"]) > 0:
                 try:
                     attr_alarm = {}
                     attr_alarm_details = {}
@@ -256,12 +211,16 @@ class TydomMessageHandler():
                     device_id = i["id"]
                     name_of_id = self.get_name_from_id(device_id)
                     type_of_id = self.get_type_from_id(device_id)
-                    # print("======[ NEW DEVICE ]======")
-                    # print("Name {}".format(name_of_id))
-                    # print("Type {}".format(type_of_id))
-                    # print("==========================")
+
+                    
+                    _LOGGER.debug("======[ DEVICE INFOS ]======")
+                    _LOGGER.debug("ID {}".format(device_id))
+                    _LOGGER.debug("Name {}".format(name_of_id))
+                    _LOGGER.debug("Type {}".format(type_of_id))
+                    _LOGGER.debug("==========================")
+                    
                     for elem in i["endpoints"][0]["data"]:
-                        
+                        _LOGGER.debug("CURRENT ELEM={}".format(elem))
                         endpoint_id = None
 
                         elementName = None
@@ -285,9 +244,9 @@ class TydomMessageHandler():
                         else:
                             print_id = device_id
                             endpoint_id = device_endpoint[device_id]
+
                         if type_of_id == 'light':
                             if elementName in deviceLightKeywords and elementValidity == 'upToDate':  # NEW METHOD
-
                                 attr_light['device_id'] = device_id
                                 attr_light['endpoint_id'] = endpoint_id
                                 attr_light['id'] = str(device_id) + '_' + str(endpoint_id)
@@ -296,14 +255,8 @@ class TydomMessageHandler():
                                 attr_light['device_type'] = 'light'
                                 attr_light[elementName] = elementValue
 
-                                # if elementName in deviceCoverDetailsKeywords:
-                                #     attr_cover_details[elementName] = elementValue
-                                # else:
-                                #     attr_cover[elementName] = elementValue
-                                # attr_cover['attributes'] = attr_cover_details
                         if type_of_id == 'shutter':
                             if elementName in deviceCoverKeywords and elementValidity == 'upToDate': #NEW METHOD
-
                                 attr_cover['device_id'] = device_id
                                 attr_cover['endpoint_id'] = endpoint_id
                                 attr_cover['id'] = str(device_id)+'_'+str(endpoint_id)
@@ -312,15 +265,8 @@ class TydomMessageHandler():
                                 attr_cover['device_type'] = 'cover'
                                 attr_cover[elementName] = elementValue
 
-                            # if elementName in deviceCoverDetailsKeywords:
-                            #     attr_cover_details[elementName] = elementValue
-                            # else:
-                            #     attr_cover[elementName] = elementValue
-                            # attr_cover['attributes'] = attr_cover_details
-
                         if type_of_id == 'belmDoor':
                             if elementName in deviceDoorKeywords and elementValidity == 'upToDate': #NEW METHOD
-
                                 attr_door['device_id'] = device_id
                                 attr_door['endpoint_id'] = endpoint_id
                                 attr_door['id'] = str(device_id)+'_'+str(endpoint_id)
@@ -329,15 +275,8 @@ class TydomMessageHandler():
                                 attr_door['device_type'] = 'sensor'
                                 attr_door[elementName] = elementValue
 
-                            # if elementName in deviceCoverDetailsKeywords:
-                            #     attr_cover_details[elementName] = elementValue
-                            # else:
-                            #     attr_cover[elementName] = elementValue
-                            # attr_cover['attributes'] = attr_cover_details
-
                         if type_of_id == 'windowFrench' or type_of_id == 'window':
                             if elementName in deviceDoorKeywords and elementValidity == 'upToDate': #NEW METHOD
-
                                 attr_window['device_id'] = device_id
                                 attr_window['endpoint_id'] = endpoint_id
                                 attr_window['id'] = str(device_id)+'_'+str(endpoint_id)
@@ -346,15 +285,8 @@ class TydomMessageHandler():
                                 attr_window['device_type'] = 'sensor'
                                 attr_window[elementName] = elementValue
 
-                            # if elementName in deviceCoverDetailsKeywords:
-                            #     attr_cover_details[elementName] = elementValue
-                            # else:
-                            #     attr_cover[elementName] = elementValue
-                            # attr_cover['attributes'] = attr_cover_details
-
                         if type_of_id == 'alarm':
                             if elementName in deviceAlarmKeywords and elementValidity == 'upToDate':
-                                # print(elementName,elementValue)
                                 attr_alarm['device_id'] = device_id
                                 attr_alarm['endpoint_id'] = endpoint_id
                                 attr_alarm['id'] = str(device_id)+'_'+str(endpoint_id)
@@ -362,12 +294,6 @@ class TydomMessageHandler():
                                 attr_alarm['name']="Tyxal Alarm"
                                 attr_alarm['device_type'] = 'alarm_control_panel'
                                 attr_alarm[elementName] = elementValue
-                                # if elementName in deviceAlarmDetailsKeywords:
-                                #     attr_alarm_details[elementName] = elementValue
-                                # else:
-                                #     attr_alarm[elementName] = elementValue
-                                # attr_alarm['attributes'] = attr_alarm_details #KEEPING original details for attributes
-                                # print(attr_alarm['attributes'])
 
                 except Exception as e:
                     print('msg_data error in parsing !')
@@ -490,13 +416,21 @@ class TydomMessageHandler():
         return request
 
     def get_type_from_id(self, id):
-        return(device_type[id])
+        deviceType = ""
+        if len(device_type) != 0 and id in device_type.keys():
+            deviceType = device_type[id]
+        else:
+            print('{} not in dic device_type'.format(id))
+
+        return(deviceType)
 
     # Get pretty name for a device id
     def get_name_from_id(self, id):
         name = ""
-        if len(device_name) != 0:
+        if len(device_name) != 0 and id in device_name.keys():
             name = device_name[id]
+        else:
+            print('{} not in dic device_name'.format(id))
         return(name)
 
 
