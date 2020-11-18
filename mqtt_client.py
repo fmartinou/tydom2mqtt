@@ -12,6 +12,7 @@ from alarm_control_panel import Alarm
 # Globals
 ####################################### MQTT
 from light import Light
+from boiler import Boiler
 
 tydom_topic = "+/tydom/#"
 refresh_topic = "homeassistant/requests/tydom/refresh"
@@ -165,6 +166,43 @@ class MQTT_Hassio():
             endpoint_id = (get_id.split("_"))[1] #extract id from mqtt
 
             await Alarm.put_alarm_state(tydom_client=self.tydom, device_id=device_id, alarm_id=endpoint_id, asked_state=command, home_zone=self.home_zone, night_zone=self.night_zone)
+ 
+        elif ('set_setpoint' in str(topic)):
+
+            value = str(payload).strip('b').strip("'")
+            print('Incoming MQTT setpoint request : ', topic, value)
+            value = json.loads(payload)
+            # print(value)
+            get_id = (topic.split("/"))[2]  # extract ids from mqtt
+            device_id = (get_id.split("_"))[0]  # extract id from mqtt
+            endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
+
+            await Boiler.put_temperature(tydom_client=self.tydom, device_id=device_id, boiler_id=endpoint_id,
+                                     set_setpoint=str(value))
+
+        elif ('set_hvacMode' in str(topic)):
+
+            value = str(payload).strip('b').strip("'")
+            print('Incoming MQTT set_hvacMode request : ', topic, value)
+            # print(value)
+            get_id = (topic.split("/"))[2]  # extract ids from mqtt
+            device_id = (get_id.split("_"))[0]  # extract id from mqtt
+            endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
+
+            await Boiler.put_hvacMode(tydom_client=self.tydom, device_id=device_id, boiler_id=endpoint_id,
+                                     set_hvacMode=str(value))
+
+        elif ('set_thermicLevel' in str(topic)):
+
+            value = str(payload).strip('b').strip("'")
+            print('Incoming MQTT set_thermicLevel request : ', topic, value)
+            # print(value)
+            get_id = (topic.split("/"))[2]  # extract ids from mqtt
+            device_id = (get_id.split("_"))[0]  # extract id from mqtt
+            endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
+
+            await Boiler.put_thermicLevel(tydom_client=self.tydom, device_id=device_id, boiler_id=endpoint_id,
+                                     set_thermicLevel=str(value))
 
         else:
             pass
