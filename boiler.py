@@ -53,7 +53,6 @@ class Boiler:
         self.mqtt = mqtt
         self.tydom_client = tydom_client
 
-
     async def setup(self):
         self.device = {}
         self.config = {}
@@ -62,15 +61,17 @@ class Boiler:
         self.device['identifiers'] = self.id
         # Check if device is an outer temperature sensor
         if 'outTemperature' in self.attributes:
+            self.config['name'] = 'Out Temperature'
             self.device['model'] = 'Sensor'
             self.config['device_class'] = 'temperature'
-            self.config['unit_of_measurement'] = '°C'
+            self.config['unit_of_measurement'] = 'C'
             self.config_topic = sensor_config_topic.format(id=self.id)
             self.config['state_topic'] = out_temperature_state_topic.format(id=self.id)
             self.topic_to_func = {}
         # Check if device is a heater with thermostat sensor
         else:
 #        elif 'setpoint' in self.attributes:
+            self.config['name'] = self.name
             self.device['model'] = 'Climate'
             self.config_topic = climate_config_topic.format(id=self.id)
             self.config['temperature_command_topic'] = temperature_command_topic.format(id=self.id)
@@ -82,18 +83,19 @@ class Boiler:
             self.config['swing_modes'] = ["STOP","ANTI_FROST","ECO","COMFORT"]
             self.config['swing_mode_state_topic'] = swing_mode_state_topic.format(id=self.id)
             self.config['swing_mode_command_topic'] = swing_mode_command_topic.format(id=self.id)
-
         # Electrical heater without thermostat
- #       else:
- #           self.device['model'] = 'Climate'
- #           self.config_topic = climate_config_topic.format(id=self.id)
- #           self.config['modes'] = ["off", "heat"]
- #           self.config['mode_state_topic'] = mode_state_topic.format(id=self.id)
- #           self.config['mode_command_topic'] = mode_command_topic.format(id=self.id)
- #           self.config['swing_modes'] = ["STOP","ANTI-FROST","ECO","COMFORT"]
- #           self.config['swing_mode_state_topic'] = swing_mode_state_topic.format(id=self.id)
- #           self.config['swing_mode_command_topic'] = swing_mode_command_topic.format(id=self.id)
-        self.config['name'] = self.name
+#        else:
+#            self.boilertype = 'Electrical'
+#            self.config['name'] = self.name
+#            self.device['model'] = 'Climate'
+#            self.config_topic = climate_config_topic.format(id=self.id)
+#            self.config['modes'] = ["off", "heat"]
+#            self.config['mode_state_topic'] = mode_state_topic.format(id=self.id)
+#            self.config['mode_command_topic'] = mode_command_topic.format(id=self.id)
+#            self.config['swing_modes'] = ["STOP","ANTI-FROST","ECO","COMFORT"]
+#            self.config['swing_mode_state_topic'] = swing_mode_state_topic.format(id=self.id)
+#            self.config['swing_mode_command_topic'] = swing_mode_command_topic.format(id=self.id)
+
         self.config['unique_id'] = self.id
 
         if (self.mqtt != None):
@@ -105,32 +107,36 @@ class Boiler:
         if (self.mqtt != None):
             if 'temperature' in self.attributes and self.attributes['temperature'] != 'None':
                 self.mqtt.mqtt_client.publish(self.config['current_temperature_topic'], self.attributes['temperature'], qos=0)
-            if 'setpoint' in self.attributes and self.attributes['setpoint'] != 'None':
-#                self.mqtt.mqtt_client.publish(self.config['temperature_command_topic'], self.attributes['setpoint'], qos=0)
-                self.mqtt.mqtt_client.publish(self.config['temperature_state_topic'], self.attributes['setpoint'], qos=0)
+            if 'setpoint' in self.attributes:
+                if self.attributes['setpoint'] != 'None':
+#                    self.mqtt.mqtt_client.publish(self.config['temperature_command_topic'], self.attributes['setpoint'], qos=0)
+                    self.mqtt.mqtt_client.publish(self.config['temperature_state_topic'], self.attributes['setpoint'], qos=0)
+                else:
+                    self.mqtt.mqtt_client.publish(self.config['temperature_state_topic'], '10', qos=0)
 #            if 'hvacMode' in self.attributes:
 #                self.mqtt.mqtt_client.publish(self.config['mode_state_topic'], "heat" if self.attributes['hvacMode'] == "NORMAL" else "off", qos=0)
-#            if 'authorisation' in self.attributes:
-#                self.mqtt.mqtt_client.publish(self.config['mode_state_topic'], "off" if self.attributes['authorisation'] == "STOP" else "heat", qos=0)
+#            if 'authorization' in self.attributes:
+#                self.mqtt.mqtt_client.publish(self.config['mode_state_topic'], "off" if self.attributes['authorization'] == "STOP" else "heat", qos=0)
             if 'thermicLevel' in self.attributes:
-                self.mqtt.mqtt_client.publish(self.config['swing_mode_state_topic'], self.attributes['thermicLevel'], qos=0)
                 self.mqtt.mqtt_client.publish(self.config['mode_state_topic'], "off" if self.attributes['thermicLevel'] == "STOP" else "heat", qos=0)
+                self.mqtt.mqtt_client.publish(self.config['swing_mode_state_topic'], self.attributes['thermicLevel'], qos=0)
             if 'outTemperature' in self.attributes:
                 self.mqtt.mqtt_client.publish(self.config['state_topic'], self.attributes['outTemperature'], qos=0)
 
         # print("Boiler created / updated : ", self.name, self.id, self.current_position)       
 
     async def put_temperature(tydom_client, device_id, boiler_id, set_setpoint):
-        print(boiler_id, 'setpoint', set_setpoint)
+        print(boiler_id, 'set_setpoint', set_setpoint)
         if not (set_setpoint == ''):
-            await tydom_client.put_devices_data(device_id, boiler_id, 'setpoint', set_setpoint)
+            await tydom_client.put_devices_data(device_id, boiler_id, 'setpoint', set_setpoint) 		
 
     async def put_hvacMode(tydom_client, device_id, boiler_id, set_hvacMode):
         print(boiler_id, 'set_hvacMode', set_hvacMode)
         if set_hvacMode == 'off':
-            await self.tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', 'STOP')
+            await tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', 'STOP')
         else:
-            await self.tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', 'COMFORT')
+            await tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', 'COMFORT')
+            await tydom_client.put_devices_data(device_id, boiler_id, 'setpoint', '10')
 
     async def put_thermicLevel(tydom_client, device_id, boiler_id, set_thermicLevel):
         print(boiler_id, 'thermicLevel', set_thermicLevel)
