@@ -131,9 +131,9 @@ class TydomMessageHandler():
         # Detect type of incoming data
         if (data != ''):
             if ("id_catalog" in data): #search for id_catalog in all data to be sure to get configuration detected
-            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            print('Incoming message type : config detected')
-            msg_type = 'msg_config'
+                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                print('Incoming message type : config detected')
+                msg_type = 'msg_config'
             elif ("id" in first):
                 print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 print('Incoming message type : data detected')
