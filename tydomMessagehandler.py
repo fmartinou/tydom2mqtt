@@ -48,7 +48,7 @@ class TydomMessageHandler():
             self.mqtt_client = mqtt_client
 
     async def incomingTriage(self):
-        bytes_str = self.incoming_bytes        
+        bytes_str = self.incoming_bytes
         if self.mqtt_client == None: #If not MQTT client, return incoming message to use it with anything.
             return bytes_str
         else:
@@ -79,7 +79,7 @@ class TydomMessageHandler():
                         print('RAW INCOMING :')
                         print(bytes_str)
                         print('END RAW')
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")            
+                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 elif ("POST" in first):
                     try:
                         incoming = self.parse_put_response(bytes_str)
@@ -91,7 +91,7 @@ class TydomMessageHandler():
                         print(bytes_str)
                         print('END RAW')
                         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                elif ("HTTP/1.1" in first): #(bytes_str != 0) and 
+                elif ("HTTP/1.1" in first): #(bytes_str != 0) and
                     response = self.response_from_bytes(bytes_str[len(self.cmd_prefix):])
                     incoming = response.data.decode("utf-8")
                     try:
@@ -130,14 +130,14 @@ class TydomMessageHandler():
         first = str(data[:40])
         # Detect type of incoming data
         if (data != ''):
-            if ("id" in first):
-                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                print('Incoming message type : data detected')
-                msg_type = 'msg_data'
-            elif (("date" in first) or ("ios" in first)): #ios for tonioa case (maybe for all iOs users)
+            if ("id_catalog" in data): #search for id_catalog in all data to be sure to get configuration detected
                 print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 print('Incoming message type : config detected')
                 msg_type = 'msg_config'
+            elif ("id" in first):
+                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                print('Incoming message type : data detected')
+                msg_type = 'msg_data'
             elif ("doctype" in first):
                 print('Incoming message type : html detected (probable 404)')
                 msg_type = 'msg_html'
@@ -146,18 +146,18 @@ class TydomMessageHandler():
                 print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 print('Incoming message type : Info detected')
                 msg_type = 'msg_info'
-                # print(data)        
+                # print(data)
             else:
                 print('Incoming message type : no type detected')
                 print(data)
 
             if not (msg_type == None):
-                try:                    
+                try:
                     if (msg_type == 'msg_config'):
                         parsed = json.loads(data)
                         #print(parsed)
                         await self.parse_config_data(parsed=parsed)
-                        
+
                     elif (msg_type == 'msg_data'):
                         parsed = json.loads(data)
                         #print(parsed)
@@ -203,7 +203,7 @@ class TydomMessageHandler():
                 device_type[i["id_device"]] = 'alarm'
                 device_endpoint[i["id_device"]] = i["id_endpoint"]
         print('Configuration updated')
-        
+
     async def parse_devices_data(self, parsed):
         for i in parsed:
             for endpoint in i["endpoints"]:
@@ -222,14 +222,14 @@ class TydomMessageHandler():
                         endpoint_id = endpoint["id"]
                         name_of_id = self.get_name_from_id(endpoint_id)
                         type_of_id = self.get_type_from_id(endpoint_id)
-                    
+
                         _LOGGER.debug("======[ DEVICE INFOS ]======")
                         _LOGGER.debug("ID {}".format(device_id))
                         _LOGGER.debug("ENDPOINT ID {}".format(endpoint_id))
                         _LOGGER.debug("Name {}".format(name_of_id))
                         _LOGGER.debug("Type {}".format(type_of_id))
                         _LOGGER.debug("==========================")
-                        
+
                         for elem in endpoint["data"]:
                             _LOGGER.debug("CURRENT ELEM={}".format(elem))
                             # endpoint_id = None
@@ -368,7 +368,7 @@ class TydomMessageHandler():
 
                             if ('alarmState' in attr_alarm and attr_alarm['alarmState'] == "ON") or ('alarmState' in attr_alarm and attr_alarm['alarmState']) == "QUIET":
                                 state = "triggered"
-                        
+
                             elif 'alarmState' in attr_alarm and attr_alarm['alarmState'] == "DELAYED":
                                 state = "pending"
 
@@ -473,5 +473,3 @@ class HTTPRequest(BaseHTTPRequestHandler):
     def send_error(self, code, message):
         self.error_code = code
         self.error_message = message
-
-
