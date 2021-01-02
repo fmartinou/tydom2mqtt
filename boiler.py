@@ -12,8 +12,8 @@ temperature_state_topic = "climate/tydom/{id}/setpoint"
 current_temperature_topic = "climate/tydom/{id}/temperature"
 mode_state_topic = "climate/tydom/{id}/hvacMode"
 mode_command_topic = "climate/tydom/{id}/set_hvacMode"
-swing_mode_state_topic = "climate/tydom/{id}/thermicLevel"
-swing_mode_command_topic = "climate/tydom/{id}/set_thermicLevel"
+hold_state_topic = "climate/tydom/{id}/thermicLevel"
+hold_command_topic = "climate/tydom/{id}/set_thermicLevel"
 out_temperature_state_topic = "sensor/tydom/{id}/temperature"
 
 #temperature = current_temperature_topic 
@@ -80,9 +80,9 @@ class Boiler:
             self.config['modes'] = ["off", "heat"]
             self.config['mode_state_topic'] = mode_state_topic.format(id=self.id)
             self.config['mode_command_topic'] = mode_command_topic.format(id=self.id)
-            self.config['swing_modes'] = ["STOP","ANTI_FROST","ECO","COMFORT"]
-            self.config['swing_mode_state_topic'] = swing_mode_state_topic.format(id=self.id)
-            self.config['swing_mode_command_topic'] = swing_mode_command_topic.format(id=self.id)
+            self.config['hold_modes'] = ["STOP","ANTI_FROST","ECO","COMFORT"]
+            self.config['hold_state_topic'] = hold_state_topic.format(id=self.id)
+            self.config['hold_command_topic'] = hold_command_topic.format(id=self.id)
         # Electrical heater without thermostat
 #        else:
 #            self.boilertype = 'Electrical'
@@ -93,8 +93,8 @@ class Boiler:
 #            self.config['mode_state_topic'] = mode_state_topic.format(id=self.id)
 #            self.config['mode_command_topic'] = mode_command_topic.format(id=self.id)
 #            self.config['swing_modes'] = ["STOP","ANTI-FROST","ECO","COMFORT"]
-#            self.config['swing_mode_state_topic'] = swing_mode_state_topic.format(id=self.id)
-#            self.config['swing_mode_command_topic'] = swing_mode_command_topic.format(id=self.id)
+#            self.config['hold_state_topic'] = hold_state_topic.format(id=self.id)
+#            self.config['hold_command_topic'] = hold_command_topic.format(id=self.id)
 
         self.config['unique_id'] = self.id
 
@@ -105,21 +105,18 @@ class Boiler:
         await self.setup()
         
         if (self.mqtt != None):
-            if 'temperature' in self.attributes and self.attributes['temperature'] != 'None':
-                self.mqtt.mqtt_client.publish(self.config['current_temperature_topic'], self.attributes['temperature'], qos=0)
+            if 'temperature' in self.attributes:
+                self.mqtt.mqtt_client.publish(self.config['current_temperature_topic'], '0' if self.attributes['temperature'] == 'None' else  self.attributes['temperature'], qos=0)
             if 'setpoint' in self.attributes:
-                if self.attributes['setpoint'] != 'None':
-#                    self.mqtt.mqtt_client.publish(self.config['temperature_command_topic'], self.attributes['setpoint'], qos=0)
-                    self.mqtt.mqtt_client.publish(self.config['temperature_state_topic'], self.attributes['setpoint'], qos=0)
-                else:
-                    self.mqtt.mqtt_client.publish(self.config['temperature_state_topic'], '10', qos=0)
+#                self.mqtt.mqtt_client.publish(self.config['temperature_command_topic'], self.attributes['setpoint'], qos=0)
+                self.mqtt.mqtt_client.publish(self.config['temperature_state_topic'], '10' if self.attributes['setpoint'] == 'None' else self.attributes['setpoint'], qos=0)
 #            if 'hvacMode' in self.attributes:
 #                self.mqtt.mqtt_client.publish(self.config['mode_state_topic'], "heat" if self.attributes['hvacMode'] == "NORMAL" else "off", qos=0)
 #            if 'authorization' in self.attributes:
 #                self.mqtt.mqtt_client.publish(self.config['mode_state_topic'], "off" if self.attributes['authorization'] == "STOP" else "heat", qos=0)
             if 'thermicLevel' in self.attributes:
                 self.mqtt.mqtt_client.publish(self.config['mode_state_topic'], "off" if self.attributes['thermicLevel'] == "STOP" else "heat", qos=0)
-                self.mqtt.mqtt_client.publish(self.config['swing_mode_state_topic'], self.attributes['thermicLevel'], qos=0)
+                self.mqtt.mqtt_client.publish(self.config['hold_state_topic'], self.attributes['thermicLevel'], qos=0)
             if 'outTemperature' in self.attributes:
                 self.mqtt.mqtt_client.publish(self.config['state_topic'], self.attributes['outTemperature'], qos=0)
 
