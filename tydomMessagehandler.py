@@ -25,7 +25,7 @@ deviceDoorKeywords = ['openState']
 deviceDoorDetailsKeywords = ['onFavPos','thermicDefect','obstacleDefect','intrusion','battDefect']
 
 deviceCoverKeywords = ['position','onFavPos','thermicDefect','obstacleDefect','intrusion','battDefect']
-deviceCoverDetailsKeywords = ['onFavPos','thermicDefect','obstacleDefect','intrusion','battDefect']
+deviceCoverDetailsKeywords = ['onFavPos','thermicDefect','obstacleDefect','intrusion','battDefect', 'position']
 
 #climateKeywords = ['temperature', 'authorization', 'hvacMode', 'setpoint']
 
@@ -193,13 +193,13 @@ class TydomMessageHandler():
 
             if i["last_usage"] == 'boiler' or i["last_usage"] == 'conso':
                 # print('{} {}'.format(i["id_endpoint"],i["name"]))
-                device_name[i["id_endpoint"]] = i["name"]
-                device_type[i["id_endpoint"]] = i["last_usage"]
+                device_name[i["id_device"]] = i["name"]
+                device_type[i["id_device"]] = i["last_usage"]
                 device_endpoint[i["id_device"]] = i["id_endpoint"]
 
             if i["last_usage"] == 'alarm':
                 # print('{} {}'.format(i["id_endpoint"], i["name"]))
-                device_name[i["id_endpoint"]] = "Tyxal Alarm"
+                device_name[i["id_device"]] = "Tyxal Alarm"
                 device_type[i["id_device"]] = 'alarm'
                 device_endpoint[i["id_device"]] = i["id_endpoint"]
         print('Configuration updated')
@@ -220,8 +220,8 @@ class TydomMessageHandler():
                         attr_light_details = {}
                         device_id = i["id"]
                         endpoint_id = endpoint["id"]
-                        name_of_id = self.get_name_from_id(endpoint_id)
-                        type_of_id = self.get_type_from_id(endpoint_id)
+                        name_of_id = self.get_name_from_id(device_id)
+                        type_of_id = self.get_type_from_id(device_id)
 
                         _LOGGER.debug("======[ DEVICE INFOS ]======")
                         _LOGGER.debug("ID {}".format(device_id))
@@ -317,31 +317,31 @@ class TydomMessageHandler():
 
                     if 'device_type' in attr_cover and attr_cover['device_type'] == 'cover':
                         # print(attr_cover)
-                        new_cover = "cover_tydom_"+str(endpoint_id)
+                        new_cover = "cover_tydom_"+str(device_id)
                         new_cover = Cover(tydom_attributes=attr_cover, mqtt=self.mqtt_client) #NEW METHOD
                         # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                         await new_cover.update()
                     elif 'device_type' in attr_door and attr_door['device_type'] == 'sensor':
                         # print(attr_cover)
-                        new_door = "door_tydom_"+str(endpoint_id)
+                        new_door = "door_tydom_"+str(device_id)
                         new_door = sensor(elem_name='openState', tydom_attributes_payload=attr_door, attributes_topic_from_device='useless', mqtt=self.mqtt_client)
                         # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                         await new_door.update()
                     elif 'device_type' in attr_window and attr_window['device_type'] == 'sensor':
                         # print(attr_cover)
-                        new_window = "window_tydom_"+str(endpoint_id)
+                        new_window = "window_tydom_"+str(device_id)
                         new_window = sensor(elem_name='openState', tydom_attributes_payload=attr_window, attributes_topic_from_device='useless', mqtt=self.mqtt_client)
                         # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                         await new_window.update()
                     elif 'device_type' in attr_light and attr_light['device_type'] == 'light':
                         # print(attr_cover)
-                        new_light = "light_tydom_"+str(endpoint_id)
+                        new_light = "light_tydom_"+str(device_id)
                         new_light = Light(tydom_attributes=attr_light, mqtt=self.mqtt_client) #NEW METHOD
                         # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                         await new_light.update()
                     elif 'device_type' in attr_boiler and attr_boiler['device_type'] == 'climate':
                         # print(attr_boiler)
-                        new_boiler = "boiler_tydom_"+str(endpoint_id)
+                        new_boiler = "boiler_tydom_"+str(device_id)
                         new_boiler = Boiler(tydom_attributes=attr_boiler, tydom_client=self.tydom_client, mqtt=self.mqtt_client) #NEW METHOD
                         # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                         await new_boiler.update()
