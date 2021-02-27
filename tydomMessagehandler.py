@@ -191,6 +191,7 @@ class TydomMessageHandler():
                 device_type[i["id_device"]] = i["last_usage"]
                 device_endpoint[i["id_device"]] = i["id_endpoint"]
 
+
             if i["last_usage"] == 'boiler' or i["last_usage"] == 'conso':
                 # print('{} {}'.format(i["id_endpoint"],i["name"]))
                 device_name[i["id_device"]] = i["name"]
@@ -202,6 +203,14 @@ class TydomMessageHandler():
                 device_name[i["id_device"]] = "Tyxal Alarm"
                 device_type[i["id_device"]] = 'alarm'
                 device_endpoint[i["id_device"]] = i["id_endpoint"]
+
+
+            if i["last_usage"] == 'electric':
+                device_name[i["id_device"]] = i["name"]
+                device_type[i["id_device"]] =  'boiler'
+                device_endpoint[i["id_device"]] = i["id_endpoint"]
+
+
         print('Configuration updated')
 
     async def parse_devices_data(self, parsed):
