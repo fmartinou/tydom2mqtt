@@ -28,7 +28,12 @@ class sensor:
         self.parent_device_id = str(tydom_attributes_payload['id'])
         self.id = elem_name+'_tydom_'+str(tydom_attributes_payload['id'])
         self.name = elem_name+'_tydom_'+'_'+str(tydom_attributes_payload['name']).replace(" ", "_")
-        
+        if 'device_class' in tydom_attributes_payload.keys():
+            self.device_class = tydom_attributes_payload['device_class']
+
+        if 'unit_of_measurement' in tydom_attributes_payload.keys():
+            self.unit_of_measurement = tydom_attributes_payload['unit_of_measurement']
+
         self.mqtt = mqtt
  
 
@@ -102,6 +107,14 @@ class sensor:
         self.config = {}
         self.config['name'] = self.name
         self.config['unique_id'] = self.id
+        try:
+            self.config['device_class'] = self.device_class
+        except AttributeError:
+            pass
+        try:
+            self.config['unit_of_measurement'] = self.unit_of_measurement
+        except AttributeError:
+            pass
         # self.config['device_class'] = self.device_class
         
         #
