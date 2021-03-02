@@ -31,6 +31,33 @@ deviceCoverDetailsKeywords = ['onFavPos','thermicDefect','obstacleDefect','intru
 
 deviceBoilerKeywords = ['thermicLevel','delayThermicLevel','temperature','authorization','hvacMode','timeDelay','tempoOn','antifrostOn','openingDetected','presenceDetected','absence','loadSheddingOn','setpoint','delaySetpoint','anticipCoeff','outTemperature']
 
+device_conso_classes = {'energyInstantTotElec': 'current', 'energyInstantTotElec_Min': 'current',
+                  'energyInstantTotElec_Max': 'current',
+                  'energyScaleTotElec_Min': 'current', 'energyScaleTotElec_Max': 'current',
+                  'energyInstantTotElecP': 'power', 'energyInstantTotElec_P_Min': 'power',
+                  'energyInstantTotElec_P_Max': 'power',
+                  'energyScaleTotElec_P_Min': 'power', 'energyScaleTotElec_P_Max': 'power',
+                  'energyInstantTi1P': 'power', 'energyInstantTi1P_Min': 'power', 'energyInstantTi1P_Max': 'power',
+                  'energyScaleTi1P_Min': 'power',
+                  'energyScaleTi1P_Max': 'power',
+                  'energyInstantTi1I': 'current', 'energyInstantTi1I_Min': 'current',
+                  'energyInstantTi1I_Max': 'current', 'energyScaleTi1I_Min': 'current',
+                  'energyScaleTi1I_Max': 'current',
+                  'energyTotIndexWatt': 'energy'}
+
+device_conso_unit_of_measurement = {'energyInstantTotElec': 'A', 'energyInstantTotElec_Min': 'A', 'energyInstantTotElec_Max': 'A',
+                       'energyScaleTotElec_Min': 'A', 'energyScaleTotElec_Max': 'A',
+                       'energyInstantTotElecP': 'W', 'energyInstantTotElec_P_Min': 'W',
+                       'energyInstantTotElec_P_Max': 'W',
+                       'energyScaleTotElec_P_Min': 'W', 'energyScaleTotElec_P_Max': 'W',
+                       'energyInstantTi1P': 'W', 'energyInstantTi1P_Min': 'W', 'energyInstantTi1P_Max': 'W',
+                       'energyScaleTi1P_Min': 'W',
+                       'energyScaleTi1P_Max': 'W',
+                       'energyInstantTi1I': 'A', 'energyInstantTi1I_Min': 'A',
+                       'energyInstantTi1I_Max': 'A', 'energyScaleTi1I_Min': 'A',
+                       'energyScaleTi1I_Max': 'A', 'energyTotIndexWatt': 'Wh'}
+device_conso_keywords = device_conso_classes.keys()
+
 # Device dict for parsing
 device_name = dict()
 device_endpoint = dict()
@@ -243,10 +270,6 @@ class TydomMessageHandler():
                             _LOGGER.debug("CURRENT ELEM={}".format(elem))
                             # endpoint_id = None
 
-                            elementName = None
-                            elementValue = None
-                            elementValidity = None
-
                             # Element name
                             elementName = elem["name"]
                             # Element value
@@ -319,6 +342,27 @@ class TydomMessageHandler():
                                     attr_alarm['name']="Tyxal Alarm"
                                     attr_alarm['device_type'] = 'alarm_control_panel'
                                     attr_alarm[elementName] = elementValue
+
+                            if type_of_id == 'conso':
+                                if elementName in device_conso_keywords and elementValidity == "upToDate":
+                                    attr_conso = {
+                                        'device_id': device_id,
+                                        'endpoint_id': endpoint_id,
+                                        'id': str(device_id) + '_' + str(endpoint_id),
+                                        'name': print_id,
+                                        'device_type': 'sensor',
+                                        elementName: elementValue
+                                    }
+
+                                    if elementName in device_conso_classes:
+                                        attr_conso['device_class'] = device_conso_classes[elementName]
+
+                                    if elementName in device_conso_unit_of_measurement:
+                                        attr_conso['unit_of_measurement'] = device_conso_unit_of_measurement[elementName]
+
+                                    new_conso = sensor(elem_name=elementName, tydom_attributes_payload=attr_conso,
+                                                       attributes_topic_from_device='useless', mqtt=self.mqtt_client)
+                                    await new_conso.update()
 
                     except Exception as e:
                         print('msg_data error in parsing !')
