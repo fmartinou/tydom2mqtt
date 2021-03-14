@@ -211,7 +211,7 @@ class TydomMessageHandler():
         for i in parsed["endpoints"]:
             # Get list of shutter
             # print(i)
-            if i["last_usage"] == 'shutter' or i["last_usage"] == 'light' or i["last_usage"] == 'window' or i["last_usage"] == 'windowFrench' or i["last_usage"] == 'belmDoor':
+            if i["last_usage"] == 'shutter' or i["last_usage"] == 'klineShutter' or i["last_usage"] == 'light' or i["last_usage"] == 'window' or i["last_usage"] == 'windowFrench' or i["last_usage"] == 'belmDoor' or i["last_usage"] == 'klineDoor' or i["last_usage"] == 'klineWindowFrench':
                 # print('{} {}'.format(i["id_endpoint"],i["name"]))
                 # device_name[i["id_endpoint"]] = i["name"]
                 device_name[i["id_device"]] = i["name"]
@@ -293,7 +293,7 @@ class TydomMessageHandler():
                                     attr_light['device_type'] = 'light'
                                     attr_light[elementName] = elementValue
 
-                            if type_of_id == 'shutter':
+                            if type_of_id == 'shutter' or type_of_id == 'klineShutter':
                                 if elementName in deviceCoverKeywords and elementValidity == 'upToDate': #NEW METHOD
                                     attr_cover['device_id'] = device_id
                                     attr_cover['endpoint_id'] = endpoint_id
@@ -301,9 +301,9 @@ class TydomMessageHandler():
                                     attr_cover['cover_name'] = print_id
                                     attr_cover['name'] = print_id
                                     attr_cover['device_type'] = 'cover'
-                                    attr_cover[elementName] = elementValue
-
-                            if type_of_id == 'belmDoor':
+                                    attr_cover[elementName] = elementValue                             
+                                    
+                            if type_of_id == 'belmDoor' or type_of_id == 'klineDoor':
                                 if elementName in deviceDoorKeywords and elementValidity == 'upToDate': #NEW METHOD
                                     attr_door['device_id'] = device_id
                                     attr_door['endpoint_id'] = endpoint_id
@@ -312,8 +312,8 @@ class TydomMessageHandler():
                                     attr_door['name'] = print_id
                                     attr_door['device_type'] = 'sensor'
                                     attr_door[elementName] = elementValue
-
-                            if type_of_id == 'windowFrench' or type_of_id == 'window':
+                                    
+                            if type_of_id == 'windowFrench' or type_of_id == 'window' or type_of_id == 'klineWindowFrench':
                                 if elementName in deviceDoorKeywords and elementValidity == 'upToDate': #NEW METHOD
                                     attr_window['device_id'] = device_id
                                     attr_window['endpoint_id'] = endpoint_id
