@@ -211,31 +211,32 @@ class TydomMessageHandler():
         for i in parsed["endpoints"]:
             # Get list of shutter
             # print(i)
+            device_unique_id = str(i["id_endpoint"]) + "_" + str(i["id_device"])
             if i["last_usage"] == 'shutter' or i["last_usage"] == 'klineShutter' or i["last_usage"] == 'light' or i["last_usage"] == 'window' or i["last_usage"] == 'windowFrench' or i["last_usage"] == 'belmDoor' or i["last_usage"] == 'klineDoor' or i["last_usage"] == 'klineWindowFrench':
                 # print('{} {}'.format(i["id_endpoint"],i["name"]))
                 # device_name[i["id_endpoint"]] = i["name"]
-                device_name[i["id_device"]] = i["name"]
-                device_type[i["id_device"]] = i["last_usage"]
-                device_endpoint[i["id_device"]] = i["id_endpoint"]
+                device_name[device_unique_id] = i["name"]
+                device_type[device_unique_id] = i["last_usage"]
+                device_endpoint[device_unique_id] = i["id_endpoint"]
 
 
             if i["last_usage"] == 'boiler' or i["last_usage"] == 'conso':
                 # print('{} {}'.format(i["id_endpoint"],i["name"]))
-                device_name[i["id_device"]] = i["name"]
-                device_type[i["id_device"]] = i["last_usage"]
-                device_endpoint[i["id_device"]] = i["id_endpoint"]
+                device_name[device_unique_id] = i["name"]
+                device_type[device_unique_id] = i["last_usage"]
+                device_endpoint[device_unique_id] = i["id_endpoint"]
 
             if i["last_usage"] == 'alarm':
                 # print('{} {}'.format(i["id_endpoint"], i["name"]))
-                device_name[i["id_device"]] = "Tyxal Alarm"
-                device_type[i["id_device"]] = 'alarm'
-                device_endpoint[i["id_device"]] = i["id_endpoint"]
+                device_name[device_unique_id] = "Tyxal Alarm"
+                device_type[device_unique_id] = 'alarm'
+                device_endpoint[device_unique_id] = i["id_endpoint"]
 
 
             if i["last_usage"] == 'electric':
-                device_name[i["id_device"]] = i["name"]
-                device_type[i["id_device"]] =  'boiler'
-                device_endpoint[i["id_device"]] = i["id_endpoint"]
+                device_name[device_unique_id] = i["name"]
+                device_type[device_unique_id] =  'boiler'
+                device_endpoint[device_unique_id] = i["id_endpoint"]
 
 
         print('Configuration updated')
@@ -256,8 +257,9 @@ class TydomMessageHandler():
                         attr_light_details = {}
                         device_id = i["id"]
                         endpoint_id = endpoint["id"]
-                        name_of_id = self.get_name_from_id(device_id)
-                        type_of_id = self.get_type_from_id(device_id)
+                        unique_id = str(endpoint_id) + "_" + str(device_id)
+                        name_of_id = self.get_name_from_id(unique_id)
+                        type_of_id = self.get_type_from_id(unique_id)
 
                         _LOGGER.debug("======[ DEVICE INFOS ]======")
                         _LOGGER.debug("ID {}".format(device_id))
@@ -506,7 +508,7 @@ class TydomMessageHandler():
             name = device_name[id]
         else:
             print('{} not in dic device_name'.format(id))
-        return(name)
+        return name
 
 
 class BytesIOSocket:
