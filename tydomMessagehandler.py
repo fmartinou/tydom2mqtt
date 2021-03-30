@@ -21,7 +21,7 @@ deviceAlarmDetailsKeywords = ['alarmSOS','zone1State','zone2State','zone3State',
 deviceLightKeywords = ['level','onFavPos','thermicDefect','battDefect','loadDefect','cmdDefect','onPresenceDetected','onDusk']
 deviceLightDetailsKeywords = ['onFavPos','thermicDefect','battDefect','loadDefect','cmdDefect','onPresenceDetected','onDusk']
 
-deviceDoorKeywords = ['openState']
+deviceDoorKeywords = ['openState', 'intrusionDetect']
 deviceDoorDetailsKeywords = ['onFavPos','thermicDefect','obstacleDefect','intrusion','battDefect']
 
 deviceCoverKeywords = ['position','onFavPos','thermicDefect','obstacleDefect','intrusion','battDefect']
