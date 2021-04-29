@@ -68,7 +68,7 @@ class TydomMessageHandler():
 
 
     def __init__(self, incoming_bytes, tydom_client, mqtt_client):
-            print('New tydom incoming message')
+            # print('New tydom incoming message')
             self.incoming_bytes = incoming_bytes
             self.tydom_client = tydom_client
             self.cmd_prefix = tydom_client.cmd_prefix
