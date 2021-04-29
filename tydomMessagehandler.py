@@ -68,7 +68,7 @@ class TydomMessageHandler():
 
 
     def __init__(self, incoming_bytes, tydom_client, mqtt_client):
-            # print('New tydom incoming message')
+            print('New tydom incoming message')
             self.incoming_bytes = incoming_bytes
             self.tydom_client = tydom_client
             self.cmd_prefix = tydom_client.cmd_prefix
@@ -212,7 +212,7 @@ class TydomMessageHandler():
             # Get list of shutter
             # print(i)
             device_unique_id = str(i["id_endpoint"]) + "_" + str(i["id_device"])
-            if i["last_usage"] == 'shutter' or i["last_usage"] == 'klineShutter' or i["last_usage"] == 'light' or i["last_usage"] == 'window' or i["last_usage"] == 'windowFrench' or i["last_usage"] == 'belmDoor' or i["last_usage"] == 'klineDoor' or i["last_usage"] == 'klineWindowFrench':
+            if i["last_usage"] == 'shutter' or i["last_usage"] == 'klineShutter' or i["last_usage"] == 'light' or i["last_usage"] == 'window' or i["last_usage"] == 'windowFrench' or i["last_usage"] == 'belmDoor' or i["last_usage"] == 'klineDoor' or i["last_usage"] == 'klineWindowFrench' or i["last_usage"] == 'klineWindowSliding':
                 # print('{} {}'.format(i["id_endpoint"],i["name"]))
                 # device_name[i["id_endpoint"]] = i["name"]
                 device_name[device_unique_id] = i["name"]
@@ -313,9 +313,10 @@ class TydomMessageHandler():
                                     attr_door['door_name'] = print_id
                                     attr_door['name'] = print_id
                                     attr_door['device_type'] = 'sensor'
+                                    attr_door['element_name'] = elementName
                                     attr_door[elementName] = elementValue
                                     
-                            if type_of_id == 'windowFrench' or type_of_id == 'window' or type_of_id == 'klineWindowFrench':
+                            if type_of_id == 'windowFrench' or type_of_id == 'window' or type_of_id == 'klineWindowFrench' or type_of_id == 'klineWindowSliding':
                                 if elementName in deviceDoorKeywords and elementValidity == 'upToDate': #NEW METHOD
                                     attr_window['device_id'] = device_id
                                     attr_window['endpoint_id'] = endpoint_id
@@ -323,6 +324,7 @@ class TydomMessageHandler():
                                     attr_window['door_name'] = print_id
                                     attr_window['name'] = print_id
                                     attr_window['device_type'] = 'sensor'
+                                    attr_window['element_name'] = elementName
                                     attr_window[elementName] = elementValue
 
                             if type_of_id == 'boiler':
@@ -379,13 +381,13 @@ class TydomMessageHandler():
                     elif 'device_type' in attr_door and attr_door['device_type'] == 'sensor':
                         # print(attr_cover)
                         new_door = "door_tydom_"+str(device_id)
-                        new_door = sensor(elem_name='openState', tydom_attributes_payload=attr_door, attributes_topic_from_device='useless', mqtt=self.mqtt_client)
+                        new_door = sensor(elem_name=attr_door['element_name'], tydom_attributes_payload=attr_door, attributes_topic_from_device='useless', mqtt=self.mqtt_client)
                         # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                         await new_door.update()
                     elif 'device_type' in attr_window and attr_window['device_type'] == 'sensor':
                         # print(attr_cover)
                         new_window = "window_tydom_"+str(device_id)
-                        new_window = sensor(elem_name='openState', tydom_attributes_payload=attr_window, attributes_topic_from_device='useless', mqtt=self.mqtt_client)
+                        new_window = sensor(elem_name=attr_window['element_name'], tydom_attributes_payload=attr_window, attributes_topic_from_device='useless', mqtt=self.mqtt_client)
                         # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                         await new_window.update()
                     elif 'device_type' in attr_light and attr_light['device_type'] == 'light':
