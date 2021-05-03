@@ -59,11 +59,12 @@ class TydomWebSocketClient():
         if self.host == "mediation.tydom.com":
             print('Setting remote mode context.')
             self.remote_mode = True
-            self.ssl_context = None
+            #self.ssl_context = None
+            self.ssl_context = ssl._create_unverified_context()
             self.cmd_prefix = "\x02"
             self.ping_timeout = 40
 
-            
+
         else:
             print('Setting local mode context.')
             self.remote_mode = False
@@ -77,8 +78,8 @@ class TydomWebSocketClient():
         print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
         print('TYDOM WEBSOCKET CONNECTION INITIALISING....                     ')
 
-    
-        
+
+
         print('Building headers, getting 1st handshake and authentication....')
 
         httpHeaders =  {"Connection": "Upgrade",
@@ -108,22 +109,22 @@ class TydomWebSocketClient():
             websocket_ssl_context = self.ssl_context
         else:
             websocket_ssl_context = True # Verify certificate
-            
+
     # outer loop restarted every time the connection fails
         print('Attempting websocket connection with tydom hub.......................')
         print('Host Target :')
-        print(self.host)                
+        print(self.host)
         '''
             Connecting to webSocket server
             websockets.client.connect returns a WebSocketClientProtocol, which is used to send and receive messages
         '''
-        self.connection = await websockets.client.connect('wss://{}:443/mediation/client?mac={}&appli=1'.format(self.host, self.mac),
+        self.connection = await websockets.connect('wss://{}:443/mediation/client?mac={}&appli=1'.format(self.host, self.mac),
                                                             extra_headers=websocketHeaders, ssl=websocket_ssl_context, ping_timeout=None)
-       
+
         return self.connection
 
 ############ Utils
- 
+
     # Generate 16 bytes random key for Sec-WebSocket-Keyand convert it to base64
     def generate_random_key(self):
         return base64.b64encode(os.urandom(16))
@@ -215,7 +216,7 @@ class TydomWebSocketClient():
 
             # str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/cdata?name={},".format(str(alarm_id),str(alarm_id),str(cmd)) + body +");"
             str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/cdata?name={} HTTP/1.1\r\nContent-Length: ".format(str(device_id),str(alarm_id),str(Cmd))+str(len(body))+"\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"+body+"\r\n\r\n"
-            
+
             a_bytes = bytes(str_request, "ascii")
             # print(a_bytes)
             print('Sending to tydom client.....', 'PUT cdata', body)
@@ -227,7 +228,7 @@ class TydomWebSocketClient():
             print(e)
             print(a_bytes)
 
-            
+
     # Get some information on Tydom
     async def get_info(self):
         msg_type = '/info'

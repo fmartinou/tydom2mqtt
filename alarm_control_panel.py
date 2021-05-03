@@ -11,7 +11,7 @@ alarm_attributes_topic = "alarm_control_panel/tydom/{id}/attributes"
 
 class Alarm:
 
-    def __init__(self, current_state, tydom_attributes=None, mqtt=None):
+    def __init__(self, current_state, alarm_pin=None, tydom_attributes=None, mqtt=None):
         self.attributes = tydom_attributes
         self.device_id = self.attributes['device_id']
         self.endpoint_id = self.attributes['endpoint_id']
@@ -19,6 +19,7 @@ class Alarm:
         self.name = self.attributes['name']
         self.current_state = current_state
         self.mqtt = mqtt
+        self.alarm_pin = alarm_pin
 
     async def setup(self):
         self.device = {}
@@ -36,7 +37,13 @@ class Alarm:
         # self.config['attributes'] = self.attributes
         self.config['command_topic'] = alarm_command_topic.format(id=self.id)
         self.config['state_topic'] = alarm_state_topic.format(id=self.id)
-        self.config['code_arm_required'] = 'false'
+        self.config['code'] = self.alarm_pin
+        if (self.alarm_pin != None):
+            self.config['code_arm_required'] = 'true'
+        else:
+            self.config['code_arm_required'] = 'false'
+
+
         self.config['json_attributes_topic'] = alarm_attributes_topic.format(id=self.id)
 
         if (self.mqtt != None):
@@ -52,7 +59,7 @@ class Alarm:
             print("Alarm sensors Error :")
             print(e)
 
-        
+
         self.state_topic = alarm_state_topic.format(id=self.id, state=self.current_state)
         if (self.mqtt != None):
             self.mqtt.mqtt_client.publish(self.state_topic, self.current_state, qos=0, retain=True) #Alarm State
@@ -94,6 +101,3 @@ class Alarm:
             zone_id = None
 
         await tydom_client.put_alarm_cdata(device_id=device_id, alarm_id=alarm_id, value=value, zone_id=zone_id)
-
-
-

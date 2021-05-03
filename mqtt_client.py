@@ -13,6 +13,7 @@ from alarm_control_panel import Alarm
 ####################################### MQTT
 from light import Light
 from boiler import Boiler
+from switch import Switch
 
 tydom_topic = "+/tydom/#"
 refresh_topic = "homeassistant/requests/tydom/refresh"
@@ -69,11 +70,11 @@ class MQTT_Hassio():
         print("##################################")
         try:
             print("Subscribing to : ", tydom_topic)
-            client.subscribe('homeassistant/status', qos=0)
+            # client.subscribe('homeassistant/#', qos=0)
             client.subscribe(tydom_topic, qos=0)
         except Exception as e:
             print("Error on connect : ", e)
-            
+
 
     async def on_message(self, client, topic, payload, qos, properties):
         # print('Incoming MQTT message : ', topic, payload)
@@ -92,8 +93,7 @@ class MQTT_Hassio():
         elif (topic == "homeassistant/requests/tydom/scenarii"):
             print('Incoming MQTT scenarii request : ', topic, payload)
             await self.tydom.get_scenarii()
-        elif (topic == "homeassistant/status" and payload.decode() == 'online'):
-            await self.tydom.get_devices_data()
+
         elif (topic == "/tydom/init"):
             print('Incoming MQTT init request : ', topic, payload)
             await self.tydom.connect()
@@ -109,7 +109,7 @@ class MQTT_Hassio():
 
         #     else:
         #         await self.tydom.put_devices_data(str(get_id), 'position', str(json.loads(payload)))
-        
+
         elif 'set_positionCmd' in str(topic):
             print('Incoming MQTT set_positionCmd request : ', topic, payload)
             value = str(payload).strip('b').strip("'")
@@ -123,18 +123,18 @@ class MQTT_Hassio():
 
 
         elif ('set_position' in str(topic)) and not ('set_positionCmd'in str(topic)):
-            
+
             print('Incoming MQTT set_position request : ', topic, json.loads(payload))
             value = json.loads(payload)
             # print(value)
             get_id = (topic.split("/"))[2] #extract ids from mqtt
             device_id = (get_id.split("_"))[0] #extract id from mqtt
             endpoint_id = (get_id.split("_"))[1] #extract id from mqtt
-            
+
             await Cover.put_position(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id, position=str(value))
 
         elif 'set_levelCmd' in str(topic):
-            print('Incoming MQTT set_positionCmd request : ', topic, payload)
+            print('Incoming MQTT set_levelCmd request : ', topic, payload)
             value = str(payload).strip('b').strip("'")
 
             get_id = (topic.split("/"))[2]  # extract ids from mqtt
@@ -148,7 +148,7 @@ class MQTT_Hassio():
 
         elif ('set_level' in str(topic)) and not ('set_levelCmd' in str(topic)):
 
-            print('Incoming MQTT set_position request : ', topic, json.loads(payload))
+            print('Incoming MQTT set_level request : ', topic, json.loads(payload))
             value = json.loads(payload)
             # print(value)
             get_id = (topic.split("/"))[2]  # extract ids from mqtt
@@ -167,7 +167,7 @@ class MQTT_Hassio():
             endpoint_id = (get_id.split("_"))[1] #extract id from mqtt
 
             await Alarm.put_alarm_state(tydom_client=self.tydom, device_id=device_id, alarm_id=endpoint_id, asked_state=command, home_zone=self.home_zone, night_zone=self.night_zone)
- 
+
         elif ('set_setpoint' in str(topic)):
 
             value = str(payload).strip('b').strip("'")
@@ -204,6 +204,40 @@ class MQTT_Hassio():
 
             await Boiler.put_thermicLevel(tydom_client=self.tydom, device_id=device_id, boiler_id=endpoint_id,
                                      set_thermicLevel=str(value))
+        elif ('set_switch_state' in str(topic)) and not ('homeassistant'in str(topic)):
+            # print(topic, payload, qos, properties)
+            command = str(payload).strip('b').strip("'")
+
+            get_id = (topic.split("/"))[2] #extract ids from mqtt
+            device_id = (get_id.split("_"))[0] #extract id from mqtt
+            endpoint_id = (get_id.split("_"))[1] #extract id from mqtt
+
+            await Switch.put_switch_state(tydom_client=self.tydom, device_id=device_id, switch_id=endpoint_id, state=command)
+
+        elif 'set_levelCmdGate' in str(topic):
+            print('Incoming MQTT set_levelCmdGate request : ', topic, payload)
+            value = str(payload).strip('b').strip("'")
+
+            get_id = (topic.split("/"))[2]  # extract ids from mqtt
+            device_id = (get_id.split("_"))[0]  # extract id from mqtt
+            endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
+
+            print(str(get_id), 'levelCmd', value)
+            await Light.put_levelCmdGate(tydom_client=self.tydom, device_id=device_id, switch_id=endpoint_id,
+                                        levelCmd=str(value))
+
+
+        elif ('set_levelGate' in str(topic)) and not ('set_levelCmd' in str(topic)):
+
+            print('Incoming MQTT set_levelGate request : ', topic, json.loads(payload))
+            value = json.loads(payload)
+            # print(value)
+            get_id = (topic.split("/"))[2]  # extract ids from mqtt
+            device_id = (get_id.split("_"))[0]  # extract id from mqtt
+            endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
+
+            await Light.put_levelGate(tydom_client=self.tydom, device_id=device_id, switch_id=endpoint_id,
+                                     level=str(value))
 
         else:
             pass
@@ -214,7 +248,7 @@ class MQTT_Hassio():
         print('MQTT Disconnected !')
         print("##################################")
         # self.connect()
-        
+
 
     def on_subscribe(self, client, mid, qos):
         print("MQTT is connected and suscribed ! =)", client)
@@ -223,5 +257,3 @@ class MQTT_Hassio():
             client.publish('homeassistant/sensor/tydom/last_clean_startup', pyld, qos=1, retain=True)
         except Exception as e:
             print("on subscribe error : ", e)
-
-

@@ -3,6 +3,9 @@ from light import Light
 from boiler import Boiler
 from alarm_control_panel import Alarm
 from sensors import sensor
+from switch import Switch
+
+
 
 from http.server import BaseHTTPRequestHandler
 from http.client import HTTPResponse
@@ -30,6 +33,9 @@ deviceCoverDetailsKeywords = ['onFavPos','thermicDefect','obstacleDefect','intru
 #climateKeywords = ['temperature', 'authorization', 'hvacMode', 'setpoint']
 
 deviceBoilerKeywords = ['thermicLevel','delayThermicLevel','temperature','authorization','hvacMode','timeDelay','tempoOn','antifrostOn','openingDetected','presenceDetected','absence','loadSheddingOn','setpoint','delaySetpoint','anticipCoeff','outTemperature']
+
+deviceSwitchKeywords = ['thermicDefect']
+deviceSwitchDetailsKeywords = ['thermicDefect']
 
 device_conso_classes = {'energyInstantTotElec': 'current', 'energyInstantTotElec_Min': 'current',
                   'energyInstantTotElec_Max': 'current',
@@ -212,7 +218,9 @@ class TydomMessageHandler():
             # Get list of shutter
             # print(i)
             device_unique_id = str(i["id_endpoint"]) + "_" + str(i["id_device"])
-            if i["last_usage"] == 'shutter' or i["last_usage"] == 'klineShutter' or i["last_usage"] == 'light' or i["last_usage"] == 'window' or i["last_usage"] == 'windowFrench' or i["last_usage"] == 'belmDoor' or i["last_usage"] == 'klineDoor' or i["last_usage"] == 'klineWindowFrench' or i["last_usage"] == 'klineWindowSliding':
+            
+            if i["last_usage"] == 'shutter' or i["last_usage"] == 'klineShutter' or i["last_usage"] == 'light' or i["last_usage"] == 'window' or i["last_usage"] == 'windowFrench' or i["last_usage"] == 'belmDoor' or i["last_usage"] == 'klineDoor' or i["last_usage"] == 'klineWindowFrench' or i["last_usage"] == 'klineWindowSliding' or i["last_usage"] == 'garage_door' or i["last_usage"] == 'gate':
+                
                 # print('{} {}'.format(i["id_endpoint"],i["name"]))
                 # device_name[i["id_endpoint"]] = i["name"]
                 device_name[device_unique_id] = i["name"]
@@ -253,6 +261,7 @@ class TydomMessageHandler():
                         attr_door ={}
                         attr_window ={}
                         attr_light = {}
+                        attr_gate = {}
                         attr_boiler = {}
                         attr_light_details = {}
                         device_id = i["id"]
@@ -347,6 +356,18 @@ class TydomMessageHandler():
                                     attr_alarm['device_type'] = 'alarm_control_panel'
                                     attr_alarm[elementName] = elementValue
 
+                            if type_of_id == 'garage_door' or type_of_id == 'gate':
+                                if elementName in deviceSwitchKeywords and elementValidity == 'upToDate':  # NEW METHOD
+                                    attr_gate['device_id'] = device_id
+                                    attr_gate['endpoint_id'] = endpoint_id
+                                    attr_gate['id'] = str(device_id) + '_' + str(endpoint_id)
+                                    attr_gate['switch_name'] = print_id
+                                    attr_gate['name'] = print_id
+                                    attr_gate['device_type'] = 'switch'
+                                    attr_gate[elementName] = elementValue
+                            
+                            
+                            
                             if type_of_id == 'conso':
                                 if elementName in device_conso_keywords and elementValidity == "upToDate":
                                     attr_conso = {
@@ -402,6 +423,13 @@ class TydomMessageHandler():
                         new_boiler = Boiler(tydom_attributes=attr_boiler, tydom_client=self.tydom_client, mqtt=self.mqtt_client) #NEW METHOD
                         # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                         await new_boiler.update()
+                    elif 'device_type' in attr_gate and attr_gate['device_type'] == 'switch':
+                        #print(attr_gate)
+                        new_gate = "gate_door_tydom_"+str(endpoint_id)
+                        new_gate = Switch(tydom_attributes=attr_gate, mqtt=self.mqtt_client) #NEW METHOD
+                        # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
+                        await new_gate.update()
+                        
                    # Get last known state (for alarm) # NEW METHOD
                     elif 'device_type' in attr_alarm and attr_alarm['device_type'] == 'alarm_control_panel':
                         # print(attr_alarm)
@@ -453,7 +481,7 @@ class TydomMessageHandler():
                                 # print(state)
                                 alarm = "alarm_tydom_"+str(endpoint_id)
                                 # print("Alarm created / updated : "+alarm)
-                                alarm = Alarm(current_state=state, tydom_attributes=attr_alarm, mqtt=self.mqtt_client)
+                                alarm = Alarm(current_state=state, alarm_pin=self.tydom_client.alarm_pin, tydom_attributes=attr_alarm, mqtt=self.mqtt_client)
                                 await alarm.update()
 
                         except Exception as e:
