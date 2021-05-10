@@ -37,11 +37,14 @@ class Alarm:
         # self.config['attributes'] = self.attributes
         self.config['command_topic'] = alarm_command_topic.format(id=self.id)
         self.config['state_topic'] = alarm_state_topic.format(id=self.id)
-        self.config['code'] = self.alarm_pin
+        #self.config['code'] = self.alarm_pin
+        
+        self.config['code_arm_required'] = 'false'
+
         if (self.alarm_pin == None):
+            self.config['code'] = self.alarm_pin
             self.config['code_arm_required'] = 'true'
-        else:
-            self.config['code_arm_required'] = 'false'
+
 
 
         self.config['json_attributes_topic'] = alarm_attributes_topic.format(id=self.id)
