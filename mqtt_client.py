@@ -71,6 +71,7 @@ class MQTT_Hassio():
         try:
             print("Subscribing to : ", tydom_topic)
             # client.subscribe('homeassistant/#', qos=0)
+            client.subscribe('homeassistant/status', qos=0)
             client.subscribe(tydom_topic, qos=0)
         except Exception as e:
             print("Error on connect : ", e)
@@ -93,7 +94,8 @@ class MQTT_Hassio():
         elif (topic == "homeassistant/requests/tydom/scenarii"):
             print('Incoming MQTT scenarii request : ', topic, payload)
             await self.tydom.get_scenarii()
-
+        elif (topic == "homeassistant/status" and payload.decode() == 'online'):
+            await self.tydom.get_devices_data()
         elif (topic == "/tydom/init"):
             print('Incoming MQTT init request : ', topic, payload)
             await self.tydom.connect()
