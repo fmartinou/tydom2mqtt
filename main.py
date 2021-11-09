@@ -7,7 +7,7 @@ import sys
 import json
 import socket
 import websockets
-import uvloop
+#import uvloop
 
 from mqtt_client import MQTT_Hassio
 from tydomConnector import TydomWebSocketClient
@@ -22,8 +22,8 @@ print('STARTING TYDOM2MQTT')
 
 print('Dectecting environnement......')
 
-uvloop.install()
-print('uvloop init OK')
+#uvloop.install()
+#print('uvloop init OK')
 # DEFAULT VALUES
 
 
