@@ -7,6 +7,7 @@ import sys
 import json
 import socket
 import websockets
+import uvloop
 
 from mqtt_client import MQTT_Hassio
 from tydomConnector import TydomWebSocketClient
@@ -21,7 +22,8 @@ print('STARTING TYDOM2MQTT')
 
 print('Dectecting environnement......')
 
-
+uvloop.install()
+print('uvloop init OK')
 # DEFAULT VALUES
 loop = asyncio.get_event_loop()
 
@@ -94,11 +96,11 @@ def loop_task():
 
     loop.run_until_complete(hassio.connect())
 
-    tasks = [
-        listen_tydom_forever(tydom_client)
-    ]
+    # tasks = [
+    #     listen_tydom_forever(tydom_client)
+    # ]
 
-    loop.run_until_complete(asyncio.wait(tasks))
+    loop.run_until_complete(listen_tydom_forever(tydom_client))
 
 
 async def listen_tydom_forever(tydom_client):
