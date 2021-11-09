@@ -25,7 +25,7 @@ print('Dectecting environnement......')
 uvloop.install()
 print('uvloop init OK')
 # DEFAULT VALUES
-loop = asyncio.get_event_loop()
+
 
 TYDOM_IP = 'mediation.tydom.com'
 MQTT_HOST = 'localhost'
@@ -93,7 +93,7 @@ hassio = MQTT_Hassio(broker_host=MQTT_HOST, port=MQTT_PORT, user=MQTT_USER, pass
 
 def loop_task():
     print('Starting main loop_task')
-
+    loop = asyncio.get_event_loop()
     loop.run_until_complete(hassio.connect())
 
     # tasks = [
