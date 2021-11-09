@@ -1,4 +1,5 @@
 import asyncio
+from asyncio import exceptions
 import websockets
 import http.client
 from requests.auth import HTTPDigestAuth
@@ -118,11 +119,18 @@ class TydomWebSocketClient():
             Connecting to webSocket server
             websockets.client.connect returns a WebSocketClientProtocol, which is used to send and receive messages
         '''
-        self.connection = await websockets.connect('wss://{}:443/mediation/client?mac={}&appli=1'.format(self.host, self.mac),
-                                                            extra_headers=websocketHeaders, ssl=websocket_ssl_context, ping_timeout=None)
+        try:
+            self.connection = await websockets.connect('wss://{}:443/mediation/clent?mac={}&appli=1'.format(self.host, self.mac),
+                                                                extra_headers=websocketHeaders, ssl=websocket_ssl_context, ping_timeout=None)
 
-        return self.connection
-
+            return self.connection
+        except Exception as e:
+            print('Exception when trying to connect with websocket !')
+            print(e)
+            print('wss://{}:443/mediation/client?mac={}&appli=1'.format(self.host, self.mac))
+            print(websocketHeaders)
+            exit()
+        
 ############ Utils
 
     # Generate 16 bytes random key for Sec-WebSocket-Keyand convert it to base64
