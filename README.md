@@ -1,80 +1,114 @@
 # tydom2MQTT
 
-https://community.home-assistant.io/t/tydom2mqtt-delta-dore-custom-component-wip/151333
+![Docker pulls](https://img.shields.io/docker/pulls/fmartinou/tydom2mqtt)
+![License](https://img.shields.io/github/license/fmartinou/tydom2mqtt)
+![Travis](https://img.shields.io/travis/fmartinou/tydom2mqtt/master)
 
-Link a Delta Dore's Tydom hub to a mqtt broker. Unofficial with no public API, so this project is an humble try to fix that injustice. (hardware is so good, that's really a shame !)
+> **Link a [Delta Dore Tydom hub](https://www.deltadore.fr/app-tydom) to an mqtt broker.**
 
-Disconnections from both servers are handled with automatic reconnections.
+> [Home Assistant tydom2mqtt official thread](https://community.home-assistant.io/t/tydom2mqtt-delta-dore-custom-component-wip/151333)
 
-Not based on a pull mechanism but on push from websocket, i.e. it regulary ask the tydom hub to refresh to keep alive the connection and it receives updates instantly.
+*Forked from [mrwiwi/tydom2mqtt](https://github.com/mrwiwi/tydom2mqtt) with the following improvements:*
+- Multi-arch lighter Docker images
+- [Travis](https://app.travis-ci.com/github/fmartinou/tydom2mqtt) continuous integration
+- [Python PEP8 code style](https://www.python.org/dev/peps/pep-0008/) enforcement
+- Boiler `AUTO` mode
+- Better default values
+- Improved documentation
 
-Based initialy on https://github.com/cth35/tydom_python
+## Why?
+Deltadore doesn't provide any public API so this project is a humble try to fix that injustice. \
+Hardware is so good, that's really a shame !
 
-# PREREQ :
+## Features
+> Push event based (websocket) to instantly get changes (inspired by [tydom_python](https://github.com/cth35/tydom_python))
 
-- You need a fully functional MQTT broker before using it (MQTT official addon, mosquitto on linux, etc.) and a user/pass to access it.
+> Out-of-the-box [Home-Assistant](https://www.home-assistant.io/) integration thanks to [Mqtt discovery](https://www.home-assistant.io/docs/mqtt/discovery/) 
 
-# HASSIO USERS (recommended choice - multiarch) :
+> Automatic reconnection to Tydom on connection drop
 
-- Addon repository : https://github.com/WiwiWillou/hassio_addons.git
-- Use MQTT auto discovery, no further config necessary ! 
+> Automatic reconnection to the Mqtt broker on connection drop
 
+## Getting started
 
-# DOCKER USERS (x86 only - fork it and change base image in Dockerfile if you need others arch):
+### Prerequisites
+- MQTT broker (Mosquitto, MQTT Home-Assistant addon...)
+- Docker engine (for Docker users)
+- Hass-io (for Hass.io users)
 
-You need a functional Docker before using it.
+### Configuration
+tydom2mqtt can be configured by using the following environment variables.
 
-You just need the install.sh to download, mod it with your credentials (Tydom and MQTT - MQTT_HOST and TYDOM_IP are optionals, defaulting to localhost and delta dore servers respectively.), then :
+| Environment variable   | Required       | Supported values                                  | Default value when missing |
+|------------------------|----------------|---------------------------------------------------|----------------------------|
+| TYDOM_MAC              | :red_circle:   | Tydom MAC address (starting with `001A...`)       |                            |
+| TYDOM_PASSWORD         | :red_circle:   | Tydom password                                    |                            |
+| TYDOM_IP               | :white_circle: | Tydom IPv4 address or FQDN                        | mediation.tydom.com        |
+| TYDOM_ALARM_PIN        | :white_circle: | Tydom Alarm PIN                                   | None                       |
+| TYDOM_ALARM_HOME_ZONE  | :white_circle: | Tydom alarm home zone                             | 1                          |
+| TYDOM_ALARM_NIGHT_ZONE | :white_circle: | Tydom alarm night zone                            | 2                          |
+| MQTT_HOST              | :white_circle: | Mqtt broker IPv4 or FQDN                          | localhost                  |
+| MQTT_PORT              | :white_circle: | Mqtt broker port                                  | 1883                       |
+| MQTT_USER              | :white_circle: | Mqtt broker user if authentication is enabled     | None                       |
+| MQTT_PASSWORD          | :white_circle: | Mqtt broker password if authentication is enabled | None                       |
+| MQTT_SSL               | :white_circle: | Mqtt broker ssl enabled                           | false                      |
 
+### Hass.io users
+Use this [addon repository](https://github.com/WiwiWillou/hassio_addons.git). \
+That's all! (thanks to Mqtt auto discovery, no further configuration needed)
+
+### Docker users
+Run [`fmartinou/tydom2mqtt`](https://hub.docker.com/repository/docker/fmartinou/tydom2mqtt) with the appropriate environment variables.
+
+*N.B. The Docker image is working on the `arm/v6`, `arm/v7`, `arm64/v8`, `amd64` platforms.*
+
+```yaml
+# Docker-Compose example
+version: '3'
+
+services:
+  tydom2mqtt:
+    image: fmartinou/tydom2mqtt
+    container_name: tydom2mqtt
+    tty: true
+    environment:
+      - TYDOM_MAC=001A2502ACE8
+      - TYDOM_PASSWORD=azerty123456789
+      - TYDOM_IP=192.168.1.33
 ```
-sh install.sh
-```
 
+## FAQ
 
-# NOT ON HASSIO :
+### How to reset my tydom password?
+In october 2021, Deltadore has released a new version of its Tydom app (v4+) preventing to set or reset the Tydom password.
 
-- For other home automation systems, install docker version then you just add devices like any MQTT devices, check on the cover and alarm py files to see or modify the topics !
+To set/reset your password, better download the previous version (v3+) which still allows to do it ([Aptoide link](https://tydom.fr.aptoide.com/app?store_name=aptoide-web&app_id=58618221)).
 
+### How to prevent my tydom to communicate with deltadore servers?
+If you're concerned about your privacy, you can perform the following actions:
+1. Configure you router to forbid your Tydom hub to access internet
+2. Find your tydom local IP address and use it as `TYDOM_IP` value
 
-ALL :
-- To force a restart from your system, publish anything to hassio/tydom/kill, it will exit the script, forever.py will restart it clean.
+### Why alarm motion sensor activity isn't reported?
+- Alarm motion sensor activity isn't reported but when the alarm is fired then you get a cdata message so you can get the info (only when alarm is armed, pending and triggered).
 
-I don't have climate or lights to test, feel free to help !
-
-# TODO (but i've got no more time...) :
-
-- x DONE ! (websockets error with ping timeout) Fix that annoying code 1006 systematic deconnection after 60s when using local mode (new since december, not before).
-- Fix parsing of cdata msg type (will not crash anymore in the meantime), coming from an action from a alarm remote (and probably other things), we can get which remote had an action on alarm with it.
-- X DONE ! Add all the attributes as json for home assistant (can see defect, etc. on attributes)
-- X DONE ! Isolate parser in a class maybe...
-- X DONE ! Hassio addon version
-- Fork it to a proper Home Assistant integration with clean onboarding
+## TODO
+- Fix parsing of cdata msg type (will not crash anymore in the meantime), coming from an action from an alarm remote (and probably other things), we can get which remote had an action on alarm with it.
+- Fork it to a proper Home Assistant integration with clean on-boarding
 - Add climate, garagedoor, etc.
-- Build a web frontend to see and test (use frontail for now)
+- Build a web frontend to see and test (use [frontail](https://github.com/mthenw/frontail) for now)
 
-# WHAT WE CAN'T DO ?
+## Contact & Support
 
-- Alarm's motion sensor activity isn't reported, but when alarm is fired there is a cdata message that could have the info, but it's only when alarm is armed and pending / triggered.
+- Create a [GitHub issue](https://github.com/fmartinou/tydom2mqtt/issues) for bug reports, feature requests, or questions
+- Add a ⭐️ [star on GitHub](https://github.com/fmartinou/tydom2mqtt) to support the project!
 
-# Home Assistant / Hassio User last fix :
+## Developer guide
+[Please find here the developer guide](DEV.md)
 
-To fix the not updating / ask update on restart (because the config part has already happenned when hassio boot), create that script on hass, and create an automation to execute it when hass start ! - We could use birth payload be it ask for some configuration in yaml...
+## Changelog
+[Please find here the changelog](CHANGELOG.md)
 
-```
-update_tydom2mqtt:
-  alias: Tydom Update
-  sequence:
-  - data:
-      payload: '{ "update" }'
-      topic: hassio/tydom/update
-    service: mqtt.publish
-```
+## License
 
-PR are most welcome !
-
-
-# Descriptions of files
-
-tydomConnector handle the connection with websocket, it is instaciated by the main script where initial connection and if necessary reconnections are made + passing incoming message from the tydom hub the the tydomMessageHandler, where the parsing of data is made (proabbaly lot of optimisation is possible here) and where new devices are instanciated with the corresponding classes.
-
-MQTT is a lot easier to manage :)
+This project is licensed under the [MIT license](https://github.com/fmartinou/teleinfo-mqtt/blob/master/LICENSE).

@@ -1,0 +1,5 @@
+# Unit tests
+pytest>6.2
+
+# Code formatter
+autopep8

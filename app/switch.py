@@ -11,9 +11,6 @@ switch_level_topic = "switch/tydom/{id}/current_level"
 switch_set_level_topic = "switch/tydom/{id}/set_levelGate"
 
 
-
-
-
 class Switch:
     def __init__(self, tydom_attributes, set_level=None, mqtt=None):
         self.attributes = tydom_attributes
@@ -29,16 +26,15 @@ class Switch:
             self.current_level = None
         self.set_level = set_level
 
-        #try:
+        # try:
         #    self.current_state = self.attributes['state']
-        #except Exception as e:
+        # except Exception as e:
         #    print(e)
         #    self.current_state = 'On'
         self.mqtt = mqtt
 
-
     async def setup(self):
-        #availability:
+        # availability:
         #  - topic: "home/bedroom/switch1/available"
 
         self.device = {}
@@ -54,7 +50,8 @@ class Switch:
         # self.config['attributes'] = self.attributes
         self.config['command_topic'] = switch_command_topic.format(id=self.id)
         self.config['state_topic'] = switch_state_topic.format(id=self.id)
-        self.config['json_attributes_topic'] = switch_attributes_topic.format(id=self.id)
+        self.config['json_attributes_topic'] = switch_attributes_topic.format(
+            id=self.id)
 
         self.config['payload_on'] = "TOGGLE"
         self.config['payload_off'] = "TOGGLE"
@@ -63,8 +60,10 @@ class Switch:
         self.config['device'] = self.device
         # print(self.config)
 
-        if (self.mqtt != None):
-            self.mqtt.mqtt_client.publish(self.config_topic, json.dumps(self.config), qos=0)
+        if (self.mqtt is not None):
+            self.mqtt.mqtt_client.publish(
+                self.config_topic, json.dumps(
+                    self.config), qos=0)
         # setup_pub = '(self.config_topic, json.dumps(self.config), qos=0)'
         # return(setup_pub)
 
@@ -77,18 +76,25 @@ class Switch:
             print("Switch sensors Error :")
             print(e)
 
+        self.level_topic = switch_state_topic.format(
+            id=self.id, current_level=self.current_level)
 
-        self.level_topic = switch_state_topic.format(id=self.id, current_level=self.current_level)
-
-        if (self.mqtt != None):
-            self.mqtt.mqtt_client.publish(self.level_topic, self.current_level, qos=0, retain=True) #Switch State
-            self.mqtt.mqtt_client.publish(self.config['json_attributes_topic'], self.attributes, qos=0)
-        print("Switch created / updated : ", self.name, self.id, self.current_level)
-
+        if (self.mqtt is not None):
+            self.mqtt.mqtt_client.publish(
+                self.level_topic,
+                self.current_level,
+                qos=0,
+                retain=True)  # Switch State
+            self.mqtt.mqtt_client.publish(
+                self.config['json_attributes_topic'], self.attributes, qos=0)
+        print(
+            "Switch created / updated : ",
+            self.name,
+            self.id,
+            self.current_level)
 
         # update_pub = '(self.position_topic, self.current_position, qos=0, retain=True)'
         # return(update_pub)
-
 
     async def update_sensors(self):
         # print('test sensors !')
@@ -97,11 +103,14 @@ class Switch:
             # print("name "+sensor_name, "elem_name "+i, "attributes_topic_from_device ",self.config['json_attributes_topic'], "mqtt",self.mqtt)
             if not i == 'device_type' or not i == 'id':
                 new_sensor = None
-                new_sensor = sensor(elem_name=i, tydom_attributes_payload=self.attributes, attributes_topic_from_device=self.config['json_attributes_topic'], mqtt=self.mqtt)
+                new_sensor = sensor(
+                    elem_name=i,
+                    tydom_attributes_payload=self.attributes,
+                    attributes_topic_from_device=self.config['json_attributes_topic'],
+                    mqtt=self.mqtt)
                 await new_sensor.update()
-    # def __init__(self, name, elem_name, tydom_attributes_payload, attributes_topic_from_device, mqtt=None):
-
-
+    # def __init__(self, name, elem_name, tydom_attributes_payload,
+    # attributes_topic_from_device, mqtt=None):
 
     async def put_levelGate(tydom_client, device_id, switch_id, level):
         print(switch_id, 'level', level)

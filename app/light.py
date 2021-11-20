@@ -12,7 +12,7 @@ light_attributes_topic = "light/tydom/{id}/attributes"
 
 class Light:
     def __init__(self, tydom_attributes, set_level=None, mqtt=None):
-        
+
         self.attributes = tydom_attributes
         self.device_id = self.attributes['device_id']
         self.endpoint_id = self.attributes['endpoint_id']
@@ -54,12 +54,15 @@ class Light:
         self.config['brightness_scale'] = 100
         self.config['unique_id'] = self.id
         self.config['optimistic'] = True
-        self.config['brightness_state_topic'] = light_level_topic.format(id=self.id)
-        self.config['brightness_command_topic'] = light_set_level_topic.format(id=self.id)
+        self.config['brightness_state_topic'] = light_level_topic.format(
+            id=self.id)
+        self.config['brightness_command_topic'] = light_set_level_topic.format(
+            id=self.id)
         self.config['command_topic'] = light_command_topic.format(id=self.id)
         # self.config['set_level_topic'] = light_set_level_topic.format(id=self.id)
         self.config['state_topic'] = light_level_topic.format(id=self.id)
-        self.config['json_attributes_topic'] = light_attributes_topic.format(id=self.id)
+        self.config['json_attributes_topic'] = light_attributes_topic.format(
+            id=self.id)
 
         self.config['payload_on'] = "ON"
         self.config['payload_on'] = "ON"
@@ -68,8 +71,10 @@ class Light:
         self.config['device'] = self.device
         # print(self.config)
 
-        if (self.mqtt != None):
-            self.mqtt.mqtt_client.publish(self.config_topic, json.dumps(self.config), qos=0)
+        if (self.mqtt is not None):
+            self.mqtt.mqtt_client.publish(
+                self.config_topic, json.dumps(
+                    self.config), qos=0)
         # setup_pub = '(self.config_topic, json.dumps(self.config), qos=0)'
         # return(setup_pub)
 
@@ -82,18 +87,23 @@ class Light:
             print("light sensors Error :")
             print(e)
 
+        self.level_topic = light_level_topic.format(
+            id=self.id, current_level=self.current_level)
 
-        self.level_topic = light_level_topic.format(id=self.id, current_level=self.current_level)
-        
-        if (self.mqtt != None):
-            self.mqtt.mqtt_client.publish(self.level_topic, self.current_level, qos=0, retain=True)
+        if (self.mqtt is not None):
+            self.mqtt.mqtt_client.publish(
+                self.level_topic, self.current_level, qos=0, retain=True)
             # self.mqtt.mqtt_client.publish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
-            self.mqtt.mqtt_client.publish(self.config['json_attributes_topic'], self.attributes, qos=0)
-        print("light created / updated : ", self.name, self.id, self.current_level)
+            self.mqtt.mqtt_client.publish(
+                self.config['json_attributes_topic'], self.attributes, qos=0)
+        print(
+            "light created / updated : ",
+            self.name,
+            self.id,
+            self.current_level)
 
         # update_pub = '(self.level_topic, self.current_level, qos=0, retain=True)'
         # return(update_pub)
-       
 
     async def update_sensors(self):
         # print('test sensors !')
@@ -102,10 +112,14 @@ class Light:
             # print("name "+sensor_name, "elem_name "+i, "attributes_topic_from_device ",self.config['json_attributes_topic'], "mqtt",self.mqtt)
             if not i == 'device_type' or not i == 'id':
                 new_sensor = None
-                new_sensor = sensor(elem_name=i, tydom_attributes_payload=self.attributes, attributes_topic_from_device=self.config['json_attributes_topic'], mqtt=self.mqtt)
+                new_sensor = sensor(
+                    elem_name=i,
+                    tydom_attributes_payload=self.attributes,
+                    attributes_topic_from_device=self.config['json_attributes_topic'],
+                    mqtt=self.mqtt)
                 await new_sensor.update()
-    # def __init__(self, name, elem_name, tydom_attributes_payload, attributes_topic_from_device, mqtt=None):
-
+    # def __init__(self, name, elem_name, tydom_attributes_payload,
+    # attributes_topic_from_device, mqtt=None):
 
     async def put_level(tydom_client, device_id, light_id, level):
         print(light_id, 'level', level)
