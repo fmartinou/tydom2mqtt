@@ -70,7 +70,6 @@ services:
   tydom2mqtt:
     image: fmartinou/tydom2mqtt
     container_name: tydom2mqtt
-    tty: true
     environment:
       - TYDOM_MAC=001A2502ACE8
       - TYDOM_PASSWORD=azerty123456789

@@ -10,4 +10,4 @@ COPY /app .
 RUN pip3 install -r requirements.txt
 
 # Main command
-CMD [ "python", "-u", "forever.py", "main.py" ]
+CMD [ "python", "-u", "main.py" ]
