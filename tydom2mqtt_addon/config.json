@@ -1,0 +1,42 @@
+{
+  "name": "tydom2mqtt",
+  "image": "fmartinou/tydom2mqtt",
+  "version": "2.0.0",
+  "slug": "tydom2mqtt",
+  "description": "Link between a Delta Dore's Tydom 1.0 Hub and and a MQTT broker, unofficial of course, hassio addon version",
+  "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
+  "url": "https://github.com/fmartinou/tydom2mqtt.git",
+  "startup": "system",
+  "boot": "auto",
+  "host_network": "true",
+  "options":
+  {
+    "TYDOM_MAC": "001A25xxxxxx",
+    "TYDOM_IP": "192.168.1.x",
+    "TYDOM_PASSWORD":"tydom_password",
+    "TYDOM_ALARM_PIN": "123456",
+    "TYDOM_ALARM_HOME_ZONE": 1,
+    "TYDOM_ALARM_NIGHT_ZONE": 2,
+    "MQTT_HOST": "localhost",
+    "MQTT_USER": "",
+    "MQTT_PASSWORD": "",
+    "MQTT_PORT": 1883,
+    "MQTT_SSL": false,
+    "log_level": "info"
+  },
+  "schema":
+  {
+    "log_level": "list(trace|debug|info|notice|warning|error|fatal)?",
+    "TYDOM_MAC":"str",
+    "TYDOM_IP": "str?",
+    "TYDOM_PASSWORD":"str",
+    "TYDOM_ALARM_PIN":"int?",
+    "TYDOM_ALARM_HOME_ZONE":"int?",
+    "TYDOM_ALARM_NIGHT_ZONE":"int?",
+    "MQTT_HOST": "str?",
+    "MQTT_USER": "str?",
+    "MQTT_PASSWORD": "str?",
+    "MQTT_PORT": "port?",
+    "MQTT_SSL": "bool?"
+  }
+}
