@@ -1,7 +1,7 @@
 {
   "name": "tydom2mqtt",
   "image": "fmartinou/tydom2mqtt",
-  "version": "2.0.0",
+  "version": "latest",
   "slug": "tydom2mqtt",
   "description": "Link between a Delta Dore's Tydom 1.0 Hub and and a MQTT broker, unofficial of course, hassio addon version",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
