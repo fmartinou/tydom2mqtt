@@ -1,0 +1,15 @@
+{
+  "name": "tydom2mqtt-doc",
+  "version": "1.0.0",
+  "description": "tydom2mqtt doc",
+  "main": "index.js",
+  "scripts": {
+    "doc": "docsify serve"
+  },
+  "author": "fmartinou",
+  "repository": "fmartinou/tydom2mqtt",
+  "license": "MIT",
+  "devDependencies": {
+    "docsify-cli": "4.4.3"
+  }
+}
