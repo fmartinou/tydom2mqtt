@@ -20,7 +20,7 @@ print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
 print('STARTING TYDOM2MQTT')
 
-print('Dectecting environnement......')
+print('Detecting environnement......')
 
 # uvloop.install()
 #print('uvloop init OK')
