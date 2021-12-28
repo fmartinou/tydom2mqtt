@@ -2,7 +2,10 @@ import json
 import time
 from datetime import datetime
 from sensors import sensor
+from logger import logger
+import logging
 
+logger = logging.getLogger(__name__)
 climate_config_topic = "homeassistant/climate/tydom/{id}/config"
 sensor_config_topic = "homeassistant/sensor/tydom/{id}/config"
 climate_json_attributes_topic = "climate/tydom/{id}/state"
@@ -148,15 +151,15 @@ class Boiler:
                     self.attributes['outTemperature'],
                     qos=0)
 
-        # print("Boiler created / updated : ", self.name, self.id, self.current_position)
+        # logger.info("Boiler created / updated : %s %s %s", self.name, self.id, self.current_position)
 
     async def put_temperature(tydom_client, device_id, boiler_id, set_setpoint):
-        print(boiler_id, 'set_setpoint', set_setpoint)
+        logger.info("%s %s %s", boiler_id, 'set_setpoint', set_setpoint)
         if not (set_setpoint == ''):
             await tydom_client.put_devices_data(device_id, boiler_id, 'setpoint', set_setpoint)
 
     async def put_hvacMode(tydom_client, device_id, boiler_id, set_hvacMode):
-        print(boiler_id, 'set_hvacMode', set_hvacMode)
+        logger.info("%s %s %s", boiler_id, 'set_hvacMode', set_hvacMode)
         if set_hvacMode == 'off':
             await tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', 'STOP')
         else:
@@ -164,6 +167,6 @@ class Boiler:
             await tydom_client.put_devices_data(device_id, boiler_id, 'setpoint', '10')
 
     async def put_thermicLevel(tydom_client, device_id, boiler_id, set_thermicLevel):
-        print(boiler_id, 'thermicLevel', set_thermicLevel)
+        logger.info("%s %s %s", boiler_id, 'thermicLevel', set_thermicLevel)
         if not (set_thermicLevel == ''):
             await tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', set_thermicLevel)

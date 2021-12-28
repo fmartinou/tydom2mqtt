@@ -2,7 +2,10 @@ import json
 import time
 from datetime import datetime
 from sensors import sensor
+from logger import logger
+import logging
 
+logger = logging.getLogger(__name__)
 cover_command_topic = "cover/tydom/{id}/set_positionCmd"
 cover_config_topic = "homeassistant/cover/tydom/{id}/config"
 cover_position_topic = "cover/tydom/{id}/current_position"
@@ -61,7 +64,7 @@ class Cover:
         self.config['payload_stop'] = "STOP"
         self.config['retain'] = 'false'
         self.config['device'] = self.device
-        # print(self.config)
+        # logger.debug(self.config)
 
         if (self.mqtt is not None):
             self.mqtt.mqtt_client.publish(
@@ -76,8 +79,8 @@ class Cover:
         try:
             await self.update_sensors()
         except Exception as e:
-            print("Cover sensors Error :")
-            print(e)
+            logger.error("Cover sensors Error :")
+            logger.error(e)
 
         self.position_topic = cover_position_topic.format(
             id=self.id, current_position=self.current_position)
@@ -91,8 +94,8 @@ class Cover:
             # self.mqtt.mqtt_client.publish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
             self.mqtt.mqtt_client.publish(
                 self.config['json_attributes_topic'], self.attributes, qos=0)
-        print(
-            "Cover created / updated : ",
+        logger.info(
+            "Cover created / updated : %s %s %s",
             self.name,
             self.id,
             self.current_position)
@@ -101,10 +104,10 @@ class Cover:
         # return(update_pub)
 
     async def update_sensors(self):
-        # print('test sensors !')
+        # logger.debug('test sensors !')
         for i, j in self.attributes.items():
             # sensor_name = "tydom_alarm_sensor_"+i
-            # print("name "+sensor_name, "elem_name "+i, "attributes_topic_from_device ",self.config['json_attributes_topic'], "mqtt",self.mqtt)
+            # logger.debug("name %s elem_name %s attributes_topic_from_device %s mqtt %s"+sensor_name, i, self.config['json_attributes_topic'], self.mqtt)
             if not i == 'device_type' or not i == 'id':
                 new_sensor = None
                 new_sensor = sensor(
@@ -117,11 +120,11 @@ class Cover:
     # attributes_topic_from_device, mqtt=None):
 
     async def put_position(tydom_client, device_id, cover_id, position):
-        print(cover_id, 'position', position)
+        logger.info("%s %s %s", cover_id, 'position', position)
         if not (position == ''):
             await tydom_client.put_devices_data(device_id, cover_id, 'position', position)
 
     async def put_positionCmd(tydom_client, device_id, cover_id, positionCmd):
-        print(cover_id, 'positionCmd', positionCmd)
+        logger.info("%s %s %s", cover_id, 'positionCmd', positionCmd)
         if not (positionCmd == ''):
             await tydom_client.put_devices_data(device_id, cover_id, 'positionCmd', positionCmd)

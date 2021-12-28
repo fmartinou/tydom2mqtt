@@ -2,7 +2,10 @@ import json
 import time
 from datetime import datetime
 from sensors import sensor
+from logger import logger
+import logging
 
+logger = logging.getLogger(__name__)
 light_command_topic = "light/tydom/{id}/set_levelCmd"
 light_config_topic = "homeassistant/light/tydom/{id}/config"
 light_level_topic = "light/tydom/{id}/current_level"
@@ -21,7 +24,7 @@ class Light:
         try:
             self.current_level = self.attributes['level']
         except Exception as e:
-            print(e)
+            logger.error(e)
             self.current_level = None
         self.set_level = set_level
         self.mqtt = mqtt
@@ -69,7 +72,7 @@ class Light:
         self.config['on_command_type'] = "brightness"
         self.config['retain'] = 'false'
         self.config['device'] = self.device
-        # print(self.config)
+        # logger.debug(self.config)
 
         if (self.mqtt is not None):
             self.mqtt.mqtt_client.publish(
@@ -84,8 +87,8 @@ class Light:
         try:
             await self.update_sensors()
         except Exception as e:
-            print("light sensors Error :")
-            print(e)
+            logger.error("light sensors Error :")
+            logger.error(e)
 
         self.level_topic = light_level_topic.format(
             id=self.id, current_level=self.current_level)
@@ -96,8 +99,8 @@ class Light:
             # self.mqtt.mqtt_client.publish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
             self.mqtt.mqtt_client.publish(
                 self.config['json_attributes_topic'], self.attributes, qos=0)
-        print(
-            "light created / updated : ",
+        logger.info(
+            "light created / updated : %s %s %s",
             self.name,
             self.id,
             self.current_level)
@@ -106,10 +109,10 @@ class Light:
         # return(update_pub)
 
     async def update_sensors(self):
-        # print('test sensors !')
+        # logger.info('test sensors !')
         for i, j in self.attributes.items():
             # sensor_name = "tydom_alarm_sensor_"+i
-            # print("name "+sensor_name, "elem_name "+i, "attributes_topic_from_device ",self.config['json_attributes_topic'], "mqtt",self.mqtt)
+            # logger.debug("name %s elem_name %s attributes_topic_from_device %s mqtt %s", sensor_name, i, self.config['json_attributes_topic'], self.mqtt)
             if not i == 'device_type' or not i == 'id':
                 new_sensor = None
                 new_sensor = sensor(
@@ -122,11 +125,11 @@ class Light:
     # attributes_topic_from_device, mqtt=None):
 
     async def put_level(tydom_client, device_id, light_id, level):
-        print(light_id, 'level', level)
+        logger.info("%s %s %s", light_id, 'level', level)
         if not (level == ''):
             await tydom_client.put_devices_data(device_id, light_id, 'level', level)
 
     async def put_levelCmd(tydom_client, device_id, light_id, levelCmd):
-        print(light_id, 'levelCmd', levelCmd)
+        logger.info("%s %s %s", light_id, 'levelCmd', levelCmd)
         if not (levelCmd == ''):
             await tydom_client.put_devices_data(device_id, light_id, 'levelCmd', levelCmd)

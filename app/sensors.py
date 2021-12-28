@@ -1,7 +1,10 @@
 import json
 import time
 from datetime import datetime
+from logger import logger
+import logging
 
+logger = logging.getLogger(__name__)
 sensor_topic = "sensor/tydom/#"
 sensor_config_topic = "homeassistant/sensor/tydom/{id}/config"
 sensor_json_attributes_topic = "sensor/tydom/{id}/state"
@@ -25,7 +28,7 @@ class sensor:
         state_dict = {}
         state_dict[elem_name] = self.elem_value
         self.attributes = state_dict
-        # print(self.attributes)
+        # logger.debug(self.attributes)
 
         # self.json_attributes_topic = attributes_topic_from_device #State
         # extracted from json, but it will make sensor not in payload to be
@@ -138,7 +141,7 @@ class sensor:
                 (self.config_topic).lower(), json.dumps(
                     self.config), qos=0, retain=True)  # sensor Config
 
-        # print("CONFIG : ",(self.config_topic).lower(), json.dumps(self.config))
+        # logger.debug("CONFIG : %s %s",(self.config_topic).lower(), json.dumps(self.config))
     async def update(self):
 
         # 3 items are necessary :
@@ -151,7 +154,7 @@ class sensor:
             await self.setup()  # Publish config
             # Publish state json to state topic
             if (self.mqtt is not None):
-                # print(self.json_attributes_topic, self.attributes)
+                # logger.debug("%s %s", self.json_attributes_topic, self.attributes)
                 # self.mqtt.mqtt_client.publish(self.json_attributes_topic,
                 # self.attributes, qos=0) #sensor json State
                 self.mqtt.mqtt_client.publish(
@@ -159,12 +162,12 @@ class sensor:
                     self.elem_value,
                     qos=0)  # sensor State
             if not self.binary:
-                print(
-                    "Sensor created / updated : ",
+                logger.info(
+                    "Sensor created / updated : %s %s",
                     self.name,
                     self.elem_value)
             else:
-                print(
-                    "Binary sensor created / updated : ",
+                logger.info(
+                    "Binary sensor created / updated : %s %s",
                     self.name,
                     self.elem_value)
