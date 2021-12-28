@@ -12,9 +12,10 @@ import urllib3
 from io import BytesIO
 import json
 import sys
+from logger import logger
 import logging
 
-_LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 # Dicts
 deviceAlarmKeywords = [
@@ -211,39 +212,39 @@ class TydomMessageHandler():
                 if ("Uri-Origin: /refresh/all" in first in first):
                     pass
                 elif ("PUT /devices/data" in first) or ("/devices/cdata" in first):
-                    # print('PUT /devices/data message detected !')
+                    logger.debug('PUT /devices/data message detected !')
                     try:
                         incoming = self.parse_put_response(bytes_str)
                         await self.parse_response(incoming)
                     except BaseException:
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                        print('RAW INCOMING :')
-                        print(bytes_str)
-                        print('END RAW')
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        logger.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        logger.error('RAW INCOMING :')
+                        logger.error(bytes_str)
+                        logger.error('END RAW')
+                        logger.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 elif ("scn" in first):
                     try:
                         incoming = get(bytes_str)
                         await self.parse_response(incoming)
-                        print('Scenarii message processed !')
-                        print("##################################")
+                        logger.info('Scenarii message processed !')
+                        logger.info("##################################")
                     except BaseException:
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                        print('RAW INCOMING :')
-                        print(bytes_str)
-                        print('END RAW')
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        logger.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        logger.error('RAW INCOMING :')
+                        logger.error(bytes_str)
+                        logger.error('END RAW')
+                        logger.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 elif ("POST" in first):
                     try:
                         incoming = self.parse_put_response(bytes_str)
                         await self.parse_response(incoming)
-                        print('POST message processed !')
+                        logger.info('POST message processed !')
                     except BaseException:
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                        print('RAW INCOMING :')
-                        print(bytes_str)
-                        print('END RAW')
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        logger.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        logger.error('RAW INCOMING :')
+                        logger.error(bytes_str)
+                        logger.error('END RAW')
+                        logger.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 elif ("HTTP/1.1" in first):  # (bytes_str != 0) and
                     response = self.response_from_bytes(
                         bytes_str[len(self.cmd_prefix):])
@@ -251,29 +252,29 @@ class TydomMessageHandler():
                     try:
                         await self.parse_response(incoming)
                     except BaseException:
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                        print('RAW INCOMING :')
-                        print(bytes_str)
-                        print('END RAW')
-                        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        logger.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        logger.error('RAW INCOMING :')
+                        logger.error(bytes_str)
+                        logger.error('END RAW')
+                        logger.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 else:
-                    print("Didn't detect incoming type, here it is :")
-                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    print('RAW INCOMING :')
-                    print(bytes_str)
-                    print('END RAW')
-                    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                    logger.warn("Didn't detect incoming type, here it is :")
+                    logger.warn(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                    logger.warn('RAW INCOMING :')
+                    logger.warn(bytes_str)
+                    logger.warn('END RAW')
+                    logger.warn(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 
             except Exception as e:
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                print('receiveMessage error')
-                print('RAW :')
-                print(bytes_str)
-                print("Incoming payload :")
-                print(incoming)
-                print("Error :")
-                print(e)
-                print('Exiting to ensure systemd restart....')
+                logger.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                logger.error('receiveMessage error')
+                logger.error('RAW :')
+                logger.error(bytes_str)
+                logger.error("Incoming payload :")
+                logger.error(incoming)
+                logger.error("Error :")
+                logger.error(e)
+                logger.error('Exiting to ensure systemd restart....')
                 sys.exit()  # Exit all to ensure systemd restart
 
     # Basic response parsing. Typically GET responses + instanciate covers and
@@ -288,45 +289,45 @@ class TydomMessageHandler():
             # search for id_catalog in all data to be sure to get configuration
             # detected
             if ("id_catalog" in data):
-                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                print('Incoming message type : config detected')
+                logger.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                logger.debug('Incoming message type : config detected')
                 msg_type = 'msg_config'
             elif ("id" in first):
-                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                print('Incoming message type : data detected')
+                logger.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                logger.debug('Incoming message type : data detected')
                 msg_type = 'msg_data'
             elif ("doctype" in first):
-                print('Incoming message type : html detected (probable 404)')
+                logger.debug('Incoming message type : html detected (probable 404)')
                 msg_type = 'msg_html'
-                print(data)
+                logger.debug(data)
             elif ("productName" in first):
-                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                print('Incoming message type : Info detected')
+                logger.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                logger.debug('Incoming message type : Info detected')
                 msg_type = 'msg_info'
-                # print(data)
+                # logger.debug(data)
             else:
-                print('Incoming message type : no type detected')
-                print(data)
+                logger.debug('Incoming message type : no type detected')
+                logger.debug(data)
 
             if not (msg_type is None):
                 try:
                     if (msg_type == 'msg_config'):
                         parsed = json.loads(data)
-                        # print(parsed)
+                        # logger.debug(parsed)
                         await self.parse_config_data(parsed=parsed)
 
                     elif (msg_type == 'msg_data'):
                         parsed = json.loads(data)
-                        # print(parsed)
+                        # logger.debug(parsed)
                         await self.parse_devices_data(parsed=parsed)
                     elif (msg_type == 'msg_html'):
-                        print("HTML Response ?")
+                        logger.debug("HTML Response ?")
                     elif (msg_type == 'msg_info'):
                         pass
                     else:
                         # Default json dump
-                        print()
-                        print(
+                        logger.debug()
+                        logger.debug(
                             json.dumps(
                                 parsed,
                                 sort_keys=True,
@@ -335,39 +336,39 @@ class TydomMessageHandler():
                                     ',',
                                     ': ')))
                 except Exception as e:
-                    print('Cannot parse response !')
-                    # print('Response :')
-                    # print(data)
+                    logger.error('Cannot parse response !')
+                    # logger.error('Response :')
+                    # logger.error(data)
                     if (e != 'Expecting value: line 1 column 1 (char 0)'):
-                        print("Error : ", e)
-                        print(parsed)
-            print('Incoming data parsed successfully !')
+                        logger.error("Error : ", e)
+                        logger.error(parsed)
+            logger.info('Incoming data parsed successfully !')
             return(0)
 
     async def parse_config_data(self, parsed):
         for i in parsed["endpoints"]:
             # Get list of shutter
-            # print(i)
+            # logger.debug(i)
             device_unique_id = str(i["id_endpoint"]) + \
                 "_" + str(i["id_device"])
 
             if i["last_usage"] == 'shutter' or i["last_usage"] == 'klineShutter' or i["last_usage"] == 'light' or i["last_usage"] == 'window' or i["last_usage"] == 'windowFrench' or i["last_usage"] == 'belmDoor' or i[
                     "last_usage"] == 'klineDoor' or i["last_usage"] == 'klineWindowFrench' or i["last_usage"] == 'klineWindowSliding' or i["last_usage"] == 'garage_door' or i["last_usage"] == 'gate':
 
-                # print('{} {}'.format(i["id_endpoint"],i["name"]))
+                # logger.debug('%s %s'.format(i["id_endpoint"],i["name"]))
                 # device_name[i["id_endpoint"]] = i["name"]
                 device_name[device_unique_id] = i["name"]
                 device_type[device_unique_id] = i["last_usage"]
                 device_endpoint[device_unique_id] = i["id_endpoint"]
 
             if i["last_usage"] == 'boiler' or i["last_usage"] == 'conso':
-                # print('{} {}'.format(i["id_endpoint"],i["name"]))
+                # logger.debug('%s %s'.format(i["id_endpoint"],i["name"]))
                 device_name[device_unique_id] = i["name"]
                 device_type[device_unique_id] = i["last_usage"]
                 device_endpoint[device_unique_id] = i["id_endpoint"]
 
             if i["last_usage"] == 'alarm':
-                # print('{} {}'.format(i["id_endpoint"], i["name"]))
+                # logger.debug('%s %s'.format(i["id_endpoint"], i["name"]))
                 device_name[device_unique_id] = "Tyxal Alarm"
                 device_type[device_unique_id] = 'alarm'
                 device_endpoint[device_unique_id] = i["id_endpoint"]
@@ -377,7 +378,7 @@ class TydomMessageHandler():
                 device_type[device_unique_id] = 'boiler'
                 device_endpoint[device_unique_id] = i["id_endpoint"]
 
-        print('Configuration updated')
+        logger.info('Configuration updated')
 
     async def parse_devices_data(self, parsed):
         for i in parsed:
@@ -527,11 +528,11 @@ class TydomMessageHandler():
                                     await new_conso.update()
 
                     except Exception as e:
-                        print('msg_data error in parsing !')
-                        print(e)
+                        logger.error('msg_data error in parsing !')
+                        logger.error(e)
 
                     if 'device_type' in attr_cover and attr_cover['device_type'] == 'cover':
-                        # print(attr_cover)
+                        # logger.debug(attr_cover)
                         new_cover = "cover_tydom_" + str(device_id)
                         new_cover = Cover(
                             tydom_attributes=attr_cover,
@@ -539,7 +540,7 @@ class TydomMessageHandler():
                         # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                         await new_cover.update()
                     elif 'device_type' in attr_door and attr_door['device_type'] == 'sensor':
-                        # print(attr_cover)
+                        # logger.debug(attr_cover)
                         new_door = "door_tydom_" + str(device_id)
                         new_door = sensor(
                             elem_name=attr_door['element_name'],
@@ -549,7 +550,7 @@ class TydomMessageHandler():
                         # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                         await new_door.update()
                     elif 'device_type' in attr_window and attr_window['device_type'] == 'sensor':
-                        # print(attr_cover)
+                        # logger.debug(attr_cover)
                         new_window = "window_tydom_" + str(device_id)
                         new_window = sensor(
                             elem_name=attr_window['element_name'],
@@ -559,7 +560,7 @@ class TydomMessageHandler():
                         # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                         await new_window.update()
                     elif 'device_type' in attr_light and attr_light['device_type'] == 'light':
-                        # print(attr_cover)
+                        # logger.debug(attr_cover)
                         new_light = "light_tydom_" + str(device_id)
                         new_light = Light(
                             tydom_attributes=attr_light,
@@ -567,7 +568,7 @@ class TydomMessageHandler():
                         # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                         await new_light.update()
                     elif 'device_type' in attr_boiler and attr_boiler['device_type'] == 'climate':
-                        # print(attr_boiler)
+                        # logger.debug(attr_boiler)
                         new_boiler = "boiler_tydom_" + str(device_id)
                         new_boiler = Boiler(
                             tydom_attributes=attr_boiler,
@@ -576,7 +577,7 @@ class TydomMessageHandler():
                         # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                         await new_boiler.update()
                     elif 'device_type' in attr_gate and attr_gate['device_type'] == 'switch':
-                        # print(attr_gate)
+                        # logger.debug(attr_gate)
                         new_gate = "gate_door_tydom_" + str(endpoint_id)
                         new_gate = Switch(
                             tydom_attributes=attr_gate,
@@ -586,7 +587,7 @@ class TydomMessageHandler():
 
                    # Get last known state (for alarm) # NEW METHOD
                     elif 'device_type' in attr_alarm and attr_alarm['device_type'] == 'alarm_control_panel':
-                        # print(attr_alarm)
+                        # logger.debug(attr_alarm)
                         state = None
                         sos_state = False
                         maintenance_mode = False
@@ -630,12 +631,12 @@ class TydomMessageHandler():
                                 out = attr_alarm["outTemperature"]
 
                             if (sos_state):
-                                print("SOS !")
+                                logger.warn("SOS !")
 
                             if not (state is None):
-                                # print(state)
+                                # logger.debug(state)
                                 alarm = "alarm_tydom_" + str(endpoint_id)
-                                # print("Alarm created / updated : "+alarm)
+                                # logger.debug("Alarm created / updated : "+alarm)
                                 alarm = Alarm(
                                     current_state=state,
                                     alarm_pin=self.tydom_client.alarm_pin,
@@ -644,8 +645,8 @@ class TydomMessageHandler():
                                 await alarm.update()
 
                         except Exception as e:
-                            print("Error in alarm parsing !")
-                            print(e)
+                            logger.error("Error in alarm parsing !")
+                            logger.error(e)
                             pass
                     else:
                         pass
@@ -686,7 +687,7 @@ class TydomMessageHandler():
         if len(device_type) != 0 and id in device_type.keys():
             deviceType = device_type[id]
         else:
-            print('{} not in dic device_type'.format(id))
+            logger.warn('%s not in dic device_type'.format(id))
 
         return(deviceType)
 
@@ -696,7 +697,7 @@ class TydomMessageHandler():
         if len(device_name) != 0 and id in device_name.keys():
             name = device_name[id]
         else:
-            print('{} not in dic device_name'.format(id))
+            logger.warn('%s not in dic device_name'.format(id))
         return name
 
 

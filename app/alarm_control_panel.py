@@ -2,7 +2,10 @@ import json
 import time
 from datetime import datetime
 from sensors import sensor
+from logger import logger
+import logging
 
+logger = logging.getLogger(__name__)
 alarm_topic = "alarm_control_panel/tydom/#"
 alarm_config_topic = "homeassistant/alarm_control_panel/tydom/{id}/config"
 alarm_state_topic = "alarm_control_panel/tydom/{id}/state"
@@ -61,8 +64,8 @@ class Alarm:
         try:
             await self.update_sensors()
         except Exception as e:
-            print("Alarm sensors Error :")
-            print(e)
+            logger.error("Alarm sensors Error :")
+            logger.error(e)
 
         self.state_topic = alarm_state_topic.format(
             id=self.id, state=self.current_state)
@@ -74,21 +77,21 @@ class Alarm:
                 retain=True)  # Alarm State
             self.mqtt.mqtt_client.publish(
                 self.config['json_attributes_topic'], self.attributes, qos=0)
-        print(
-            "Alarm created / updated : ",
+        logger.info(
+            "Alarm created / updated : %s %s %s",
             self.name,
             self.id,
             self.current_state)
 
     async def update_sensors(self):
-        # print('test sensors !')
+        # logger.info('test sensors !')
         for i, j in self.attributes.items():
             # if j == 'ON' and not 'alarm' in i:
             #     j = True
             # elif j == 'OFF' and not 'alarm' in i:
             #     j == False
             # sensor_name = "tydom_alarm_sensor_"+i
-            # print("name "+sensor_name, "elem_name "+i, "attributes_topic_from_device ",self.config['json_attributes_topic'], "mqtt",self.mqtt)
+            # logger.debug("name %s elem_name %s attributes_topic_from_device %s mqtt %s", sensor_name, i, self.config['json_attributes_topic'], self.mqtt)
             if not i == 'device_type' or not i == 'id':
                 new_sensor = None
                 new_sensor = sensor(
@@ -101,7 +104,7 @@ class Alarm:
     # attributes_topic_from_device, mqtt=None):
 
     async def put_alarm_state(tydom_client, device_id, alarm_id, home_zone, night_zone, asked_state=None):
-        # print(tydom_client, device_id, alarm_id, asked_state)
+        # logger.debug("%s %s %s %s", tydom_client, device_id, alarm_id, asked_state)
 
         value = None
         zone_id = None

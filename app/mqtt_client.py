@@ -14,7 +14,10 @@ from alarm_control_panel import Alarm
 from light import Light
 from boiler import Boiler
 from switch import Switch
+from logger import logger
+import logging
 
+logger = logging.getLogger(__name__)
 tydom_topic = "+/tydom/#"
 refresh_topic = "homeassistant/requests/tydom/refresh"
 hostname = socket.gethostname()
@@ -39,15 +42,15 @@ class MQTT_Hassio():
     async def connect(self):
 
         try:
-            print('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
-            print('Attempting MQTT connection...')
-            print('MQTT host : ', self.broker_host)
-            print('MQTT user : ', self.user)
+            logger.info('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
+            logger.info('Attempting MQTT connection...')
+            logger.info('MQTT host : %s', self.broker_host)
+            logger.info('MQTT user : %s', self.user)
             adress = hostname + str(datetime.fromtimestamp(time.time()))
-            # print(adress)
+            # logger.info(adress)
 
             client = MQTTClient(adress)
-            # print(client)
+            # logger.info(client)
 
             client.on_connect = self.on_connect
             client.on_message = self.on_message
@@ -61,50 +64,50 @@ class MQTT_Hassio():
             return self.mqtt_client
 
         except Exception as e:
-            print("MQTT connection Error : ", e)
-            print('MQTT error, restarting in 8s...')
+            logger.info("MQTT connection Error : %s", e)
+            logger.info('MQTT error, restarting in 8s...')
             await asyncio.sleep(8)
             await self.connect()
 
     def on_connect(self, client, flags, rc, properties):
-        print("##################################")
+        logger.info("##################################")
         try:
-            print("Subscribing to : ", tydom_topic)
+            logger.info("Subscribing to : %s", tydom_topic)
             # client.subscribe('homeassistant/#', qos=0)
             client.subscribe('homeassistant/status', qos=0)
             client.subscribe(tydom_topic, qos=0)
         except Exception as e:
-            print("Error on connect : ", e)
+            logger.info("Error on connect : %s", e)
 
     async def on_message(self, client, topic, payload, qos, properties):
-        # print('Incoming MQTT message : ', topic, payload)
+        logger.debug('Incoming MQTT message : %s %s', topic, payload)
         if ('update' in str(topic)):
             #        if "update" in topic:
-            print('Incoming MQTT update request : ', topic, payload)
+            logger.info('Incoming MQTT update request : ', topic, payload)
             await self.tydom.get_data()
         elif ('kill' in str(topic)):
             #        if "update" in topic:
-            print('Incoming MQTT kill request : ', topic, payload)
-            print('Exiting...')
+            logger.info('Incoming MQTT kill request : %s %s', topic, payload)
+            logger.info('Exiting...')
             sys.exit()
         elif (topic == "homeassistant/requests/tydom/refresh"):
-            print('Incoming MQTT refresh request : ', topic, payload)
+            logger.info('Incoming MQTT refresh request : %s %s', topic, payload)
             await self.tydom.post_refresh()
         elif (topic == "homeassistant/requests/tydom/scenarii"):
-            print('Incoming MQTT scenarii request : ', topic, payload)
+            logger.info('Incoming MQTT scenarii request : %s %s', topic, payload)
             await self.tydom.get_scenarii()
         elif (topic == "homeassistant/status" and payload.decode() == 'online'):
             await self.tydom.get_devices_data()
         elif (topic == "/tydom/init"):
-            print('Incoming MQTT init request : ', topic, payload)
+            logger.info('Incoming MQTT init request : %s %s', topic, payload)
             await self.tydom.connect()
 
         # elif ('set_scenario' in str(topic)):
-        #     print('Incoming MQTT set_scenario request : ', topic, payload)
+        #     logger.info('Incoming MQTT set_scenario request : %s %s', topic, payload)
         #     get_id = (topic.split("/"))[3] #extract id from mqtt
-        #     # print(tydom, str(get_id), 'position', json.loads(payload))
+        #     # logger.debug("%s %s %s %s", tydom, str(get_id), 'position', json.loads(payload))
         #     if not self.tydom.connection.open:
-        #         print('Websocket not opened, reconnect...')
+        #         logger.info('Websocket not opened, reconnect...')
         #         await self.tydom.connect()
         # await self.tydom.put_devices_data(str(get_id), 'position',
         # str(json.loads(payload)))
@@ -114,24 +117,24 @@ class MQTT_Hassio():
         # str(json.loads(payload)))
 
         elif 'set_positionCmd' in str(topic):
-            print('Incoming MQTT set_positionCmd request : ', topic, payload)
+            logger.info('Incoming MQTT set_positionCmd request : %s %s', topic, payload)
             value = str(payload).strip('b').strip("'")
 
             get_id = (topic.split("/"))[2]  # extract ids from mqtt
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
 
-            print(str(get_id), 'positionCmd', value)
+            logger.info("%s %s %s", str(get_id), 'positionCmd', value)
             await Cover.put_positionCmd(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id, positionCmd=str(value))
 
         elif ('set_position' in str(topic)) and not ('set_positionCmd' in str(topic)):
 
-            print(
-                'Incoming MQTT set_position request : ',
+            logger.info(
+                'Incoming MQTT set_position request : %s %s',
                 topic,
                 json.loads(payload))
             value = json.loads(payload)
-            # print(value)
+            # logger.debug(value)
             get_id = (topic.split("/"))[2]  # extract ids from mqtt
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
@@ -139,25 +142,25 @@ class MQTT_Hassio():
             await Cover.put_position(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id, position=str(value))
 
         elif 'set_levelCmd' in str(topic):
-            print('Incoming MQTT set_levelCmd request : ', topic, payload)
+            logger.info('Incoming MQTT set_levelCmd request : %s %s', topic, payload)
             value = str(payload).strip('b').strip("'")
 
             get_id = (topic.split("/"))[2]  # extract ids from mqtt
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
 
-            print(str(get_id), 'levelCmd', value)
+            logger.info("%s %s %s", str(get_id), 'levelCmd', value)
             await Light.put_levelCmd(tydom_client=self.tydom, device_id=device_id, light_id=endpoint_id,
                                      levelCmd=str(value))
 
         elif ('set_level' in str(topic)) and not ('set_levelCmd' in str(topic)):
 
-            print(
-                'Incoming MQTT set_level request : ',
+            logger.info(
+                'Incoming MQTT set_level request : %s %s',
                 topic,
                 json.loads(payload))
             value = json.loads(payload)
-            # print(value)
+            # logger.debug(value)
             get_id = (topic.split("/"))[2]  # extract ids from mqtt
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
@@ -166,7 +169,7 @@ class MQTT_Hassio():
                                   level=str(value))
 
         elif ('set_alarm_state' in str(topic)) and not ('homeassistant' in str(topic)):
-            # print(topic, payload, qos, properties)
+            # logger.debug("%s %s %s %s", topic, payload, qos, properties)
             command = str(payload).strip('b').strip("'")
 
             get_id = (topic.split("/"))[2]  # extract ids from mqtt
@@ -178,9 +181,9 @@ class MQTT_Hassio():
         elif ('set_setpoint' in str(topic)):
 
             value = str(payload).strip('b').strip("'")
-            print('Incoming MQTT setpoint request : ', topic, value)
+            logger.info('Incoming MQTT setpoint request : %s %s', topic, value)
             value = json.loads(payload)
-            # print(value)
+            # logger.debug(value)
             get_id = (topic.split("/"))[2]  # extract ids from mqtt
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
@@ -191,8 +194,8 @@ class MQTT_Hassio():
         elif ('set_hvacMode' in str(topic)):
 
             value = str(payload).strip('b').strip("'")
-            print('Incoming MQTT set_hvacMode request : ', topic, value)
-            # print(value)
+            logger.info('Incoming MQTT set_hvacMode request : %s %s', topic, value)
+            # logger.debug(value)
             get_id = (topic.split("/"))[2]  # extract ids from mqtt
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
@@ -203,8 +206,8 @@ class MQTT_Hassio():
         elif ('set_thermicLevel' in str(topic)):
 
             value = str(payload).strip('b').strip("'")
-            print('Incoming MQTT set_thermicLevel request : ', topic, value)
-            # print(value)
+            logger.info('Incoming MQTT set_thermicLevel request : %s %s', topic, value)
+            # logger.debug(value)
             get_id = (topic.split("/"))[2]  # extract ids from mqtt
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
@@ -212,7 +215,7 @@ class MQTT_Hassio():
             await Boiler.put_thermicLevel(tydom_client=self.tydom, device_id=device_id, boiler_id=endpoint_id,
                                           set_thermicLevel=str(value))
         elif ('set_switch_state' in str(topic)) and not ('homeassistant' in str(topic)):
-            # print(topic, payload, qos, properties)
+            # logger.debug("%s %s %s %s", topic, payload, qos, properties)
             command = str(payload).strip('b').strip("'")
 
             get_id = (topic.split("/"))[2]  # extract ids from mqtt
@@ -222,25 +225,25 @@ class MQTT_Hassio():
             await Switch.put_switch_state(tydom_client=self.tydom, device_id=device_id, switch_id=endpoint_id, state=command)
 
         elif 'set_levelCmdGate' in str(topic):
-            print('Incoming MQTT set_levelCmdGate request : ', topic, payload)
+            logger.info('Incoming MQTT set_levelCmdGate request : %s %s', topic, payload)
             value = str(payload).strip('b').strip("'")
 
             get_id = (topic.split("/"))[2]  # extract ids from mqtt
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
 
-            print(str(get_id), 'levelCmd', value)
+            logger.info("%s %s %s", str(get_id), 'levelCmd', value)
             await Light.put_levelCmdGate(tydom_client=self.tydom, device_id=device_id, switch_id=endpoint_id,
                                          levelCmd=str(value))
 
         elif ('set_levelGate' in str(topic)) and not ('set_levelCmd' in str(topic)):
 
-            print(
-                'Incoming MQTT set_levelGate request : ',
+            logger.info(
+                'Incoming MQTT set_levelGate request : %s %s',
                 topic,
                 json.loads(payload))
             value = json.loads(payload)
-            # print(value)
+            # logger.debug(value)
             get_id = (topic.split("/"))[2]  # extract ids from mqtt
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
@@ -250,16 +253,16 @@ class MQTT_Hassio():
 
         else:
             pass
-            # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            # print('MQTT incoming : ', topic, payload.decode())
+            # logger.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            # logger.debug('MQTT incoming : ', topic, payload.decode())
 
     def on_disconnect(self, client, packet, exc=None):
-        print('MQTT Disconnected !')
-        print("##################################")
+        logger.info('MQTT Disconnected !')
+        logger.info("##################################")
         # self.connect()
 
     def on_subscribe(self, client, mid, qos):
-        print("MQTT is connected and suscribed ! =)", client)
+        logger.info("MQTT is connected and suscribed ! =) %s", client)
         try:
             pyld = str(datetime.fromtimestamp(time.time()))
             client.publish(
@@ -268,4 +271,4 @@ class MQTT_Hassio():
                 qos=1,
                 retain=True)
         except Exception as e:
-            print("on subscribe error : ", e)
+            logger.error("on subscribe error : %s", e)

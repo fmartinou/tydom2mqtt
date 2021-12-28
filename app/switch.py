@@ -2,7 +2,10 @@ import json
 import time
 from datetime import datetime
 from sensors import sensor
+from logger import logger
+import logging
 
+logger = logging.getLogger(__name__)
 switch_config_topic = "homeassistant/switch/tydom/{id}/config"
 switch_state_topic = "switch/tydom/{id}/state"
 switch_attributes_topic = "switch/tydom/{id}/attributes"
@@ -22,14 +25,14 @@ class Switch:
         try:
             self.current_level = self.attributes['level']
         except Exception as e:
-            print(e)
+            logger.error(e)
             self.current_level = None
         self.set_level = set_level
 
         # try:
         #    self.current_state = self.attributes['state']
         # except Exception as e:
-        #    print(e)
+        #    logger.error(e)
         #    self.current_state = 'On'
         self.mqtt = mqtt
 
@@ -58,7 +61,7 @@ class Switch:
         #self.config['optimistic'] = 'false'
         self.config['retain'] = 'false'
         self.config['device'] = self.device
-        # print(self.config)
+        # logger.debug(self.config)
 
         if (self.mqtt is not None):
             self.mqtt.mqtt_client.publish(
@@ -73,8 +76,8 @@ class Switch:
         try:
             await self.update_sensors()
         except Exception as e:
-            print("Switch sensors Error :")
-            print(e)
+            logger.error("Switch sensors Error :")
+            logger.error(e)
 
         self.level_topic = switch_state_topic.format(
             id=self.id, current_level=self.current_level)
@@ -87,8 +90,8 @@ class Switch:
                 retain=True)  # Switch State
             self.mqtt.mqtt_client.publish(
                 self.config['json_attributes_topic'], self.attributes, qos=0)
-        print(
-            "Switch created / updated : ",
+        logger.info(
+            "Switch created / updated : %s %s %s",
             self.name,
             self.id,
             self.current_level)
@@ -97,10 +100,10 @@ class Switch:
         # return(update_pub)
 
     async def update_sensors(self):
-        # print('test sensors !')
+        # logger.info('test sensors !')
         for i, j in self.attributes.items():
             # sensor_name = "tydom_alarm_sensor_"+i
-            # print("name "+sensor_name, "elem_name "+i, "attributes_topic_from_device ",self.config['json_attributes_topic'], "mqtt",self.mqtt)
+            # logger.debug("name %s elem_name %s attributes_topic_from_device %s mqtt %s", sensor_name, i, self.config['json_attributes_topic'], self.mqtt)
             if not i == 'device_type' or not i == 'id':
                 new_sensor = None
                 new_sensor = sensor(
@@ -113,11 +116,11 @@ class Switch:
     # attributes_topic_from_device, mqtt=None):
 
     async def put_levelGate(tydom_client, device_id, switch_id, level):
-        print(switch_id, 'level', level)
+        logger.info("%s %s %s", switch_id, 'level', level)
         if not (level == ''):
             await tydom_client.put_devices_data(device_id, switch_id, 'level', level)
 
     async def put_levelCmdGate(tydom_client, device_id, switch_id, levelCmd):
-        print(switch_id, 'levelCmd', levelCmd)
+        logger.info("%s %s %s", switch_id, 'levelCmd', levelCmd)
         if not (levelCmd == ''):
             await tydom_client.put_devices_data(device_id, switch_id, 'levelCmd', levelCmd)
