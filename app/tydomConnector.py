@@ -101,6 +101,8 @@ class TydomWebSocketClient():
                      None,
                      httpHeaders)
         res = conn.getresponse()
+        logger.info('response')
+        logger.info(res)
         # Get authentication
         nonce = res.headers["WWW-Authenticate"].split(',', 3)
         # read response
