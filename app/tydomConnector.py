@@ -302,12 +302,14 @@ class TydomWebSocketClient:
             # logger.debug(a_bytes)
             logger.info("Sending to tydom client..... %s %s", "PUT cdata", body)
 
-            await self.connection.send(a_bytes)
-            return 0
-        except Exception as e:
-            logger.error("put_alarm_cdata ERROR !")
-            logger.error(e)
-            logger.error(a_bytes)
+            try:
+                await self.connection.send(a_bytes)
+                return 0
+            except:
+                logger.error("put_alarm_cdata ERROR !", exc_info=True)
+                logger.error(a_bytes)
+        except:
+            logger.error("put_alarm_cdata ERROR !", exc_info=True)
 
     # Get some information on Tydom
 
