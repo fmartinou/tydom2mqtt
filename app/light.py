@@ -124,12 +124,14 @@ class Light:
     # def __init__(self, name, elem_name, tydom_attributes_payload,
     # attributes_topic_from_device, mqtt=None):
 
+    @staticmethod
     async def put_level(tydom_client, device_id, light_id, level):
         logger.info("%s %s %s", light_id, 'level', level)
         if not (level == ''):
             await tydom_client.put_devices_data(device_id, light_id, 'level', level)
 
-    async def put_levelCmd(tydom_client, device_id, light_id, levelCmd):
-        logger.info("%s %s %s", light_id, 'levelCmd', levelCmd)
-        if not (levelCmd == ''):
-            await tydom_client.put_devices_data(device_id, light_id, 'levelCmd', levelCmd)
+    @staticmethod
+    async def put_level_cmd(tydom_client, device_id, light_id, level_cmd):
+        logger.info("%s %s %s", light_id, 'levelCmd', level_cmd)
+        if not (level_cmd == ''):
+            await tydom_client.put_devices_data(device_id, light_id, 'levelCmd', level_cmd)
