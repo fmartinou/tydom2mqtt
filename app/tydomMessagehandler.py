@@ -292,10 +292,12 @@ class TydomMessageHandler():
                 logger.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 logger.debug('Incoming message type : config detected')
                 msg_type = 'msg_config'
+                logger.debug(data)
             elif ("id" in first):
                 logger.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 logger.debug('Incoming message type : data detected')
                 msg_type = 'msg_data'
+                logger.debug(data)
             elif ("doctype" in first):
                 logger.debug('Incoming message type : html detected (probable 404)')
                 msg_type = 'msg_html'
@@ -304,7 +306,7 @@ class TydomMessageHandler():
                 logger.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 logger.debug('Incoming message type : Info detected')
                 msg_type = 'msg_info'
-                # logger.debug(data)
+                logger.debug(data)
             else:
                 logger.debug('Incoming message type : no type detected')
                 logger.debug(data)
