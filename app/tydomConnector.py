@@ -101,14 +101,24 @@ class TydomWebSocketClient():
                      None,
                      httpHeaders)
         res = conn.getresponse()
-        logger.info('response')
-        logger.info(res)
-        # Get authentication
-        nonce = res.headers["WWW-Authenticate"].split(',', 3)
-        # read response
-        res.read()
         # Close HTTPS Connection
         conn.close()
+
+        logger.debug('response headers')
+        logger.debug(res.headers)
+        logger.debug('response code')
+        logger.debug(res.getcode())
+
+        # read response
+        logger.debug('response')
+        logger.debug(res.read())
+        res.read()
+
+        # if res.getcode() is not 101:
+        #     exit('Was not able to continue')
+
+        # Get authentication
+        nonce = "" #res.headers["WWW-Authenticate"].split(',', 3)
 
         logger.info('Upgrading http connection to websocket....')
         # Build websocket headers
@@ -149,7 +159,7 @@ class TydomWebSocketClient():
     def build_digest_headers(self, nonce):
         digestAuth = HTTPDigestAuth(self.mac, self.password)
         chal = dict()
-        chal["nonce"] = nonce[2].split('=', 1)[1].split('"')[1]
+        chal["nonce"] = "" # nonce[2].split('=', 1)[1].split('"')[1]
         chal["realm"] = "ServiceMedia" if self.remote_mode is True else "protected area"
         chal["qop"] = "auth"
         digestAuth._thread_local.chal = chal
