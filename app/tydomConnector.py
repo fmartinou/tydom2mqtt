@@ -146,9 +146,7 @@ class TydomWebSocketClient:
         """
         try:
             self.connection = await websockets.connect(
-                "wss://{}:443/mediation/client?mac={}&appli=1".format(
-                    self.host, self.mac
-                ),
+                f"wss://{self.host}:443/mediation/client?mac={self.mac}&appli=1",
                 extra_headers=websocket_headers,
                 ssl=websocket_ssl_context,
                 ping_timeout=None,
@@ -159,9 +157,7 @@ class TydomWebSocketClient:
             logger.error("Exception when trying to connect with websocket !")
             logger.error(e)
             logger.error(
-                "wss://{}:443/mediation/client?mac={}&appli=1".format(
-                    self.host, self.mac
-                )
+                f"wss://{self.host}:443/mediation/client?mac={self.mac}&appli=1"
             )
             logger.error(websocket_headers)
             exit()
@@ -185,8 +181,8 @@ class TydomWebSocketClient:
         digest_auth._thread_local.nonce_count = 1
         return digest_auth.build_digest_header(
             "GET",
-            "https://{}:443/mediation/client?mac={}&appli=1".format(
-                self.host, self.mac
+            "https://{host}:443/mediation/client?mac={mac}&appli=1".format(
+                host=self.host, mac=self.mac
             ),
         )
 
@@ -238,9 +234,7 @@ class TydomWebSocketClient:
         # open.
         str_request = (
             self.cmd_prefix
-            + "PUT /devices/{}/endpoints/{}/data HTTP/1.1\r\nContent-Length: ".format(
-                str(device_id), str(endpoint_id)
-            )
+            + f"PUT /devices/{device_id}/endpoints/{endpoint_id}/data HTTP/1.1\r\nContent-Length: "
             + str(len(body))
             + "\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
             + body
@@ -295,8 +289,8 @@ class TydomWebSocketClient:
             # str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/cdata?name={},".format(str(alarm_id),str(alarm_id),str(cmd)) + body +");"
             str_request = (
                 self.cmd_prefix
-                + "PUT /devices/{}/endpoints/{}/cdata?name={} HTTP/1.1\r\nContent-Length: ".format(
-                    str(device_id), str(alarm_id), str(cmd)
+                + "PUT /devices/{device}/endpoints/{alarm}/cdata?name={cmd} HTTP/1.1\r\nContent-Length: ".format(
+                    device=str(device_id), alarm=str(alarm_id), cmd=str(cmd)
                 )
                 + str(len(body))
                 + "\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
@@ -379,11 +373,10 @@ class TydomWebSocketClient:
     # Give order to endpoint
     async def get_device_data(self, id):
         # 10 here is the endpoint = the device (shutter in this case) to open.
+        device_id = str(id)
         str_request = (
             self.cmd_prefix
-            + "GET /devices/{}/endpoints/{}/data HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n".format(
-                str(id), str(id)
-            )
+            + f"GET /devices/{device_id}/endpoints/{device_id}/data HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
         )
         a_bytes = bytes(str_request, "ascii")
         await self.connection.send(a_bytes)
