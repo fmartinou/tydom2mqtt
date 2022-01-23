@@ -125,7 +125,8 @@ class MQTT_Hassio():
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
 
             logger.info("%s %s %s", str(get_id), 'positionCmd', value)
-            await Cover.put_positionCmd(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id, positionCmd=str(value))
+            await Cover.put_positionCmd(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id,
+                                        positionCmd=str(value))
 
         elif ('set_position' in str(topic)) and not ('set_positionCmd' in str(topic)):
 
@@ -139,7 +140,8 @@ class MQTT_Hassio():
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
 
-            await Cover.put_position(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id, position=str(value))
+            await Cover.put_position(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id,
+                                     position=str(value))
 
         elif 'set_levelCmd' in str(topic):
             logger.info('Incoming MQTT set_levelCmd request : %s %s', topic, payload)
@@ -150,8 +152,8 @@ class MQTT_Hassio():
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
 
             logger.info("%s %s %s", str(get_id), 'levelCmd', value)
-            await Light.put_levelCmd(tydom_client=self.tydom, device_id=device_id, light_id=endpoint_id,
-                                     levelCmd=str(value))
+            await Light.put_level_cmd(tydom_client=self.tydom, device_id=device_id, light_id=endpoint_id,
+                                      level_cmd=str(value))
 
         elif ('set_level' in str(topic)) and not ('set_levelCmd' in str(topic)):
 
@@ -176,7 +178,8 @@ class MQTT_Hassio():
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
 
-            await Alarm.put_alarm_state(tydom_client=self.tydom, device_id=device_id, alarm_id=endpoint_id, asked_state=command, home_zone=self.home_zone, night_zone=self.night_zone)
+            await Alarm.put_alarm_state(tydom_client=self.tydom, device_id=device_id, alarm_id=endpoint_id,
+                                        asked_state=command, home_zone=self.home_zone, night_zone=self.night_zone)
 
         elif ('set_setpoint' in str(topic)):
 
@@ -191,7 +194,7 @@ class MQTT_Hassio():
             await Boiler.put_temperature(tydom_client=self.tydom, device_id=device_id, boiler_id=endpoint_id,
                                          set_setpoint=str(value))
 
-        elif ('set_hvacMode' in str(topic)):
+        elif 'set_hvacMode' in str(topic):
 
             value = str(payload).strip('b').strip("'")
             logger.info('Incoming MQTT set_hvacMode request : %s %s', topic, value)
@@ -200,8 +203,8 @@ class MQTT_Hassio():
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
 
-            await Boiler.put_hvacMode(tydom_client=self.tydom, device_id=device_id, boiler_id=endpoint_id,
-                                      set_hvacMode=str(value))
+            await Boiler.put_hvac_mode(tydom_client=self.tydom, device_id=device_id, boiler_id=endpoint_id,
+                                       set_hvac_mode=str(value))
 
         elif ('set_thermicLevel' in str(topic)):
 
@@ -212,8 +215,8 @@ class MQTT_Hassio():
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
 
-            await Boiler.put_thermicLevel(tydom_client=self.tydom, device_id=device_id, boiler_id=endpoint_id,
-                                          set_thermicLevel=str(value))
+            await Boiler.put_thermic_level(tydom_client=self.tydom, device_id=device_id, boiler_id=endpoint_id,
+                                           set_thermic_level=str(value))
         elif ('set_switch_state' in str(topic)) and not ('homeassistant' in str(topic)):
             # logger.debug("%s %s %s %s", topic, payload, qos, properties)
             command = str(payload).strip('b').strip("'")
@@ -222,6 +225,7 @@ class MQTT_Hassio():
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
 
+            # This seems broken, but I'm not entirely clear what it is *meant* to do?
             await Switch.put_switch_state(tydom_client=self.tydom, device_id=device_id, switch_id=endpoint_id, state=command)
 
         elif 'set_levelCmdGate' in str(topic):
@@ -233,8 +237,8 @@ class MQTT_Hassio():
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
 
             logger.info("%s %s %s", str(get_id), 'levelCmd', value)
-            await Light.put_levelCmdGate(tydom_client=self.tydom, device_id=device_id, switch_id=endpoint_id,
-                                         levelCmd=str(value))
+            await Switch.put_level_cmd_gate(tydom_client=self.tydom, device_id=device_id, switch_id=endpoint_id,
+                                            level_cmd=str(value))
 
         elif ('set_levelGate' in str(topic)) and not ('set_levelCmd' in str(topic)):
 
@@ -248,8 +252,8 @@ class MQTT_Hassio():
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
 
-            await Light.put_levelGate(tydom_client=self.tydom, device_id=device_id, switch_id=endpoint_id,
-                                      level=str(value))
+            await Switch.put_level_gate(tydom_client=self.tydom, device_id=device_id, switch_id=endpoint_id,
+                                        level=str(value))
 
         else:
             pass
