@@ -66,7 +66,7 @@ class TydomWebSocketClient():
         if self.host == "mediation.tydom.com":
             logger.info('Setting remote mode context.')
             self.remote_mode = True
-            #self.ssl_context = None
+            # self.ssl_context = None
             self.ssl_context = ssl._create_unverified_context()
             self.cmd_prefix = "\x02"
             self.ping_timeout = 40
@@ -85,13 +85,13 @@ class TydomWebSocketClient():
 
         logger.info('Building headers, getting 1st handshake and authentication....')
 
-        httpHeaders = {"Connection": "Upgrade",
-                       "Upgrade": "websocket",
-                       "Host": self.host + ":443",
-                       "Accept": "*/*",
-                       "Sec-WebSocket-Key": self.generate_random_key(),
-                       "Sec-WebSocket-Version": "13"
-                       }
+        http_headers = {"Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Host": self.host + ":443",
+                        "Accept": "*/*",
+                        "Sec-WebSocket-Key": self.generate_random_key(),
+                        "Sec-WebSocket-Version": "13"
+                        }
         conn = http.client.HTTPSConnection(
             self.host, 443, context=self.ssl_context)
 
@@ -99,7 +99,7 @@ class TydomWebSocketClient():
         conn.request("GET",
                      "/mediation/client?mac={}&appli=1".format(self.mac),
                      None,
-                     httpHeaders)
+                     http_headers)
         res = conn.getresponse()
         # Close HTTPS Connection
         conn.close()
@@ -121,15 +121,13 @@ class TydomWebSocketClient():
         nonce = "" #res.headers["WWW-Authenticate"].split(',', 3)
 
         logger.info('Upgrading http connection to websocket....')
-        # Build websocket headers
-        websocketHeaders = {'Authorization': self.build_digest_headers(nonce)}
 
         if self.ssl_context is not None:
             websocket_ssl_context = self.ssl_context
         else:
             websocket_ssl_context = True  # Verify certificate
 
-    # outer loop restarted every time the connection fails
+        # outer loop restarted every time the connection fails
         logger.info('Attempting websocket connection with tydom hub.......................')
         logger.info('Host Target : %s', self.host)
         '''
@@ -137,18 +135,19 @@ class TydomWebSocketClient():
             websockets.client.connect returns a WebSocketClientProtocol, which is used to send and receive messages
         '''
         try:
-            self.connection = await websockets.connect('wss://{}:443/mediation/client?mac={}&appli=1'.format(self.host, self.mac),
-                                                       extra_headers=websocketHeaders, ssl=websocket_ssl_context, ping_timeout=None)
+            self.connection = await websockets.connect(
+                'wss://{}:443/mediation/client?mac={}&appli=1'.format(self.host, self.mac),
+                extra_headers=websocket_headers, ssl=websocket_ssl_context, ping_timeout=None)
 
             return self.connection
         except Exception as e:
             logger.error('Exception when trying to connect with websocket !')
             logger.error(e)
             logger.error('wss://{}:443/mediation/client?mac={}&appli=1'.format(self.host, self.mac))
-            logger.error(websocketHeaders)
+            logger.error(websocket_headers)
             exit()
 
-# Utils
+    # Utils
 
     # Generate 16 bytes random key for Sec-WebSocket-Keyand convert it to
     # base64
@@ -157,15 +156,15 @@ class TydomWebSocketClient():
 
     # Build the headers of Digest Authentication
     def build_digest_headers(self, nonce):
-        digestAuth = HTTPDigestAuth(self.mac, self.password)
+        digest_auth = HTTPDigestAuth(self.mac, self.password)
         chal = dict()
-        chal["nonce"] = "" # nonce[2].split('=', 1)[1].split('"')[1]
+        chal["nonce"] = ""  # nonce[2].split('=', 1)[1].split('"')[1]
         chal["realm"] = "ServiceMedia" if self.remote_mode is True else "protected area"
         chal["qop"] = "auth"
-        digestAuth._thread_local.chal = chal
-        digestAuth._thread_local.last_nonce = nonce
-        digestAuth._thread_local.nonce_count = 1
-        return digestAuth.build_digest_header(
+        digest_auth._thread_local.chal = chal
+        digest_auth._thread_local.last_nonce = nonce
+        digest_auth._thread_local.nonce_count = 1
+        return digest_auth.build_digest_header(
             'GET', "https://{}:443/mediation/client?mac={}&appli=1".format(self.host, self.mac))
 
     async def notify_alive(self, msg='OK'):
@@ -189,7 +188,7 @@ class TydomWebSocketClient():
         # logger.debug("%s %s", method, msg)
 
         str = self.cmd_prefix + method + ' ' + msg + \
-            " HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
+              " HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
         a_bytes = bytes(str, "ascii")
         if 'pwd' not in msg:
             logger.info('>>>>>>>>>> Sending to tydom client..... %s %s', method, msg)
@@ -210,8 +209,10 @@ class TydomWebSocketClient():
         body = "[{\"name\":\"" + name + "\",\"value\":\"" + value + "\"}]"
         # endpoint_id is the endpoint = the device (shutter in this case) to
         # open.
-        str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/data HTTP/1.1\r\nContent-Length: ".format(str(device_id), str(
-            endpoint_id)) + str(len(body)) + "\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n" + body + "\r\n\r\n"
+        str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/data HTTP/1.1\r\nContent-Length: ".format(
+            str(device_id), str(
+                endpoint_id)) + str(
+            len(body)) + "\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n" + body + "\r\n\r\n"
         a_bytes = bytes(str_request, "ascii")
         # logger.debug(a_bytes)
         logger.info('Sending to tydom client..... %s %s', 'PUT data', body)
@@ -239,21 +240,22 @@ class TydomWebSocketClient():
             logger.warn('TYDOM_ALARM_PIN not set !')
             pass
         try:
-            Cmd = None
 
             if zone_id is None:
-                Cmd = 'alarmCmd'
+                cmd = 'alarmCmd'
                 body = "{\"value\":\"" + \
-                    str(value) + "\",\"pwd\":\"" + str(self.alarm_pin) + "\"}"
+                       str(value) + "\",\"pwd\":\"" + str(self.alarm_pin) + "\"}"
                 # body= {"value":"OFF","pwd":"123456"}
             else:
-                Cmd = 'zoneCmd'
+                cmd = 'zoneCmd'
                 body = "{\"value\":\"" + str(value) + "\",\"pwd\":\"" + str(
                     self.alarm_pin) + "\",\"zones\":\"[" + str(zone_id) + "]\"}"
 
             # str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/cdata?name={},".format(str(alarm_id),str(alarm_id),str(cmd)) + body +");"
-            str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/cdata?name={} HTTP/1.1\r\nContent-Length: ".format(str(device_id), str(
-                alarm_id), str(Cmd)) + str(len(body)) + "\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n" + body + "\r\n\r\n"
+            str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/cdata?name={} HTTP/1.1\r\nContent-Length: ".format(
+                str(device_id), str(
+                    alarm_id), str(cmd)) + str(
+                len(body)) + "\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n" + body + "\r\n\r\n"
 
             a_bytes = bytes(str_request, "ascii")
             # logger.debug(a_bytes)
@@ -331,18 +333,18 @@ class TydomWebSocketClient():
     async def get_device_data(self, id):
         # 10 here is the endpoint = the device (shutter in this case) to open.
         str_request = self.cmd_prefix + \
-            "GET /devices/{}/endpoints/{}/data HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n".format(
-                str(id), str(id))
+                      "GET /devices/{}/endpoints/{}/data HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n".format(
+                          str(id), str(id))
         a_bytes = bytes(str_request, "ascii")
         await self.connection.send(a_bytes)
         # name = await self.recv()
         # parse_response(name)
 
     async def setup(self):
-        '''
+        """
         Sending heartbeat to server
         Ping - pong messages to verify connection is alive adn data is always up to date
-        '''
+        """
         logger.info('Requesting 1st data...')
         await self.get_info()
         logger.info("##################################")
