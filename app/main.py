@@ -81,7 +81,7 @@ try:
             logger.error('Parsing error %s', e)
 
 except FileNotFoundError:
-    logger.info("No /data/options.json, seems where are not in hassio addon mode.")
+    logger.info("No /data/options.json, seems we are not in hassio addon mode.")
     # CREDENTIALS TYDOM
     TYDOM_MAC = os.getenv('TYDOM_MAC')  # MAC Address of Tydom Box
     # Local ip address, default to mediation.tydom.com for remote connexion if
@@ -148,7 +148,7 @@ async def listen_tydom_forever(tydom_client):
                 try:
                     incoming_bytes_str = await asyncio.wait_for(tydom_client.connection.recv(), timeout=tydom_client.refresh_timeout)
                     logger.debug('<<<<<<<<<< Receiving from tydom_client...')
-                    # logger.debug(incoming_bytes_str)
+                    logger.debug(incoming_bytes_str)
 
                 except (asyncio.TimeoutError, websockets.exceptions.ConnectionClosed) as e:
                     logger.debug(e)
@@ -164,7 +164,7 @@ async def listen_tydom_forever(tydom_client):
                         logger.error('Error: %s', e)
                         await asyncio.sleep(tydom_client.sleep_time)
                         break
-                # logger.debug('Server said > %s'.format(incoming_bytes_str))
+                logger.debug('Server said > %s'.format(incoming_bytes_str))
                 incoming_bytes_str
 
                 handler = TydomMessageHandler(
