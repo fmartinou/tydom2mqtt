@@ -41,10 +41,11 @@ TYDOM_ALARM_PIN = None
 TYDOM_ALARM_HOME_ZONE = 1
 TYDOM_ALARM_NIGHT_ZONE = 2
 
+data_options_path = '/data/options.json'
 
 try:
-    with open('/data/options.json') as f:
-        logger.info('/data/options.json detected ! Hassio Addons Environnement : parsing options.json....')
+    with open(data_options_path) as f:
+        logger.info(data_options_path + ' detected ! Hassio Addons Environnement : parsing options.json....')
         try:
             data = json.load(f)
             logger.debug(data)
