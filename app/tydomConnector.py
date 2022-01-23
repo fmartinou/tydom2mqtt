@@ -118,7 +118,15 @@ class TydomWebSocketClient():
         #     exit('Was not able to continue')
 
         # Get authentication
-        nonce = "" #res.headers["WWW-Authenticate"].split(',', 3)
+        websocket_headers = {}
+        try:
+            # Anecdotally, local installations are unauthenticated but we don't *know* that for certain
+            # so we'll EAFP, try to use the header and fallback if we're unable.
+            nonce = res.headers["WWW-Authenticate"].split(',', 3)
+            # Build websocket headers
+            websocket_headers = {'Authorization': self.build_digest_headers(nonce)}
+        except AttributeError:
+            pass
 
         logger.info('Upgrading http connection to websocket....')
 
@@ -158,7 +166,7 @@ class TydomWebSocketClient():
     def build_digest_headers(self, nonce):
         digest_auth = HTTPDigestAuth(self.mac, self.password)
         chal = dict()
-        chal["nonce"] = ""  # nonce[2].split('=', 1)[1].split('"')[1]
+        chal["nonce"] = nonce[2].split('=', 1)[1].split('"')[1]
         chal["realm"] = "ServiceMedia" if self.remote_mode is True else "protected area"
         chal["qop"] = "auth"
         digest_auth._thread_local.chal = chal
