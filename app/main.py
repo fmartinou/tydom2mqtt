@@ -42,8 +42,7 @@ TYDOM_ALARM_PIN = None
 TYDOM_ALARM_HOME_ZONE = 1
 TYDOM_ALARM_NIGHT_ZONE = 2
 
-# data_options_path = '/data/options.json'
-data_options_path = "options.json"
+data_options_path = "/data/options.json"
 
 try:
     with open(data_options_path) as f:
