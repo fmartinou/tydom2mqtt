@@ -153,20 +153,23 @@ class Boiler:
 
         # logger.info("Boiler created / updated : %s %s %s", self.name, self.id, self.current_position)
 
+    @staticmethod
     async def put_temperature(tydom_client, device_id, boiler_id, set_setpoint):
         logger.info("%s %s %s", boiler_id, 'set_setpoint', set_setpoint)
         if not (set_setpoint == ''):
             await tydom_client.put_devices_data(device_id, boiler_id, 'setpoint', set_setpoint)
 
-    async def put_hvacMode(tydom_client, device_id, boiler_id, set_hvacMode):
-        logger.info("%s %s %s", boiler_id, 'set_hvacMode', set_hvacMode)
-        if set_hvacMode == 'off':
+    @staticmethod
+    async def put_hvac_mode(tydom_client, device_id, boiler_id, set_hvac_mode):
+        logger.info("%s %s %s", boiler_id, 'set_hvacMode', set_hvac_mode)
+        if set_hvac_mode == 'off':
             await tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', 'STOP')
         else:
             await tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', 'COMFORT')
             await tydom_client.put_devices_data(device_id, boiler_id, 'setpoint', '10')
 
-    async def put_thermicLevel(tydom_client, device_id, boiler_id, set_thermicLevel):
-        logger.info("%s %s %s", boiler_id, 'thermicLevel', set_thermicLevel)
-        if not (set_thermicLevel == ''):
-            await tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', set_thermicLevel)
+    @staticmethod
+    async def put_thermic_level(tydom_client, device_id, boiler_id, set_thermic_level):
+        logger.info("%s %s %s", boiler_id, 'thermicLevel', set_thermic_level)
+        if not (set_thermic_level == ''):
+            await tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', set_thermic_level)

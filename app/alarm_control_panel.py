@@ -103,6 +103,7 @@ class Alarm:
     # def __init__(self, name, elem_name, tydom_attributes_payload,
     # attributes_topic_from_device, mqtt=None):
 
+    @staticmethod
     async def put_alarm_state(tydom_client, device_id, alarm_id, home_zone, night_zone, asked_state=None):
         # logger.debug("%s %s %s %s", tydom_client, device_id, alarm_id, asked_state)
 
