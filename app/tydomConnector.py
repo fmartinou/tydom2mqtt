@@ -40,6 +40,8 @@ class TydomWebSocketClient:
         # # ping_timeout=None is necessary on local connection to avoid 1006 erros
         self.sleep_time = 2
         self.incoming = None
+        # Some devices (like Tywatt) need pulling
+        self.pull_device_urls = []
         # if not (self.host == 'mediation.tydom.com'):
         #     test = None
         #     testlocal = None
@@ -197,6 +199,9 @@ class TydomWebSocketClient:
         #     n.notify("WATCHDOG=1")
         #     # logger.info("Tydom HUB is still connected, systemd's watchdog notified...")
 
+    def add_pull_device_url(self, url):
+        self.pull_device_urls.append(url)
+
     ###############################################################
     # Commands                                                    #
     ###############################################################
@@ -325,6 +330,9 @@ class TydomWebSocketClient:
         msg_type = "/refresh/all"
         req = "POST"
         await self.send_message(method=req, msg=msg_type)
+        # Get pull devices data
+        for url in self.pull_device_urls:
+            await self.get_pull_device_data(url)
 
     # Get the moments (programs)
     async def get_moments(self):
@@ -359,6 +367,9 @@ class TydomWebSocketClient:
         msg_type = "/devices/data"
         req = "GET"
         await self.send_message(method=req, msg=msg_type)
+        # Get pull devices data
+        for url in self.pull_device_urls:
+            await self.get_pull_device_data(url)
 
     # List the device to get the endpoint id
 
@@ -367,8 +378,16 @@ class TydomWebSocketClient:
         req = "GET"
         await self.send_message(method=req, msg=msg_type)
 
+    # Get metadata configuration to list pull devices (like Tywatt)
+
+    async def get_devices_cmeta(self):
+        msg_type = "/devices/cmeta"
+        req = "GET"
+        await self.send_message(method=req, msg=msg_type)
+
     async def get_data(self):
         await self.get_configs_file()
+        await self.get_devices_cmeta()
         await asyncio.sleep(5)
         await self.get_devices_data()
 
@@ -384,6 +403,11 @@ class TydomWebSocketClient:
         await self.connection.send(a_bytes)
         # name = await self.recv()
         # parse_response(name)
+
+    async def get_pull_device_data(self, url):
+        msg_type = url
+        req = "GET"
+        await self.send_message(method=req, msg=msg_type)
 
     async def setup(self):
         """

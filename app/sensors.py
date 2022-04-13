@@ -40,6 +40,9 @@ class sensor:
         if 'device_class' in tydom_attributes_payload.keys():
             self.device_class = tydom_attributes_payload['device_class']
 
+        if 'state_class' in tydom_attributes_payload.keys():
+            self.state_class = tydom_attributes_payload['state_class']
+
         if 'unit_of_measurement' in tydom_attributes_payload.keys():
             self.unit_of_measurement = tydom_attributes_payload['unit_of_measurement']
 
@@ -116,6 +119,10 @@ class sensor:
         self.config['unique_id'] = self.id
         try:
             self.config['device_class'] = self.device_class
+        except AttributeError:
+            pass
+        try:
+            self.config['state_class'] = self.state_class
         except AttributeError:
             pass
         try:
