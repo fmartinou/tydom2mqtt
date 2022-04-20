@@ -214,7 +214,11 @@ class TydomMessageHandler():
                 elif ("PUT /devices/data" in first) or ("/devices/cdata" in first):
                     logger.debug('PUT /devices/data message detected !')
                     try:
-                        incoming = self.parse_put_response(bytes_str)
+                        try:
+                            incoming = self.parse_put_response(bytes_str)
+                        except:
+                            # Tywatt response starts at 7
+                            incoming = self.parse_put_response(bytes_str, 7)
                         await self.parse_response(incoming)
                     except BaseException:
                         logger.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
@@ -293,6 +297,16 @@ class TydomMessageHandler():
                 logger.debug('Incoming message type : config detected')
                 msg_type = 'msg_config'
                 logger.debug(data)
+            elif ("cmetadata" in data):
+                logger.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                logger.debug('Incoming message type : cmetadata detected')
+                msg_type = 'msg_cmetadata'
+                logger.debug(data)
+            elif ("cdata" in data):
+                logger.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                logger.debug('Incoming message type : cdata detected')
+                msg_type = 'msg_cdata'
+                logger.debug(data)
             elif ("id" in first):
                 logger.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 logger.debug('Incoming message type : data detected')
@@ -317,11 +331,19 @@ class TydomMessageHandler():
                         parsed = json.loads(data)
                         # logger.debug(parsed)
                         await self.parse_config_data(parsed=parsed)
+                    elif (msg_type == 'msg_cmetadata'):
+                        parsed = json.loads(data)
+                        # logger.debug(parsed)
+                        await self.parse_cmeta_data(parsed=parsed)
 
                     elif (msg_type == 'msg_data'):
                         parsed = json.loads(data)
                         # logger.debug(parsed)
                         await self.parse_devices_data(parsed=parsed)
+                    elif (msg_type == 'msg_cdata'):
+                        parsed = json.loads(data)
+                        # logger.debug(parsed)
+                        await self.parse_devices_cdata(parsed=parsed)
                     elif (msg_type == 'msg_html'):
                         logger.debug("HTML Response ?")
                     elif (msg_type == 'msg_info'):
@@ -381,6 +403,36 @@ class TydomMessageHandler():
                 device_endpoint[device_unique_id] = i["id_endpoint"]
 
         logger.info('Configuration updated')
+
+    async def parse_cmeta_data(self, parsed):
+        for i in parsed:
+            for endpoint in i["endpoints"]:
+                if len(endpoint["cmetadata"]) > 0:
+                    for elem in endpoint["cmetadata"]:
+                        device_id = i["id"]
+                        endpoint_id = endpoint["id"]
+                        unique_id = str(endpoint_id) + "_" + str(device_id)
+
+                        if elem["name"] == "energyIndex":
+                            device_name[unique_id] = 'Tywatt'
+                            device_type[unique_id] = 'conso'
+                            for params in elem["parameters"]:
+                                if params["name"] == "dest":
+                                    for dest in params["enum_values"]:
+                                        url = "/devices/" + str(i["id"]) + "/endpoints/" + str(endpoint["id"]) + "/cdata?name=" + elem["name"] + "&dest=" + dest + "&reset=false"
+                                        self.tydom_client.add_pull_device_url(url)
+                                        logger.debug("Add pull device : " + url)
+                        elif elem["name"] == "energyInstant":
+                            device_name[unique_id] = 'Tywatt'
+                            device_type[unique_id] = 'conso'
+                            for params in elem["parameters"]:
+                                if params["name"] == "unit":
+                                    for unit in params["enum_values"]:
+                                        url = "/devices/" + str(i["id"]) + "/endpoints/" + str(endpoint["id"]) + "/cdata?name=" + elem["name"] + "&unit=" + unit + "&reset=false"
+                                        self.tydom_client.add_pull_device_url(url)
+                                        logger.debug("Add pull device : " + url)
+
+        logger.info('Metadata configuration updated')
 
     async def parse_devices_data(self, parsed):
         for i in parsed:
@@ -653,12 +705,74 @@ class TydomMessageHandler():
                     else:
                         pass
 
+    async def parse_devices_cdata(self, parsed):
+        for i in parsed:
+            for endpoint in i["endpoints"]:
+                if endpoint["error"] == 0 and len(endpoint["cdata"]) > 0:
+                    try:
+                        device_id = i["id"]
+                        endpoint_id = endpoint["id"]
+                        unique_id = str(endpoint_id) + "_" + str(device_id)
+                        name_of_id = self.get_name_from_id(unique_id)
+                        type_of_id = self.get_type_from_id(unique_id)
+
+                        logger.debug("======[ DEVICE INFOS ]======")
+                        logger.debug("ID {}".format(device_id))
+                        logger.debug("ENDPOINT ID {}".format(endpoint_id))
+                        logger.debug("Name {}".format(name_of_id))
+                        logger.debug("Type {}".format(type_of_id))
+                        logger.debug("==========================")
+
+                        for elem in endpoint["cdata"]:
+                            device_class_of_id = None
+                            state_class_of_id = None
+                            unit_of_measurement_of_id = None
+                            elementName = None
+                            elementIndex = None
+
+                            if type_of_id == 'conso':
+                                if elem["name"] == "energyIndex":
+                                    device_class_of_id = 'energy'
+                                    state_class_of_id = 'total_increasing'
+                                    unit_of_measurement_of_id = 'Wh'
+                                    elementName = elem["parameters"]["dest"]
+                                    elementIndex = 'counter'
+
+                                elif elem["name"] == "energyInstant":
+                                    device_class_of_id = 'current'
+                                    state_class_of_id = 'measurement'
+                                    unit_of_measurement_of_id = 'VA'
+                                    elementName = elem["parameters"]["unit"]
+                                    elementIndex = 'measure'
+
+                                attr_conso = {
+                                    'device_id': device_id,
+                                    'endpoint_id': endpoint_id,
+                                    'id': unique_id,
+                                    'name': name_of_id,
+                                    'device_type': 'sensor',
+                                    'device_class': device_class_of_id,
+                                    'state_class': state_class_of_id,
+                                    'unit_of_measurement': unit_of_measurement_of_id,
+                                    elementName: elem["values"][elementIndex]}
+
+                                new_conso = sensor(
+                                    elem_name=elementName,
+                                    tydom_attributes_payload=attr_conso,
+                                    attributes_topic_from_device='useless',
+                                    mqtt=self.mqtt_client)
+                                await new_conso.update()
+
+                    except Exception as e:
+                        logger.error('msg_cdata error in parsing !')
+                        logger.error(e)
+
     # PUT response DIRTY parsing
-    def parse_put_response(self, bytes_str):
+    def parse_put_response(self, bytes_str, start=6):
         # TODO : Find a cooler way to parse nicely the PUT HTTP response
         resp = bytes_str[len(self.cmd_prefix):].decode("utf-8")
         fields = resp.split("\r\n")
-        fields = fields[6:]  # ignore the PUT / HTTP/1.1
+        fields = fields[start:]  # ignore the PUT / HTTP/1.1
         end_parsing = False
         i = 0
         output = str()
