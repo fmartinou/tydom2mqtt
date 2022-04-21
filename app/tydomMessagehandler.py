@@ -420,8 +420,8 @@ class TydomMessageHandler():
                                 if params["name"] == "dest":
                                     for dest in params["enum_values"]:
                                         url = "/devices/" + str(i["id"]) + "/endpoints/" + str(endpoint["id"]) + "/cdata?name=" + elem["name"] + "&dest=" + dest + "&reset=false"
-                                        self.tydom_client.add_pull_device_url(url)
-                                        logger.debug("Add pull device : " + url)
+                                        self.tydom_client.add_poll_device_url(url)
+                                        logger.debug("Add poll device : " + url)
                         elif elem["name"] == "energyInstant":
                             device_name[unique_id] = 'Tywatt'
                             device_type[unique_id] = 'conso'
@@ -429,8 +429,8 @@ class TydomMessageHandler():
                                 if params["name"] == "unit":
                                     for unit in params["enum_values"]:
                                         url = "/devices/" + str(i["id"]) + "/endpoints/" + str(endpoint["id"]) + "/cdata?name=" + elem["name"] + "&unit=" + unit + "&reset=false"
-                                        self.tydom_client.add_pull_device_url(url)
-                                        logger.debug("Add pull device : " + url)
+                                        self.tydom_client.add_poll_device_url(url)
+                                        logger.debug("Add poll device : " + url)
 
         logger.info('Metadata configuration updated')
 
