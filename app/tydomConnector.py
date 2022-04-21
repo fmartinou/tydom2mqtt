@@ -40,8 +40,8 @@ class TydomWebSocketClient:
         # # ping_timeout=None is necessary on local connection to avoid 1006 erros
         self.sleep_time = 2
         self.incoming = None
-        # Some devices (like Tywatt) need pulling
-        self.pull_device_urls = []
+        # Some devices (like Tywatt) need polling
+        self.poll_device_urls = []
         # if not (self.host == 'mediation.tydom.com'):
         #     test = None
         #     testlocal = None
@@ -199,8 +199,8 @@ class TydomWebSocketClient:
         #     n.notify("WATCHDOG=1")
         #     # logger.info("Tydom HUB is still connected, systemd's watchdog notified...")
 
-    def add_pull_device_url(self, url):
-        self.pull_device_urls.append(url)
+    def add_poll_device_url(self, url):
+        self.poll_device_urls.append(url)
 
     ###############################################################
     # Commands                                                    #
@@ -330,9 +330,9 @@ class TydomWebSocketClient:
         msg_type = "/refresh/all"
         req = "POST"
         await self.send_message(method=req, msg=msg_type)
-        # Get pull devices data
-        for url in self.pull_device_urls:
-            await self.get_pull_device_data(url)
+        # Get poll devices data
+        for url in self.poll_device_urls:
+            await self.get_poll_device_data(url)
 
     # Get the moments (programs)
     async def get_moments(self):
@@ -367,9 +367,9 @@ class TydomWebSocketClient:
         msg_type = "/devices/data"
         req = "GET"
         await self.send_message(method=req, msg=msg_type)
-        # Get pull devices data
-        for url in self.pull_device_urls:
-            await self.get_pull_device_data(url)
+        # Get poll devices data
+        for url in self.poll_device_urls:
+            await self.get_poll_device_data(url)
 
     # List the device to get the endpoint id
 
@@ -378,7 +378,7 @@ class TydomWebSocketClient:
         req = "GET"
         await self.send_message(method=req, msg=msg_type)
 
-    # Get metadata configuration to list pull devices (like Tywatt)
+    # Get metadata configuration to list poll devices (like Tywatt)
 
     async def get_devices_cmeta(self):
         msg_type = "/devices/cmeta"
@@ -404,7 +404,7 @@ class TydomWebSocketClient:
         # name = await self.recv()
         # parse_response(name)
 
-    async def get_pull_device_data(self, url):
+    async def get_poll_device_data(self, url):
         msg_type = url
         req = "GET"
         await self.send_message(method=req, msg=msg_type)
