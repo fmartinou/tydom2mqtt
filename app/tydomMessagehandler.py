@@ -40,12 +40,21 @@ deviceAlarmKeywords = [
     'unackedEvent',
     'alarmTechnical',
     'systAutoProtect',
-    'sysBatteryDefect',
-    'zsystSupervisionDefect',
+    'systBatteryDefect',
+    'systSupervisionDefect',
     'systOpenIssue',
     'systTechnicalDefect',
     'videoLinkDefect',
-    'outTemperature']
+    'outTemperature',
+    'kernelUpToDate',
+    'irv1State',
+    'irv2State',
+    'irv3State',
+    'irv4State',
+    'simDefect',
+    'remoteSurveyDefect',
+    'systSectorDefect',
+	]
 deviceAlarmDetailsKeywords = [
     'alarmSOS',
     'zone1State',
@@ -66,7 +75,7 @@ deviceAlarmDetailsKeywords = [
     'unackedEvent',
     'alarmTechnical',
     'systAutoProtect',
-    'sysBatteryDefect',
+    'systBatteryDefect',
     'zsystSupervisionDefect',
     'systOpenIssue',
     'systTechnicalDefect',
@@ -136,6 +145,9 @@ deviceBoilerKeywords = [
 
 deviceSwitchKeywords = ['thermicDefect']
 deviceSwitchDetailsKeywords = ['thermicDefect']
+
+deviceMotionKeywords = ['motionDetect']
+deviceMotionDetailsKeywords = ['motionDetect']
 
 device_conso_classes = {
     'energyInstantTotElec': 'current',
@@ -380,6 +392,12 @@ class TydomMessageHandler():
                 device_type[device_unique_id] = 'boiler'
                 device_endpoint[device_unique_id] = i["id_endpoint"]
 
+
+            if i["last_usage"] == '':
+                device_name[device_unique_id] = i["name"]
+                device_type[device_unique_id] = 'unknown'
+                device_endpoint[device_unique_id] = i["id_endpoint"]
+
         logger.info('Configuration updated')
 
     async def parse_devices_data(self, parsed):
@@ -392,6 +410,7 @@ class TydomMessageHandler():
                         attr_cover = {}
                         attr_cover_details = {}
                         attr_door = {}
+                        attr_ukn = {}
                         attr_window = {}
                         attr_light = {}
                         attr_gate = {}
@@ -458,6 +477,7 @@ class TydomMessageHandler():
                                     attr_door['door_name'] = print_id
                                     attr_door['name'] = print_id
                                     attr_door['device_type'] = 'sensor'
+                                    attr_door['device_class'] = 'door'
                                     attr_door['element_name'] = elementName
                                     attr_door[elementName] = elementValue
 
@@ -506,6 +526,7 @@ class TydomMessageHandler():
                                     attr_gate['device_type'] = 'switch'
                                     attr_gate[elementName] = elementValue
 
+
                             if type_of_id == 'conso':
                                 if elementName in device_conso_keywords and elementValidity == "upToDate":
                                     attr_conso = {
@@ -528,6 +549,28 @@ class TydomMessageHandler():
                                         attributes_topic_from_device='useless',
                                         mqtt=self.mqtt_client)
                                     await new_conso.update()
+
+                            if type_of_id == 'unknown':
+                                if elementName in deviceMotionKeywords and elementValidity == 'upToDate':  # NEW METHOD
+                                    attr_ukn['device_id'] = device_id
+                                    attr_ukn['endpoint_id'] = endpoint_id
+                                    attr_ukn['id'] = str(
+                                        device_id) + '_' + str(endpoint_id)
+                                    attr_ukn['name'] = print_id
+                                    attr_ukn['device_type'] = 'sensor'
+                                    attr_ukn['device_class'] = 'motion'
+                                    attr_ukn['element_name'] = elementName
+                                    attr_ukn[elementName] = elementValue
+                                elif elementName in deviceDoorKeywords and elementValidity == 'upToDate':  # NEW METHOD
+                                    attr_ukn['device_id'] = device_id
+                                    attr_ukn['endpoint_id'] = endpoint_id
+                                    attr_ukn['id'] = str(
+                                        device_id) + '_' + str(endpoint_id)
+                                    attr_ukn['name'] = print_id
+                                    attr_ukn['device_type'] = 'sensor'
+                                    attr_ukn['device_class'] = 'door'
+                                    attr_ukn['element_name'] = elementName
+                                    attr_ukn[elementName] = elementValue
 
                     except Exception as e:
                         logger.error('msg_data error in parsing !')
@@ -587,6 +630,16 @@ class TydomMessageHandler():
                         # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                         await new_gate.update()
 
+                    elif 'device_type' in attr_ukn and attr_ukn['device_type'] == 'sensor':
+                        # logger.debug(attr_cover)
+                        new_ukn = "door_tydom_" + str(device_id)
+                        new_ukn = sensor(
+                            elem_name=attr_ukn['element_name'],
+                            tydom_attributes_payload=attr_ukn,
+                            attributes_topic_from_device='useless',
+                            mqtt=self.mqtt_client)
+                        # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
+                        await new_ukn.update()
                    # Get last known state (for alarm) # NEW METHOD
                     elif 'device_type' in attr_alarm and attr_alarm['device_type'] == 'alarm_control_panel':
                         # logger.debug(attr_alarm)
