@@ -46,10 +46,16 @@ class sensor:
         self.mqtt = mqtt
 
         self.binary = False
+
         # self.device_class = None
-        self.config_topic = sensor_config_topic.format(id=self.id)
         if 'unit_of_measurement' not in tydom_attributes_payload.keys() and (self.elem_value in ["0", "1", "true", "false"] or type(self.elem_value) == bool):
             self.binary = True
+
+            if self.elem_value == "false" or self.elem_value == "False" or self.elem_value == False or self.elem_value == 0:
+                self.elem_value = "OFF"
+            else:
+                self.elem_value = "ON"
+
             self.json_attributes_topic = binary_sensor_json_attributes_topic.format(
                 id=self.id)
             self.config_topic = binary_sensor_config_topic.format(id=self.id)
