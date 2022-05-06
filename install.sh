@@ -13,7 +13,7 @@ docker run \
   -e MQTT_PASSWORD='MQTT_PASSWORD' \
   -e MQTT_PORT='MQTT_PORT' \
   -e MQTT_SSL='MQTT_SSL' \
-  mrwiwi/tydom2mqtt_edge
+  fransiouz/tydom2mqtt
 
 # TYDOM_IP, MQTT_PORT and MQTT_SLL are optional.
 
