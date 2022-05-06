@@ -6,8 +6,8 @@
   "scripts": {
     "doc": "docsify serve"
   },
-  "author": "fmartinou",
-  "repository": "fmartinou/tydom2mqtt",
+  "author": "fransiouz",
+  "repository": "fransiouz/tydom2mqtt",
   "license": "MIT",
   "devDependencies": {
     "docsify-cli": "4.4.3"
