@@ -13,3 +13,5 @@ build:
 		--platform ${PLATFORMS} \
 		-t ${DOCKER_USERNAME}/${IMAGE_NAME}:${IMAGE_VERSION} \
 		.
+push:
+	docker push ghcr.io/{DOCKER_USERNAME}/${IMAGE_NAME}:${IMAGE_VERSION}
