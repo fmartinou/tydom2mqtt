@@ -20,7 +20,7 @@
 [Please find here the developer guide](DEV.md)
 
 ## Changelog
-[Please find here the changelog](CHANGELOG.md)
+[Please find here the changelog](docs/changelog/README.md)
 
 ## License
 

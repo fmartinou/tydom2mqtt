@@ -1,5 +1,8 @@
 # Changelog
 
+### 2.2.0
+- :star: Add `Tywatt` support
+
 ### 2.1.0
 - :star: Set Tydom IP and MAC as required
 - :star: The Tydom Alarm PIN as optional.
