@@ -9,7 +9,9 @@ logger = logging.getLogger(__name__)
 cover_command_topic = "cover/tydom/{id}/set_positionCmd"
 cover_config_topic = "homeassistant/cover/tydom/{id}/config"
 cover_position_topic = "cover/tydom/{id}/current_position"
-cover_set_postion_topic = "cover/tydom/{id}/set_position"
+cover_tilt_topic = "cover/tydom/{id}/current_tilt"
+cover_set_position_topic = "cover/tydom/{id}/set_position"
+cover_set_tilt_topic = "cover/tydom/{id}/set_tilt"
 cover_attributes_topic = "cover/tydom/{id}/attributes"
 
 
@@ -21,8 +23,14 @@ class Cover:
         self.endpoint_id = self.attributes['endpoint_id']
         self.id = self.attributes['id']
         self.name = self.attributes['cover_name']
-        self.current_position = self.attributes['position']
         self.set_position = set_position
+
+        if 'position' in tydom_attributes:
+            self.current_position = self.attributes['position']
+
+        if 'tilt' in tydom_attributes:
+            self.current_tilt = self.attributes['tilt']
+
         self.mqtt = mqtt
 
     # def id(self):
@@ -53,9 +61,15 @@ class Cover:
         self.config['unique_id'] = self.id
         # self.config['attributes'] = self.attributes
         self.config['command_topic'] = cover_command_topic.format(id=self.id)
-        self.config['set_position_topic'] = cover_set_postion_topic.format(
+        self.config['set_position_topic'] = cover_set_position_topic.format(
             id=self.id)
-        self.config['position_topic'] = cover_position_topic.format(id=self.id)
+
+        if 'tilt' in self.attributes:
+            self.config['tilt_command_topic'] = cover_set_tilt_topic.format(
+                id=self.id)
+            self.config['tilt_status_topic'] = cover_tilt_topic.format(
+                id=self.id)
+
         self.config['json_attributes_topic'] = cover_attributes_topic.format(
             id=self.id)
 
@@ -82,23 +96,33 @@ class Cover:
             logger.error("Cover sensors Error :")
             logger.error(e)
 
-        self.position_topic = cover_position_topic.format(
-            id=self.id, current_position=self.current_position)
-
-        if (self.mqtt is not None):
+        if (self.mqtt is not None and 'position' in self.attributes):
+            self.position_topic = cover_position_topic.format(
+                id=self.id, current_position=self.current_position)
             self.mqtt.mqtt_client.publish(
                 self.position_topic,
                 self.current_position,
                 qos=0,
                 retain=True)
+
+        if (self.mqtt is not None and 'tilt' in self.attributes):
+            self.tilt_topic = cover_tilt_topic.format(
+                id=self.id, current_tilt=self.current_tilt)
+            self.mqtt.mqtt_client.publish(
+                self.tilt_topic,
+                self.current_tilt,
+                qos=0,
+                retain=True)
+
+        if (self.mqtt is not None):
             # self.mqtt.mqtt_client.publish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
             self.mqtt.mqtt_client.publish(
                 self.config['json_attributes_topic'], self.attributes, qos=0)
+
         logger.info(
-            "Cover created / updated : %s %s %s",
+            "Cover created / updated : %s %s",
             self.name,
-            self.id,
-            self.current_position)
+            self.id)
 
         # update_pub = '(self.position_topic, self.current_position, qos=0, retain=True)'
         # return(update_pub)
@@ -123,6 +147,11 @@ class Cover:
         logger.info("%s %s %s", cover_id, 'position', position)
         if not (position == ''):
             await tydom_client.put_devices_data(device_id, cover_id, 'position', position)
+
+    async def put_tilt(tydom_client, device_id, cover_id, tilt):
+        logger.info("%s %s %s", cover_id, 'tilt', tilt)
+        if not (tilt == ''):
+            await tydom_client.put_devices_data(device_id, cover_id, 'slope', tilt)
 
     async def put_positionCmd(tydom_client, device_id, cover_id, positionCmd):
         logger.info("%s %s %s", cover_id, 'positionCmd', positionCmd)

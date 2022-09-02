@@ -140,11 +140,26 @@ class MQTT_Hassio():
             device_id = (get_id.split("_"))[0]  # extract id from mqtt
             endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
 
-            await Cover.put_position(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id,
-                                     position=str(value))
+            await Cover.put_position(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id, position=str(value))
+
+        elif ('set_tilt' in str(topic)):
+            logger.info(
+                'Incoming MQTT set_tilt request : %s %s',
+                topic,
+                json.loads(payload))
+            value = json.loads(payload)
+            # logger.debug(value)
+            get_id = (topic.split("/"))[2]  # extract ids from mqtt
+            device_id = (get_id.split("_"))[0]  # extract id from mqtt
+            endpoint_id = (get_id.split("_"))[1]  # extract id from mqtt
+
+            await Cover.put_tilt(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id, tilt=str(value))
 
         elif 'set_levelCmd' in str(topic):
-            logger.info('Incoming MQTT set_levelCmd request : %s %s', topic, payload)
+            logger.info(
+                'Incoming MQTT set_levelCmd request : %s %s',
+                topic,
+                payload)
             value = str(payload).strip('b').strip("'")
 
             get_id = (topic.split("/"))[2]  # extract ids from mqtt
