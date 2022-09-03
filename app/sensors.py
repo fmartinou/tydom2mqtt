@@ -56,7 +56,9 @@ class sensor:
                 "0",
                 "1",
                 "true",
-                "false"] or isinstance(
+                "false",
+                "True",
+                "False"] or isinstance(
                 self.elem_value,
                 bool)):
             self.binary = True

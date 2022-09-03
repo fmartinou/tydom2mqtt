@@ -2,6 +2,7 @@
 
 ### dev
 - :star: Add cover tilt support
+- :fire: Fix binary sensors created but not updated on HA
 
 ### 2.2.0
 - :star: Add `Tywatt` support
