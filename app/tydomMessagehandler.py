@@ -101,6 +101,7 @@ deviceDoorDetailsKeywords = [
 
 deviceCoverKeywords = [
     'position',
+    'slope',
     'onFavPos',
     'thermicDefect',
     'obstacleDefect',
@@ -112,7 +113,8 @@ deviceCoverDetailsKeywords = [
     'obstacleDefect',
     'intrusion',
     'battDefect',
-    'position']
+    'position',
+    'slope']
 
 #climateKeywords = ['temperature', 'authorization', 'hvacMode', 'setpoint']
 
@@ -499,6 +501,10 @@ class TydomMessageHandler():
                                     attr_cover['cover_name'] = print_id
                                     attr_cover['name'] = print_id
                                     attr_cover['device_type'] = 'cover'
+
+                                    if elementName == 'slope':
+                                        attr_cover['tilt'] = elementValue
+
                                     attr_cover[elementName] = elementValue
 
                             if type_of_id == 'belmDoor' or type_of_id == 'klineDoor':
