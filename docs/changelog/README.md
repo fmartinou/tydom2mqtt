@@ -1,5 +1,8 @@
 # Changelog
 
+### dev
+- :star: Add cover tilt support
+
 ### 2.2.0
 - :star: Add `Tywatt` support
 

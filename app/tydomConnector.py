@@ -23,7 +23,12 @@ logger = logging.getLogger(__name__)
 
 
 class TydomWebSocketClient:
-    def __init__(self, mac, password, alarm_pin=None, host="mediation.tydom.com"):
+    def __init__(
+            self,
+            mac,
+            password,
+            alarm_pin=None,
+            host="mediation.tydom.com"):
         logger.info("Initialising TydomClient Class")
 
         self.password = password
@@ -80,10 +85,13 @@ class TydomWebSocketClient:
 
     async def connect(self):
 
-        logger.info('""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
-        logger.info("TYDOM WEBSOCKET CONNECTION INITIALISING....                     ")
+        logger.info(
+            '""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
+        logger.info(
+            "TYDOM WEBSOCKET CONNECTION INITIALISING....                     ")
 
-        logger.info("Building headers, getting 1st handshake and authentication....")
+        logger.info(
+            "Building headers, getting 1st handshake and authentication....")
 
         http_headers = {
             "Connection": "Upgrade",
@@ -93,7 +101,8 @@ class TydomWebSocketClient:
             "Sec-WebSocket-Key": self.generate_random_key(),
             "Sec-WebSocket-Version": "13",
         }
-        conn = http.client.HTTPSConnection(self.host, 443, context=self.ssl_context)
+        conn = http.client.HTTPSConnection(
+            self.host, 443, context=self.ssl_context)
 
         # Get first handshake
         conn.request(
@@ -123,10 +132,12 @@ class TydomWebSocketClient:
         websocket_headers = {}
         try:
             # Anecdotally, local installations are unauthenticated but we don't *know* that for certain
-            # so we'll EAFP, try to use the header and fallback if we're unable.
+            # so we'll EAFP, try to use the header and fallback if we're
+            # unable.
             nonce = res.headers["WWW-Authenticate"].split(",", 3)
             # Build websocket headers
-            websocket_headers = {"Authorization": self.build_digest_headers(nonce)}
+            websocket_headers = {
+                "Authorization": self.build_digest_headers(nonce)}
         except AttributeError:
             pass
 
@@ -212,19 +223,22 @@ class TydomWebSocketClient:
         # logger.debug("%s %s", method, msg)
 
         str = (
-            self.cmd_prefix
-            + method
-            + " "
-            + msg
-            + " HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
-        )
+            self.cmd_prefix +
+            method +
+            " " +
+            msg +
+            " HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n")
         a_bytes = bytes(str, "ascii")
         if "pwd" not in msg:
-            logger.info(">>>>>>>>>> Sending to tydom client..... %s %s", method, msg)
+            logger.info(
+                ">>>>>>>>>> Sending to tydom client..... %s %s",
+                method,
+                msg)
         else:
             logger.info(
-                ">>>>>>>>>> Sending to tydom client..... %s %s", method, "secret msg"
-            )
+                ">>>>>>>>>> Sending to tydom client..... %s %s",
+                method,
+                "secret msg")
 
         await self.connection.send(a_bytes)
         # logger.debug(a_bytes)
@@ -238,13 +252,13 @@ class TydomWebSocketClient:
         # endpoint_id is the endpoint = the device (shutter in this case) to
         # open.
         str_request = (
-            self.cmd_prefix
-            + f"PUT /devices/{device_id}/endpoints/{endpoint_id}/data HTTP/1.1\r\nContent-Length: "
-            + str(len(body))
-            + "\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
-            + body
-            + "\r\n\r\n"
-        )
+            self.cmd_prefix +
+            f"PUT /devices/{device_id}/endpoints/{endpoint_id}/data HTTP/1.1\r\nContent-Length: " +
+            str(
+                len(body)) +
+            "\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n" +
+            body +
+            "\r\n\r\n")
         a_bytes = bytes(str_request, "ascii")
         # logger.debug(a_bytes)
         logger.info("Sending to tydom client..... %s %s", "PUT data", body)
@@ -275,9 +289,8 @@ class TydomWebSocketClient:
 
             if zone_id is None:
                 cmd = "alarmCmd"
-                body = (
-                    '{"value":"' + str(value) + '","pwd":"' + str(self.alarm_pin) + '"}'
-                )
+                body = ('{"value":"' + str(value) +
+                        '","pwd":"' + str(self.alarm_pin) + '"}')
                 # body= {"value":"OFF","pwd":"123456"}
             else:
                 cmd = "zoneCmd"
@@ -293,27 +306,31 @@ class TydomWebSocketClient:
 
             # str_request = self.cmd_prefix + "PUT /devices/{}/endpoints/{}/cdata?name={},".format(str(alarm_id),str(alarm_id),str(cmd)) + body +");"
             str_request = (
-                self.cmd_prefix
-                + "PUT /devices/{device}/endpoints/{alarm}/cdata?name={cmd} HTTP/1.1\r\nContent-Length: ".format(
-                    device=str(device_id), alarm=str(alarm_id), cmd=str(cmd)
-                )
-                + str(len(body))
-                + "\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
-                + body
-                + "\r\n\r\n"
-            )
+                self.cmd_prefix +
+                "PUT /devices/{device}/endpoints/{alarm}/cdata?name={cmd} HTTP/1.1\r\nContent-Length: ".format(
+                    device=str(device_id),
+                    alarm=str(alarm_id),
+                    cmd=str(cmd)) +
+                str(
+                    len(body)) +
+                "\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n" +
+                body +
+                "\r\n\r\n")
 
             a_bytes = bytes(str_request, "ascii")
             # logger.debug(a_bytes)
-            logger.info("Sending to tydom client..... %s %s", "PUT cdata", body)
+            logger.info(
+                "Sending to tydom client..... %s %s",
+                "PUT cdata",
+                body)
 
             try:
                 await self.connection.send(a_bytes)
                 return 0
-            except:
+            except BaseException:
                 logger.error("put_alarm_cdata ERROR !", exc_info=True)
                 logger.error(a_bytes)
-        except:
+        except BaseException:
             logger.error("put_alarm_cdata ERROR !", exc_info=True)
 
     # Get some information on Tydom
@@ -396,9 +413,8 @@ class TydomWebSocketClient:
         # 10 here is the endpoint = the device (shutter in this case) to open.
         device_id = str(id)
         str_request = (
-            self.cmd_prefix
-            + f"GET /devices/{device_id}/endpoints/{device_id}/data HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n"
-        )
+            self.cmd_prefix +
+            f"GET /devices/{device_id}/endpoints/{device_id}/data HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n")
         a_bytes = bytes(str_request, "ascii")
         await self.connection.send(a_bytes)
         # name = await self.recv()

@@ -218,7 +218,7 @@ class TydomMessageHandler():
                     try:
                         try:
                             incoming = self.parse_put_response(bytes_str)
-                        except:
+                        except BaseException:
                             # Tywatt response starts at 7
                             incoming = self.parse_put_response(bytes_str, 7)
                         await self.parse_response(incoming)
@@ -315,7 +315,8 @@ class TydomMessageHandler():
                 msg_type = 'msg_data'
                 logger.debug(data)
             elif ("doctype" in first):
-                logger.debug('Incoming message type : html detected (probable 404)')
+                logger.debug(
+                    'Incoming message type : html detected (probable 404)')
                 msg_type = 'msg_html'
                 logger.debug(data)
             elif ("productName" in first):
@@ -369,7 +370,7 @@ class TydomMessageHandler():
                         logger.error("Error : ", e)
                         logger.error(parsed)
             logger.info('Incoming data parsed successfully !')
-            return(0)
+            return (0)
 
     async def parse_config_data(self, parsed):
         for i in parsed["endpoints"]:
@@ -421,18 +422,24 @@ class TydomMessageHandler():
                             for params in elem["parameters"]:
                                 if params["name"] == "dest":
                                     for dest in params["enum_values"]:
-                                        url = "/devices/" + str(i["id"]) + "/endpoints/" + str(endpoint["id"]) + "/cdata?name=" + elem["name"] + "&dest=" + dest + "&reset=false"
-                                        self.tydom_client.add_poll_device_url(url)
-                                        logger.debug("Add poll device : " + url)
+                                        url = "/devices/" + str(i["id"]) + "/endpoints/" + str(
+                                            endpoint["id"]) + "/cdata?name=" + elem["name"] + "&dest=" + dest + "&reset=false"
+                                        self.tydom_client.add_poll_device_url(
+                                            url)
+                                        logger.debug(
+                                            "Add poll device : " + url)
                         elif elem["name"] == "energyInstant":
                             device_name[unique_id] = 'Tywatt'
                             device_type[unique_id] = 'conso'
                             for params in elem["parameters"]:
                                 if params["name"] == "unit":
                                     for unit in params["enum_values"]:
-                                        url = "/devices/" + str(i["id"]) + "/endpoints/" + str(endpoint["id"]) + "/cdata?name=" + elem["name"] + "&unit=" + unit + "&reset=false"
-                                        self.tydom_client.add_poll_device_url(url)
-                                        logger.debug("Add poll device : " + url)
+                                        url = "/devices/" + str(i["id"]) + "/endpoints/" + str(
+                                            endpoint["id"]) + "/cdata?name=" + elem["name"] + "&unit=" + unit + "&reset=false"
+                                        self.tydom_client.add_poll_device_url(
+                                            url)
+                                        logger.debug(
+                                            "Add poll device : " + url)
 
         logger.info('Metadata configuration updated')
 
@@ -811,7 +818,7 @@ class TydomMessageHandler():
         else:
             logger.warn('%s not in dic device_type'.format(id))
 
-        return(deviceType)
+        return (deviceType)
 
     # Get pretty name for a device id
     def get_name_from_id(self, id):
