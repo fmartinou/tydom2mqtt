@@ -1,5 +1,8 @@
 # Changelog
 
+### 2.3.1
+- :fire: Fix cover config publication
+
 ### 2.3.0
 - :star: Add cover tilt support
 - :fire: Fix binary sensors created but not updated on HA
