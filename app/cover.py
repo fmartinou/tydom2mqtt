@@ -59,10 +59,10 @@ class Cover:
         self.config = {}
         self.config['name'] = self.name
         self.config['unique_id'] = self.id
-        # self.config['attributes'] = self.attributes
         self.config['command_topic'] = cover_command_topic.format(id=self.id)
         self.config['set_position_topic'] = cover_set_position_topic.format(
             id=self.id)
+        self.config['position_topic'] = cover_position_topic.format(id=self.id)
 
         if 'tilt' in self.attributes:
             self.config['tilt_command_topic'] = cover_set_tilt_topic.format(
@@ -78,7 +78,7 @@ class Cover:
         self.config['payload_stop'] = "STOP"
         self.config['retain'] = 'false'
         self.config['device'] = self.device
-        # logger.debug(self.config)
+        self.config['device_class'] = 'shutter'
 
         if (self.mqtt is not None):
             self.mqtt.mqtt_client.publish(
@@ -97,22 +97,16 @@ class Cover:
             logger.error(e)
 
         if (self.mqtt is not None and 'position' in self.attributes):
-            self.position_topic = cover_position_topic.format(
-                id=self.id, current_position=self.current_position)
             self.mqtt.mqtt_client.publish(
-                self.position_topic,
+                self.config['position_topic'],
                 self.current_position,
-                qos=0,
-                retain=True)
+                qos=0)
 
         if (self.mqtt is not None and 'tilt' in self.attributes):
-            self.tilt_topic = cover_tilt_topic.format(
-                id=self.id, current_tilt=self.current_tilt)
             self.mqtt.mqtt_client.publish(
-                self.tilt_topic,
+                self.config['tilt_status_topic'],
                 self.current_tilt,
-                qos=0,
-                retain=True)
+                qos=0)
 
         if (self.mqtt is not None):
             # self.mqtt.mqtt_client.publish('homeassistant/sensor/tydom/last_update', str(datetime.fromtimestamp(time.time())), qos=1, retain=True)
