@@ -511,8 +511,8 @@ class TydomMessageHandler():
 
                                     if elementName == 'slope':
                                         attr_cover['tilt'] = elementValue
-
-                                    attr_cover[elementName] = elementValue
+                                    else:
+                                        attr_cover[elementName] = elementValue
 
                             if type_of_id == 'belmDoor' or type_of_id == 'klineDoor':
                                 if elementName in deviceDoorKeywords and elementValidity == 'upToDate':  # NEW METHOD
@@ -816,7 +816,7 @@ class TydomMessageHandler():
         if len(device_type) != 0 and id in device_type.keys():
             deviceType = device_type[id]
         else:
-            logger.warn('%s not in dic device_type'.format(id))
+            logger.warn('%s not in dic device_type', id)
 
         return (deviceType)
 
@@ -826,7 +826,7 @@ class TydomMessageHandler():
         if len(device_name) != 0 and id in device_name.keys():
             name = device_name[id]
         else:
-            logger.warn('%s not in dic device_name'.format(id))
+            logger.warn('%s not in dic device_name', id)
         return name
 
 
