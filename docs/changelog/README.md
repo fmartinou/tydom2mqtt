@@ -1,5 +1,8 @@
 # Changelog
 
+### dev
+- :star: Add support for Tywatt energy distribution (clamp)
+
 ### 2.3.1
 - :fire: Fix cover config publication
 
