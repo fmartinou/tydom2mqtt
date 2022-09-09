@@ -440,6 +440,18 @@ class TydomMessageHandler():
                                             url)
                                         logger.debug(
                                             "Add poll device : " + url)
+                        elif elem["name"] == "energyDistrib":
+                            device_name[unique_id] = 'Tywatt'
+                            device_type[unique_id] = 'conso'
+                            for params in elem["parameters"]:
+                                if params["name"] == "src":
+                                    for src in params["enum_values"]:
+                                        url = "/devices/" + str(i["id"]) + "/endpoints/" + str(
+                                            endpoint["id"]) + "/cdata?name=" + elem["name"] + "&period=YEAR&periodOffset=0&src=" + src
+                                        self.tydom_client.add_poll_device_url(
+                                            url)
+                                        logger.debug(
+                                            "Add poll device : " + url)
 
         logger.info('Metadata configuration updated')
 
@@ -751,6 +763,24 @@ class TydomMessageHandler():
                                     elementName = elem["parameters"]["dest"]
                                     elementIndex = 'counter'
 
+                                    attr_conso = {
+                                        'device_id': device_id,
+                                        'endpoint_id': endpoint_id,
+                                        'id': unique_id,
+                                        'name': name_of_id,
+                                        'device_type': 'sensor',
+                                        'device_class': device_class_of_id,
+                                        'state_class': state_class_of_id,
+                                        'unit_of_measurement': unit_of_measurement_of_id,
+                                        elementName: elem["values"][elementIndex]}
+
+                                    new_conso = sensor(
+                                        elem_name=elementName,
+                                        tydom_attributes_payload=attr_conso,
+                                        attributes_topic_from_device='useless',
+                                        mqtt=self.mqtt_client)
+                                    await new_conso.update()
+
                                 elif elem["name"] == "energyInstant":
                                     device_class_of_id = 'current'
                                     state_class_of_id = 'measurement'
@@ -758,23 +788,47 @@ class TydomMessageHandler():
                                     elementName = elem["parameters"]["unit"]
                                     elementIndex = 'measure'
 
-                                attr_conso = {
-                                    'device_id': device_id,
-                                    'endpoint_id': endpoint_id,
-                                    'id': unique_id,
-                                    'name': name_of_id,
-                                    'device_type': 'sensor',
-                                    'device_class': device_class_of_id,
-                                    'state_class': state_class_of_id,
-                                    'unit_of_measurement': unit_of_measurement_of_id,
-                                    elementName: elem["values"][elementIndex]}
+                                    attr_conso = {
+                                        'device_id': device_id,
+                                        'endpoint_id': endpoint_id,
+                                        'id': unique_id,
+                                        'name': name_of_id,
+                                        'device_type': 'sensor',
+                                        'device_class': device_class_of_id,
+                                        'state_class': state_class_of_id,
+                                        'unit_of_measurement': unit_of_measurement_of_id,
+                                        elementName: elem["values"][elementIndex]}
 
-                                new_conso = sensor(
-                                    elem_name=elementName,
-                                    tydom_attributes_payload=attr_conso,
-                                    attributes_topic_from_device='useless',
-                                    mqtt=self.mqtt_client)
-                                await new_conso.update()
+                                    new_conso = sensor(
+                                        elem_name=elementName,
+                                        tydom_attributes_payload=attr_conso,
+                                        attributes_topic_from_device='useless',
+                                        mqtt=self.mqtt_client)
+                                    await new_conso.update()
+
+
+                                elif elem["name"] == "energyDistrib":
+                                    for elName in elem["values"]:     
+                                        if elName != 'date':
+                                            elementName = elName
+                                            elementIndex = elName
+                                            attr_conso = {
+                                                'device_id': device_id,
+                                                'endpoint_id': endpoint_id,
+                                                'id': unique_id,
+                                                'name': name_of_id,
+                                                'device_type': 'sensor',
+                                                'device_class': 'energy',
+                                                'state_class': 'total_increasing',
+                                                'unit_of_measurement': 'Wh',
+                                                elementName: elem["values"][elementIndex]}
+
+                                            new_conso = sensor(
+                                                elem_name=elementName,
+                                                tydom_attributes_payload=attr_conso,
+                                                attributes_topic_from_device='useless',
+                                                mqtt=self.mqtt_client)
+                                            await new_conso.update()
 
                     except Exception as e:
                         logger.error('msg_cdata error in parsing !')
