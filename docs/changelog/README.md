@@ -1,6 +1,6 @@
 # Changelog
 
-### dev
+### 2.4.0
 - :star: Add support for Tywatt energy distribution (clamp)
 
 ### 2.3.1
