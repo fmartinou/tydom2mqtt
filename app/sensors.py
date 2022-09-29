@@ -50,7 +50,7 @@ class sensor:
 
         self.binary = False
         # self.device_class = None
-        self.config_topic = sensor_config_topic.format(id=self.id)
+
         if 'unit_of_measurement' not in tydom_attributes_payload.keys() and (
             self.elem_value in [
                 "0",
@@ -62,6 +62,12 @@ class sensor:
                 self.elem_value,
                 bool)):
             self.binary = True
+
+            if self.elem_value == True or self.elem_value == "True" or self.elem_value == "true" or self.elem_value == "1":
+                self.elem_value = "ON"
+            else:
+                self.elem_value = "OFF"
+
             self.json_attributes_topic = binary_sensor_json_attributes_topic.format(
                 id=self.id)
             self.config_topic = binary_sensor_config_topic.format(id=self.id)
