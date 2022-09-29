@@ -1,5 +1,10 @@
 # Changelog
 
+### dev
+- :star: Add sensor unknown for motion & door detectors
+- :fire: Delete duplicate binary sensors
+- :fire: Force value sensor to OFF/ON
+
 ### 2.4.0
 - :star: Add support for Tywatt energy distribution (clamp)
 
