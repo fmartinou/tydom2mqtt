@@ -1,6 +1,6 @@
 # Changelog
 
-### dev
+### 2.5.0
 - :star: Add sensor unknown for motion & door detectors
 - :fire: Delete duplicate binary sensors
 - :fire: Force value sensor to OFF/ON
