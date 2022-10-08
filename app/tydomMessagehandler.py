@@ -54,7 +54,7 @@ deviceAlarmKeywords = [
     'simDefect',
     'remoteSurveyDefect',
     'systSectorDefect',
-	]
+]
 deviceAlarmDetailsKeywords = [
     'alarmSOS',
     'zone1State',
@@ -654,7 +654,6 @@ class TydomMessageHandler():
                                     attr_ukn['device_class'] = 'door'
                                     attr_ukn['element_name'] = elementName
                                     attr_ukn[elementName] = elementValue
-
 
                     except Exception as e:
                         logger.error('msg_data error in parsing !')

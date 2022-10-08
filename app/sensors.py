@@ -63,7 +63,7 @@ class sensor:
                 bool)):
             self.binary = True
 
-            if self.elem_value == True or self.elem_value == "True" or self.elem_value == "true" or self.elem_value == "1":
+            if self.elem_value or self.elem_value == "True" or self.elem_value == "true" or self.elem_value == "1":
                 self.elem_value = "ON"
             else:
                 self.elem_value = "OFF"

@@ -1,5 +1,8 @@
 # Changelog
 
+### 2.6.0
+- :star: Add support for TYPASS and Tywatt 5100 gaz sensor
+
 ### 2.5.0
 - :star: Add sensor unknown for motion & door detectors
 - :fire: Delete duplicate binary sensors
