@@ -175,6 +175,7 @@ device_conso_classes = {
     'energyTotIndexWatt': 'energy',
     'energyIndexHeatWatt': 'energy',
     'energyIndexECSWatt': 'energy',
+    'energyIndexHeatGas': 'energy',
     'outTemperature': 'temperature'}
 
 device_conso_unit_of_measurement = {
@@ -201,6 +202,7 @@ device_conso_unit_of_measurement = {
     'energyTotIndexWatt': 'Wh',
     'energyIndexHeatWatt': 'Wh',
     'energyIndexECSWatt': 'Wh',
+    'energyIndexHeatGas': 'Wh',
     'outTemperature': 'C'}
 device_conso_keywords = device_conso_classes.keys()
 
