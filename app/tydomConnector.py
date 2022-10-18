@@ -47,6 +47,7 @@ class TydomWebSocketClient:
         self.incoming = None
         # Some devices (like Tywatt) need polling
         self.poll_device_urls = []
+        self.current_poll_index = 0
         # if not (self.host == 'mediation.tydom.com'):
         #     test = None
         #     testlocal = None
@@ -347,9 +348,14 @@ class TydomWebSocketClient:
         msg_type = "/refresh/all"
         req = "POST"
         await self.send_message(method=req, msg=msg_type)
-        # Get poll devices data
-        for url in self.poll_device_urls:
-            await self.get_poll_device_data(url)
+        # Get poll device data
+        nb_poll_devices = len(self.poll_device_urls)
+        if self.current_poll_index < nb_poll_devices - 1:
+            self.current_poll_index = self.current_poll_index + 1
+        else:
+            self.current_poll_index = 0
+        if nb_poll_devices > 0:
+            await self.get_poll_device_data(self.poll_device_urls[self.current_poll_index])
 
     # Get the moments (programs)
     async def get_moments(self):
