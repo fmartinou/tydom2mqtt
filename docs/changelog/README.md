@@ -1,5 +1,8 @@
 # Changelog
 
+### 2.6.1
+- :fire: Poll one device at a time to avoid sporadic Tybox DOS
+
 ### 2.6.0
 - :star: Add support for TYPASS and Tywatt 5100 gaz sensor
 
