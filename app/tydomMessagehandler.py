@@ -561,7 +561,6 @@ class TydomMessageHandler():
                                     attr_door['door_name'] = print_id
                                     attr_door['name'] = print_id
                                     attr_door['device_type'] = 'sensor'
-                                    attr_door['device_class'] = 'door'
                                     attr_door['element_name'] = elementName
                                     attr_door[elementName] = elementValue
 
@@ -641,7 +640,6 @@ class TydomMessageHandler():
                                         device_id) + '_' + str(endpoint_id)
                                     attr_ukn['name'] = print_id
                                     attr_ukn['device_type'] = 'sensor'
-                                    attr_ukn['device_class'] = 'motion'
                                     attr_ukn['element_name'] = elementName
                                     attr_ukn[elementName] = elementValue
                                 elif elementName in deviceDoorKeywords and elementValidity == 'upToDate':  # NEW METHOD
@@ -651,7 +649,6 @@ class TydomMessageHandler():
                                         device_id) + '_' + str(endpoint_id)
                                     attr_ukn['name'] = print_id
                                     attr_ukn['device_type'] = 'sensor'
-                                    attr_ukn['device_class'] = 'door'
                                     attr_ukn['element_name'] = elementName
                                     attr_ukn[elementName] = elementValue
 
