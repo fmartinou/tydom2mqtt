@@ -1,5 +1,8 @@
 # Changelog
 
+### 2.6.2
+- :fire: Fix unknown HA device classes
+
 ### 2.6.1
 - :fire: Poll one device at a time to avoid sporadic Tybox DOS
 
