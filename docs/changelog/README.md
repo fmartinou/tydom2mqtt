@@ -1,5 +1,8 @@
 # Changelog
 
+### 2.6.3
+- :fire: Replace hold_mode by preset_mode because of HA 2022.9 deprecation 
+
 ### 2.6.2
 - :fire: Fix unknown HA device classes
 
