@@ -399,7 +399,7 @@ class TydomMessageHandler():
             device_unique_id = str(i["id_endpoint"]) + \
                 "_" + str(i["id_device"])
 
-            if i["last_usage"] == 'shutter' or i["last_usage"] == 'klineShutter' or i["last_usage"] == 'light' or i["last_usage"] == 'window' or i["last_usage"] == 'windowFrench' or i["last_usage"] == 'belmDoor' or i[
+            if i["last_usage"] == 'shutter' or i["last_usage"] == 'klineShutter' or i["last_usage"] == 'light' or i["last_usage"] == 'window' or i["last_usage"] == 'windowFrench' or i["last_usage"] == 'windowSliding' or i["last_usage"] == 'belmDoor' or i[
                     "last_usage"] == 'klineDoor' or i["last_usage"] == 'klineWindowFrench' or i["last_usage"] == 'klineWindowSliding' or i["last_usage"] == 'garage_door' or i["last_usage"] == 'gate':
 
                 # logger.debug('%s %s'.format(i["id_endpoint"],i["name"]))
@@ -564,7 +564,7 @@ class TydomMessageHandler():
                                     attr_door['element_name'] = elementName
                                     attr_door[elementName] = elementValue
 
-                            if type_of_id == 'windowFrench' or type_of_id == 'window' or type_of_id == 'klineWindowFrench' or type_of_id == 'klineWindowSliding':
+                            if type_of_id == 'windowFrench' or type_of_id == 'window' or type_of_id == 'windowSliding' or type_of_id == 'klineWindowFrench' or type_of_id == 'klineWindowSliding':
                                 if elementName in deviceDoorKeywords and elementValidity == 'upToDate':  # NEW METHOD
                                     attr_window['device_id'] = device_id
                                     attr_window['endpoint_id'] = endpoint_id
