@@ -1,5 +1,8 @@
 # Changelog
 
+### 2.6.4
+- :fire: Fix sensors for Kline sliding openings
+
 ### 2.6.3
 - :fire: Replace hold_mode by preset_mode because of HA 2022.9 deprecation 
 
