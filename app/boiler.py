@@ -92,7 +92,7 @@ class Boiler:
             self.config['mode_command_topic'] = mode_command_topic.format(
                 id=self.id)
             self.config['preset_modes'] = [
-                "STOP", "ANTI_FROST", "ECO", "COMFORT"]
+                "STOP", "ANTI_FROST", "ECO", "COMFORT", "AUTO"]
             self.config['preset_mode_state_topic'] = preset_mode_state_topic.format(
                 id=self.id)
             self.config['preset_mode_command_topic'] = preset_mode_command_topic.format(
