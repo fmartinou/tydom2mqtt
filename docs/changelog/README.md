@@ -1,5 +1,8 @@
 # Changelog
 
+### 2.6.5
+- :fire: Revert the deletion of the AUTO boiler mode (`2.6.3`)
+
 ### 2.6.4
 - :fire: Fix sensors for Kline sliding openings
 
