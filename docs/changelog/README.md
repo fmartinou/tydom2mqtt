@@ -1,5 +1,8 @@
 # Changelog
 
+### dev
+- :fire: Fix regression because of Linux Alpine upgrade (`3.17` -> `3.16`)
+
 ### 2.6.5
 - :fire: Revert the deletion of the AUTO boiler mode (`2.6.3`)
 
