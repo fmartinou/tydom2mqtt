@@ -1,6 +1,6 @@
 # Changelog
 
-### dev
+### 2.6.6
 - :fire: Fix regression because of Linux Alpine upgrade (`3.17` -> `3.16`)
 
 ### 2.6.5
