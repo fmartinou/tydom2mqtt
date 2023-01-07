@@ -865,7 +865,7 @@ class TydomMessageHandler():
                                 elif elem["name"] == "energyDistrib":
                                     for elName in elem["values"]:
                                         if elName != 'date':
-                                            elementName = elName
+                                            elementName = elName + "_yearly"
                                             elementIndex = elName
                                             attr_conso = {
                                                 'device_id': device_id,
