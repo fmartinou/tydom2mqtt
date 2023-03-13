@@ -18,9 +18,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Thanks
-# https://stackoverflow.com/questions/49878953/issues-listening-incoming-messages-in-websocket-client-on-python-3-6
-
 
 class TydomWebSocketClient:
     def __init__(
@@ -29,7 +26,7 @@ class TydomWebSocketClient:
             password,
             alarm_pin=None,
             host="mediation.tydom.com"):
-        logger.info("Initialising TydomClient Class")
+        logger.debug("Initializing TydomClient Class")
 
         self.password = password
         self.mac = mac
@@ -42,7 +39,6 @@ class TydomWebSocketClient:
         self.reply_timeout = 4
         self.ping_timeout = None
         self.refresh_timeout = 42
-        # # ping_timeout=None is necessary on local connection to avoid 1006 erros
         self.sleep_time = 2
         self.incoming = None
         # Some devices (like Tywatt) need polling
@@ -57,7 +53,7 @@ class TydomWebSocketClient:
         #     except Exception as e:
         #         logger.info('Local control is down, will try to fallback to remote....')
         #         try:
-        #             logger.info('Testing if mediation.tydom.com is reacheable...')
+        #             logger.info('Testing if mediation.tydom.com is reachable...')
         #             test = subprocess.check_output("ping -{} 1 {}".format('n' if platform.system().lower()=="windows" else 'c', 'mediation.tydom.com'), shell=True)
         #             logger.info('mediation.tydom.com is reacheable ! Using it to prevent code 1006 deconnections from local ip for now.')
         #             self.host = 'mediation.tydom.com'
@@ -70,29 +66,21 @@ class TydomWebSocketClient:
 
         # Set Host, ssl context and prefix for remote or local connection
         if self.host == "mediation.tydom.com":
-            logger.info("Setting remote mode context.")
+            logger.info("Configure remote mode (%s)", self.host)
             self.remote_mode = True
-            # self.ssl_context = None
             self.ssl_context = ssl._create_unverified_context()
             self.cmd_prefix = "\x02"
             self.ping_timeout = 40
 
         else:
-            logger.info("Setting local mode context.")
+            logger.info("Configure local mode (%s)", self.host)
             self.remote_mode = False
             self.ssl_context = ssl._create_unverified_context()
             self.cmd_prefix = ""
             self.ping_timeout = None
 
     async def connect(self):
-
-        logger.info(
-            '""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""')
-        logger.info(
-            "TYDOM WEBSOCKET CONNECTION INITIALISING....                     ")
-
-        logger.info(
-            "Building headers, getting 1st handshake and authentication....")
+        logger.debug("Connecting to Tydom")
 
         http_headers = {
             "Connection": "Upgrade",
@@ -113,26 +101,23 @@ class TydomWebSocketClient:
             http_headers,
         )
         res = conn.getresponse()
-        # Close HTTPS Connection
         conn.close()
 
-        logger.debug("response headers")
+        logger.debug("Response headers")
         logger.debug(res.headers)
-        logger.debug("response code")
+
+        logger.debug("Response code")
         logger.debug(res.getcode())
 
-        # read response
+        # Read response
         logger.debug("response")
         logger.debug(res.read())
         res.read()
 
-        # if res.getcode() is not 101:
-        #     exit('Was not able to continue')
-
         # Get authentication
         websocket_headers = {}
         try:
-            # Anecdotally, local installations are unauthenticated but we don't *know* that for certain
+            # Local installations are unauthenticated but we don't *know* that for certain
             # so we'll EAFP, try to use the header and fallback if we're
             # unable.
             nonce = res.headers["WWW-Authenticate"].split(",", 3)
@@ -142,7 +127,7 @@ class TydomWebSocketClient:
         except AttributeError:
             pass
 
-        logger.info("Upgrading http connection to websocket....")
+        logger.debug("Upgrading http connection to websocket....")
 
         if self.ssl_context is not None:
             websocket_ssl_context = self.ssl_context
@@ -150,10 +135,9 @@ class TydomWebSocketClient:
             websocket_ssl_context = True  # Verify certificate
 
         # outer loop restarted every time the connection fails
-        logger.info(
-            "Attempting websocket connection with tydom hub......................."
+        logger.debug(
+            "Attempting websocket connection with Tydom hub"
         )
-        logger.info("Host Target : %s", self.host)
         """
             Connecting to webSocket server
             websockets.client.connect returns a WebSocketClientProtocol, which is used to send and receive messages

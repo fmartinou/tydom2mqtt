@@ -10,115 +10,35 @@ import websockets
 from logger import logger
 import logging
 
-# import uvloop
-
 from mqtt_client import MQTT_Hassio
 from tydomConnector import TydomWebSocketClient
 from tydomMessagehandler import TydomMessageHandler
 
 logger = logging.getLogger(__name__)
 
-# HASSIO ADDON
-logger.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-logger.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-logger.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+logger.info("Starting tydom2mqtt")
 
-logger.info("STARTING TYDOM2MQTT")
-
-logger.info("Detecting environnement......")
-
-# uvloop.install()
-# logger.info('uvloop init OK')
-# DEFAULT VALUES
-
-
-TYDOM_IP = "mediation.tydom.com"
-MQTT_HOST = "localhost"
-MQTT_PORT = 1883
-MQTT_USER = ""
-MQTT_PASSWORD = ""
-MQTT_SSL = False
-TYDOM_ALARM_PIN = None
-TYDOM_ALARM_HOME_ZONE = 1
-TYDOM_ALARM_NIGHT_ZONE = 2
-
-data_options_path = "/data/options.json"
-
-try:
-    with open(data_options_path) as f:
-        logger.info(
-            f"{data_options_path} detected ! Hassio Addons Environnement : parsing options.json...."
-        )
-        try:
-            data = json.load(f)
-            logger.debug(data)
-
-            # CREDENTIALS TYDOM
-            if data["TYDOM_MAC"] != "":
-                TYDOM_MAC = data["TYDOM_MAC"]  # MAC Address of Tydom Box
-            else:
-                logger.error("No Tydom MAC set")
-                exit()
-
-            if data["TYDOM_IP"] != "":
-                TYDOM_IP = data["TYDOM_IP"]
-
-            if data["TYDOM_PASSWORD"] != "":
-                TYDOM_PASSWORD = data["TYDOM_PASSWORD"]  # Tydom password
-            else:
-                logger.error("No Tydom password set")
-                exit()
-
-            if data["TYDOM_ALARM_PIN"] != "":
-                TYDOM_ALARM_PIN = data["TYDOM_ALARM_PIN"]
-
-            if data["TYDOM_ALARM_HOME_ZONE"] != "":
-                TYDOM_ALARM_HOME_ZONE = data["TYDOM_ALARM_HOME_ZONE"]
-            if data["TYDOM_ALARM_NIGHT_ZONE"] != "":
-                TYDOM_ALARM_NIGHT_ZONE = data["TYDOM_ALARM_NIGHT_ZONE"]
-
-            # CREDENTIALS MQTT
-            if data["MQTT_HOST"] != "":
-                MQTT_HOST = data["MQTT_HOST"]
-
-            if data["MQTT_USER"] != "":
-                MQTT_USER = data["MQTT_USER"]
-
-            if data["MQTT_PASSWORD"] != "":
-                MQTT_PASSWORD = data["MQTT_PASSWORD"]
-
-            if data["MQTT_PORT"] != 1883:
-                MQTT_PORT = data["MQTT_PORT"]
-
-            if (data["MQTT_SSL"] == "true") or (data["MQTT_SSL"]):
-                MQTT_SSL = True
-
-        except Exception as e:
-            logger.error("Parsing error %s", e)
-
-except FileNotFoundError:
-    logger.info(
-        f"No {data_options_path}, seems we are not in hassio addon mode.")
-    # CREDENTIALS TYDOM
-    TYDOM_MAC = os.getenv("TYDOM_MAC")  # MAC Address of Tydom Box
-    # Local ip address, default to mediation.tydom.com for remote connexion if
-    # not specified
-    TYDOM_IP = os.getenv("TYDOM_IP", "mediation.tydom.com")
-    TYDOM_PASSWORD = os.getenv("TYDOM_PASSWORD")  # Tydom password
-    TYDOM_ALARM_PIN = os.getenv("TYDOM_ALARM_PIN")
-    TYDOM_ALARM_HOME_ZONE = os.getenv("TYDOM_ALARM_HOME_ZONE", 1)
-    TYDOM_ALARM_NIGHT_ZONE = os.getenv("TYDOM_ALARM_NIGHT_ZONE", 2)
-
-    # CREDENTIALS MQTT
-    MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
-    MQTT_USER = os.getenv("MQTT_USER", "")
-    MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", "")
-
-    # 1883 #1884 for websocket without SSL
-    MQTT_PORT = os.getenv("MQTT_PORT", 1883)
-    MQTT_SSL = os.getenv("MQTT_SSL", False)
+# Get config from env vars (+ fallback to default values)
+MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
+MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", "")
+MQTT_PORT = os.getenv("MQTT_PORT", 1883)
+MQTT_SSL = os.getenv("MQTT_SSL", False)
+MQTT_USER = os.getenv("MQTT_USER", "")
+TYDOM_ALARM_HOME_ZONE = os.getenv("TYDOM_ALARM_HOME_ZONE", 1)
+TYDOM_ALARM_NIGHT_ZONE = os.getenv("TYDOM_ALARM_NIGHT_ZONE", 2)
+TYDOM_ALARM_PIN = os.getenv("TYDOM_ALARM_PIN", None)
+TYDOM_IP = os.getenv("TYDOM_IP", "mediation.tydom.com")
+TYDOM_MAC = os.getenv("TYDOM_MAC", None)
+TYDOM_PASSWORD = os.getenv("TYDOM_PASSWORD", None)
 
 
+# Override configuration with hassio options file if found
+override_configuration_for_hassio()
+
+# Validate required configuration
+validate_configuration()
+
+# Create tydom client
 tydom_client = TydomWebSocketClient(
     mac=TYDOM_MAC,
     host=TYDOM_IP,
@@ -137,17 +57,76 @@ hassio = MQTT_Hassio(
 
 
 def loop_task():
-    logger.info("Starting main loop_task")
+    logger.debug("Starting main loop")
     loop = asyncio.get_event_loop()
     loop.run_until_complete(hassio.connect())
-
-    # tasks = [
-    #     listen_tydom_forever(tydom_client)
-    # ]
-
     loop.run_until_complete(listen_tydom_forever(tydom_client))
 
 
+def override_configuration_for_hassio():
+    def hassio_options_file_path = "/data/options.json"
+
+    try:
+        with open(hassio_options_file_path) as f:
+
+            logger.info(
+                "Hassio environment detected: loading configuration from options.json....")
+
+            try:
+                data = json.load(f)
+                logger.debug(data)
+
+                if TYDOM_MAC in data and data["TYDOM_MAC"] != ""
+                    TYDOM_MAC = data["TYDOM_MAC"]
+
+                if TYDOM_IP in data and data["TYDOM_IP"] != ""
+                    TYDOM_IP = data["TYDOM_IP"]
+
+                if TYDOM_PASSWORD in data and data["TYDOM_PASSWORD"] != "":
+                    TYDOM_PASSWORD = data["TYDOM_PASSWORD"]  # Tydom password
+
+                if TYDOM_ALARM_PIN in data and data["TYDOM_ALARM_PIN"] != "":
+                    TYDOM_ALARM_PIN = str(data["TYDOM_ALARM_PIN"]))
+
+                if TYDOM_ALARM_HOME_ZONE in data and data["TYDOM_ALARM_HOME_ZONE"] != "":
+                    TYDOM_ALARM_HOME_ZONE=data["TYDOM_ALARM_HOME_ZONE"]
+
+                if TYDOM_ALARM_NIGHT_ZONE in data and data["TYDOM_ALARM_NIGHT_ZONE"] != "":
+                    TYDOM_ALARM_NIGHT_ZONE=data["TYDOM_ALARM_NIGHT_ZONE"]
+
+                if MQTT_HOST in data and data["MQTT_HOST"] != "":
+                    MQTT_HOST=data["MQTT_HOST"]
+
+                if MQTT_USER in data and data["MQTT_USER"] != "":
+                    MQTT_USER=data["MQTT_USER"]
+
+                if MQTT_PASSWORD in data and data["MQTT_PASSWORD"] != "":
+                    MQTT_PASSWORD=data["MQTT_PASSWORD"]
+
+                if MQTT_PORT in data and data["MQTT_PORT"] != "":
+                    MQTT_PORT=data["MQTT_PORT"]
+
+                if MQTT_SSL in data and data["MQTT_SSL"] != "":
+                    MQTT_SSL=True
+
+            except Exception as e:
+                logger.error("Parsing error %s", e)
+
+    except FileNotFoundError:
+        logger.debug("Hassio environment not detected")
+
+# Validate the resolved configuration.
+def validate_configuration():
+    if TYDOM_MAC == None or TYDOM_MAC == ""
+        logger.error("Tydom MAC address must be defined")
+        sys.exit(1)
+
+    if TYDOM_PASSWORD == None or TYDOM_PASSWORD == "":
+        logger.error("Tydom password must be defined")
+        sys.exit(1)
+
+
+# Listen to tydom events.
 async def listen_tydom_forever(tydom_client):
     """
     Connect, then receive all server messages and pipe them to the handler, and reconnects if needed
@@ -155,7 +134,7 @@ async def listen_tydom_forever(tydom_client):
 
     while True:
         await asyncio.sleep(0)
-        # # outer loop restarted every time the connection fails
+        # outer loop restarted every time the connection fails
         try:
             await tydom_client.connect()
             logger.info("Tydom Client is connected to websocket and ready !")
@@ -164,9 +143,9 @@ async def listen_tydom_forever(tydom_client):
             while True:
                 # listener loop
                 try:
-                    incoming_bytes_str = await asyncio.wait_for(
+                    incoming_bytes_str=await asyncio.wait_for(
                         tydom_client.connection.recv(),
-                        timeout=tydom_client.refresh_timeout,
+                        timeout = tydom_client.refresh_timeout,
                     )
                     logger.debug("<<<<<<<<<< Receiving from tydom_client...")
                     logger.debug(incoming_bytes_str)
@@ -177,11 +156,10 @@ async def listen_tydom_forever(tydom_client):
                 ) as e:
                     logger.debug(e)
                     try:
-                        pong = tydom_client.post_refresh()
+                        pong=tydom_client.post_refresh()
                         await asyncio.wait_for(
-                            pong, timeout=tydom_client.refresh_timeout
+                            pong, timeout = tydom_client.refresh_timeout
                         )
-                        # logger.debug('Ping OK, keeping connection alive...')
                         continue
                     except Exception as e:
                         logger.error(
