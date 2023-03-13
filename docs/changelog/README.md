@@ -1,7 +1,8 @@
 # Changelog
 
 ### dev
-- :fire: Make `TYDOM_ALARM_PIN` (really) optional
+- :fire: Fix configuration loading (default values, validation...)
+- :fire: Cleanup code (remove dead code, improve log readability...)
 
 ### 2.6.6
 - :fire: Fix regression because of Linux Alpine upgrade (`3.17` -> `3.16`)

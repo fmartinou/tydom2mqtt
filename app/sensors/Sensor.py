@@ -1,7 +1,4 @@
 import json
-import time
-from datetime import datetime
-from logger import logger
 import logging
 
 logger = logging.getLogger(__name__)
@@ -13,26 +10,22 @@ binary_sensor_topic = "binary_sensor/tydom/#"
 binary_sensor_config_topic = "homeassistant/binary_sensor/tydom/{id}/config"
 binary_sensor_json_attributes_topic = "binary_sensor/tydom/{id}/state"
 
-# sensor_json_attributes_topic = "sensor/tydom/{id}/state"
-# State topic can be the same as the original device attributes topic !
 
+class Sensor:
 
-class sensor:
-
-    def __init__(self, elem_name, tydom_attributes_payload,
-                 attributes_topic_from_device, mqtt=None):
+    def __init__(self, elem_name, tydom_attributes_payload, mqtt=None):
+        self.config = None
+        self.config_sensor_topic = None
+        self.device = None
         self.elem_name = elem_name
         self.elem_value = tydom_attributes_payload[self.elem_name]
 
         # init a state json
-        state_dict = {}
-        state_dict[elem_name] = self.elem_value
+        state_dict = {elem_name: self.elem_value}
         self.attributes = state_dict
-        # logger.debug(self.attributes)
 
-        # self.json_attributes_topic = attributes_topic_from_device #State
         # extracted from json, but it will make sensor not in payload to be
-        # considerd offline....
+        # considered offline....
         self.parent_device_id = str(tydom_attributes_payload['id'])
         self.id = elem_name + '_tydom_' + str(tydom_attributes_payload['id'])
         self.name = elem_name + '_tydom_' + '_' + \
@@ -47,9 +40,7 @@ class sensor:
             self.unit_of_measurement = tydom_attributes_payload['unit_of_measurement']
 
         self.mqtt = mqtt
-
         self.binary = False
-        # self.device_class = None
 
         if 'unit_of_measurement' not in tydom_attributes_payload.keys() and (
             self.elem_value in [
@@ -71,18 +62,10 @@ class sensor:
             self.json_attributes_topic = binary_sensor_json_attributes_topic.format(
                 id=self.id)
             self.config_topic = binary_sensor_config_topic.format(id=self.id)
-            # if 'efect' in self.elem_name:
-            #     self.device_class = 'problem'
-            # elif 'ntrusion' in self.elem_name or 'zone' in self.elem_name or 'alarm' in self.elem_name:
-            #     self.device_class = 'safety'
-            # elif 'gsm' in self.elem_name:
-            #     self.device_class = 'signal_strength'
         else:
             self.json_attributes_topic = sensor_json_attributes_topic.format(
                 id=self.id)
             self.config_topic = sensor_config_topic.format(id=self.id)
-            # if 'emperature' in self.elem_name:
-            #     self.device_class = 'temperature'
 
     # SENSOR:
     # None: Generic sensor. This is the default and doesn’t need to be set.
@@ -121,17 +104,15 @@ class sensor:
     # window: on means open, off means closed
 
     async def setup(self):
-        self.device = {}
-        self.device['manufacturer'] = 'Delta Dore'
-        self.device['model'] = 'Sensor'
-        self.device['name'] = self.name
-        self.device['identifiers'] = self.parent_device_id + '_sensors'
+        self.device = {
+            'manufacturer': 'Delta Dore',
+            'model': 'Sensor',
+            'name': self.name,
+            'identifiers': self.parent_device_id + '_sensors'}
 
         self.config_sensor_topic = sensor_config_topic.format(id=self.id)
 
-        self.config = {}
-        self.config['name'] = self.name
-        self.config['unique_id'] = self.id
+        self.config = {'name': self.name, 'unique_id': self.id}
         try:
             self.config['device_class'] = self.device_class
         except AttributeError:
@@ -144,26 +125,15 @@ class sensor:
             self.config['unit_of_measurement'] = self.unit_of_measurement
         except AttributeError:
             pass
-        # self.config['device_class'] = self.device_class
 
-        #
-        # self.config['value_template'] = "{{ value_json."+self.elem_name+" }}"
-        # self.config['attributes'] = self.attributes
-
-        # DISABLED, ALL VALUES
-        # value_json = "value_json."+self.elem_name+'"'
-        # self.config['value_template'] = "{% if "+value_json+" is defined and "+value_json+" != '' %} {{ value_json."+value_json+" }} {% else %} {{ states('sensor." + self.name + "') }} {% endif %}"
-
-        # self.config['force_update'] = True
         self.config['device'] = self.device
         self.config['state_topic'] = self.json_attributes_topic
 
-        if (self.mqtt is not None):
+        if self.mqtt is not None:
             self.mqtt.mqtt_client.publish(
-                (self.config_topic).lower(), json.dumps(
+                self.config_topic.lower(), json.dumps(
                     self.config), qos=0, retain=True)  # sensor Config
 
-        # logger.debug("CONFIG : %s %s",(self.config_topic).lower(), json.dumps(self.config))
     async def update(self):
 
         # 3 items are necessary :
@@ -175,14 +145,11 @@ class sensor:
         else:
             await self.setup()  # Publish config
             # Publish state json to state topic
-            if (self.mqtt is not None):
-                # logger.debug("%s %s", self.json_attributes_topic, self.attributes)
-                # self.mqtt.mqtt_client.publish(self.json_attributes_topic,
-                # self.attributes, qos=0) #sensor json State
+            if self.mqtt is not None:
                 self.mqtt.mqtt_client.publish(
                     self.json_attributes_topic,
                     self.elem_value,
-                    qos=0)  # sensor State
+                    qos=0)
             if not self.binary:
                 logger.info(
                     "Sensor created / updated : %s %s",
