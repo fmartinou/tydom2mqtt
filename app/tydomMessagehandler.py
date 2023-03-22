@@ -643,6 +643,7 @@ class TydomMessageHandler():
                             if type_of_id == 'smoke':
                                 if elementName in deviceSmokeKeywords and elementValidity == 'upToDate':  # NEW METHOD
                                     attr_smoke['device_id'] = device_id
+                                    attr_smoke['device_class'] = 'smoke'
                                     attr_smoke['endpoint_id'] = endpoint_id
                                     attr_smoke['id'] = str(
                                         device_id) + '_' + str(endpoint_id)
