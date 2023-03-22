@@ -206,6 +206,8 @@ device_conso_unit_of_measurement = {
     'outTemperature': 'C'}
 device_conso_keywords = device_conso_classes.keys()
 
+deviceSmokeKeywords = ['techSmokeDefect']
+
 # Device dict for parsing
 device_name = dict()
 device_endpoint = dict()
@@ -361,11 +363,11 @@ class TydomMessageHandler():
 
                     elif (msg_type == 'msg_data'):
                         parsed = json.loads(data)
-                        # logger.debug(parsed)
+                        logger.debug(parsed)
                         await self.parse_devices_data(parsed=parsed)
                     elif (msg_type == 'msg_cdata'):
                         parsed = json.loads(data)
-                        # logger.debug(parsed)
+                        logger.debug(parsed)
                         await self.parse_devices_cdata(parsed=parsed)
                     elif (msg_type == 'msg_html'):
                         logger.debug("HTML Response ?")
@@ -423,6 +425,11 @@ class TydomMessageHandler():
             if i["last_usage"] == 'electric':
                 device_name[device_unique_id] = i["name"]
                 device_type[device_unique_id] = 'boiler'
+                device_endpoint[device_unique_id] = i["id_endpoint"]
+
+            if i["last_usage"] == 'sensorDFR':
+                device_name[device_unique_id] = i["name"]
+                device_type[device_unique_id] = 'smoke'
                 device_endpoint[device_unique_id] = i["id_endpoint"]
 
             if i["last_usage"] == '':
@@ -495,6 +502,7 @@ class TydomMessageHandler():
                         attr_light = {}
                         attr_gate = {}
                         attr_boiler = {}
+                        attr_smoke = {}
                         attr_light_details = {}
                         device_id = i["id"]
                         endpoint_id = endpoint["id"]
@@ -632,6 +640,17 @@ class TydomMessageHandler():
                                         mqtt=self.mqtt_client)
                                     await new_conso.update()
 
+                            if type_of_id == 'smoke':
+                                if elementName in deviceSmokeKeywords and elementValidity == 'upToDate':  # NEW METHOD
+                                    attr_smoke['device_id'] = device_id
+                                    attr_smoke['endpoint_id'] = endpoint_id
+                                    attr_smoke['id'] = str(
+                                        device_id) + '_' + str(endpoint_id)
+                                    attr_smoke['name'] = print_id
+                                    attr_smoke['device_type'] = 'sensor'
+                                    attr_smoke['element_name'] = elementName
+                                    attr_smoke[elementName] = elementValue
+
                             if type_of_id == 'unknown':
                                 if elementName in deviceMotionKeywords and elementValidity == 'upToDate':  # NEW METHOD
                                     attr_ukn['device_id'] = device_id
@@ -709,6 +728,16 @@ class TydomMessageHandler():
                             mqtt=self.mqtt_client)  # NEW METHOD
                         # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
                         await new_gate.update()
+                    elif 'device_type' in attr_smoke and attr_smoke['device_type'] == 'sensor':
+                        # logger.debug(attr_smoke)
+                        new_smoke = "smoke_tydom_" + str(device_id)
+                        new_smoke = sensor(
+                            elem_name=attr_smoke['element_name'],
+                            tydom_attributes_payload=attr_smoke,
+                            attributes_topic_from_device='useless',
+                            mqtt=self.mqtt_client)
+                        # new_cover = Cover(id=endpoint_id,name=print_id, current_position=elementValue, attributes=i, mqtt=self.mqtt_client)
+                        await new_smoke.update()
                     elif 'device_type' in attr_ukn and attr_ukn['device_type'] == 'sensor':
                         # logger.debug(attr_cover)
                         new_ukn = "door_tydom_" + str(device_id)
