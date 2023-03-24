@@ -202,6 +202,8 @@ device_conso_unit_of_measurement = {
     'outTemperature': 'C'}
 device_conso_keywords = device_conso_classes.keys()
 
+deviceSmokeKeywords = ['techSmokeDefect']
+
 # Device dict for parsing
 device_name = dict()
 device_endpoint = dict()
@@ -349,6 +351,11 @@ class MessageHandler:
                 device_type[device_unique_id] = 'boiler'
                 device_endpoint[device_unique_id] = i["id_endpoint"]
 
+            if i["last_usage"] == 'sensorDFR':
+                device_name[device_unique_id] = i["name"]
+                device_type[device_unique_id] = 'smoke'
+                device_endpoint[device_unique_id] = i["id_endpoint"]
+
             if i["last_usage"] == '':
                 device_name[device_unique_id] = i["name"]
                 device_type[device_unique_id] = 'unknown'
@@ -417,6 +424,7 @@ class MessageHandler:
                         attr_light = {}
                         attr_gate = {}
                         attr_boiler = {}
+                        attr_smoke = {}
                         device_id = i["id"]
                         endpoint_id = endpoint["id"]
                         unique_id = str(endpoint_id) + "_" + str(device_id)
@@ -542,6 +550,18 @@ class MessageHandler:
                                         mqtt=self.mqtt_client)
                                     await new_conso.update()
 
+                            if type_of_id == 'smoke':
+                                if element_name in deviceSmokeKeywords and element_validity == 'upToDate':
+                                    attr_smoke['device_id'] = device_id
+                                    attr_smoke['device_class'] = 'smoke'
+                                    attr_smoke['endpoint_id'] = endpoint_id
+                                    attr_smoke['id'] = str(
+                                        device_id) + '_' + str(endpoint_id)
+                                    attr_smoke['name'] = print_id
+                                    attr_smoke['device_type'] = 'sensor'
+                                    attr_smoke['element_name'] = element_name
+                                    attr_smoke[element_name] = element_value
+
                             if type_of_id == 'unknown':
                                 if element_name in deviceMotionKeywords and element_validity == 'upToDate':
                                     attr_ukn['device_id'] = device_id
@@ -599,6 +619,13 @@ class MessageHandler:
                             tydom_attributes=attr_gate,
                             mqtt=self.mqtt_client)
                         await new_gate.update()
+                    elif 'device_type' in attr_smoke and attr_smoke['device_type'] == 'sensor':
+                        new_smoke = sensor(
+                            elem_name=attr_smoke['element_name'],
+                            tydom_attributes_payload=attr_smoke,
+                            attributes_topic_from_device='useless',
+                            mqtt=self.mqtt_client)
+                        await new_smoke.update()
                     elif 'device_type' in attr_ukn and attr_ukn['device_type'] == 'sensor':
                         new_ukn = Sensor(
                             elem_name=attr_ukn['element_name'],
