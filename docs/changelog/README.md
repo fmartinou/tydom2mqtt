@@ -1,6 +1,7 @@
 # Changelog
 
 ### 3.0.0
+- :star: Add support for Smoke detectors (Tyxal DFR)
 - :star: Add graceful shutdown
 - :star: Add configuration validation
 - :star: Cleanup code (wip)
