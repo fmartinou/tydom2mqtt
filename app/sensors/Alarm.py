@@ -1,9 +1,7 @@
 import json
-import time
-from datetime import datetime
-from sensors import sensor
-from logger import logger
 import logging
+
+from . import Sensor
 
 logger = logging.getLogger(__name__)
 alarm_topic = "alarm_control_panel/tydom/#"
@@ -17,6 +15,10 @@ class Alarm:
 
     def __init__(self, current_state, alarm_pin=None,
                  tydom_attributes=None, mqtt=None):
+        self.state_topic = None
+        self.device = None
+        self.config = None
+        self.config_alarm_topic = None
         self.attributes = tydom_attributes
         self.device_id = self.attributes['device_id']
         self.endpoint_id = self.attributes['endpoint_id']
@@ -27,40 +29,36 @@ class Alarm:
         self.alarm_pin = alarm_pin
 
     async def setup(self):
-        self.device = {}
-        self.device['manufacturer'] = 'Delta Dore'
-        self.device['model'] = 'Tyxal'
-        self.device['name'] = self.name
-        self.device['identifiers'] = self.id
-
+        self.device = {
+            'manufacturer': 'Delta Dore',
+            'model': 'Tyxal',
+            'name': self.name,
+            'identifiers': self.id
+        }
+        self.config = {
+            'name': self.name,
+            'unique_id': self.id,
+            'device': self.device,
+            'command_topic': alarm_command_topic.format(id=self.id),
+            'state_topic': alarm_state_topic.format(id=self.id),
+            'code_arm_required': 'false',
+        }
         self.config_alarm_topic = alarm_config_topic.format(id=self.id)
 
-        self.config = {}
-        self.config['name'] = self.name
-        self.config['unique_id'] = self.id
-        self.config['device'] = self.device
-        # self.config['attributes'] = self.attributes
-        self.config['command_topic'] = alarm_command_topic.format(id=self.id)
-        self.config['state_topic'] = alarm_state_topic.format(id=self.id)
-        #self.config['code'] = self.alarm_pin
-
-        self.config['code_arm_required'] = 'false'
-
-        if (self.alarm_pin is None):
+        if self.alarm_pin is None:
             self.config['code'] = self.alarm_pin
             self.config['code_arm_required'] = 'true'
 
         self.config['json_attributes_topic'] = alarm_attributes_topic.format(
             id=self.id)
 
-        if (self.mqtt is not None):
+        if self.mqtt is not None:
             self.mqtt.mqtt_client.publish(
                 self.config_alarm_topic, json.dumps(
                     self.config), qos=0)  # Alarm Config
 
     async def update(self):
         await self.setup()
-
         try:
             await self.update_sensors()
         except Exception as e:
@@ -69,7 +67,7 @@ class Alarm:
 
         self.state_topic = alarm_state_topic.format(
             id=self.id, state=self.current_state)
-        if (self.mqtt is not None):
+        if self.mqtt is not None:
             self.mqtt.mqtt_client.publish(
                 self.state_topic,
                 self.current_state,
@@ -84,29 +82,17 @@ class Alarm:
             self.current_state)
 
     async def update_sensors(self):
-        # logger.info('test sensors !')
         for i, j in self.attributes.items():
-            # if j == 'ON' and not 'alarm' in i:
-            #     j = True
-            # elif j == 'OFF' and not 'alarm' in i:
-            #     j == False
-            # sensor_name = "tydom_alarm_sensor_"+i
-            # logger.debug("name %s elem_name %s attributes_topic_from_device %s mqtt %s", sensor_name, i, self.config['json_attributes_topic'], self.mqtt)
             if not i == 'device_type' or not i == 'id':
-                new_sensor = None
-                new_sensor = sensor(
+                new_sensor = Sensor(
                     elem_name=i,
                     tydom_attributes_payload=self.attributes,
                     attributes_topic_from_device=self.config['json_attributes_topic'],
                     mqtt=self.mqtt)
                 await new_sensor.update()
-    # def __init__(self, name, elem_name, tydom_attributes_payload,
-    # attributes_topic_from_device, mqtt=None):
 
     @staticmethod
     async def put_alarm_state(tydom_client, device_id, alarm_id, home_zone, night_zone, asked_state=None):
-        # logger.debug("%s %s %s %s", tydom_client, device_id, alarm_id, asked_state)
-
         value = None
         zone_id = None
 
