@@ -1,8 +1,12 @@
 # Changelog
 
-### dev
-- :fire: Fix configuration loading (default values, validation...)
-- :fire: Cleanup code (remove dead code, improve log readability...)
+### 3.0.0
+- :star: Add graceful shutdown
+- :star: Add configuration validation
+- :star: Cleanup code (wip)
+- :fire: Mask alarm pin code optional
+- :fire: Mask sensitive configuration values in logs
+- :fire: Fix log levels
 
 ### 2.6.6
 - :fire: Fix regression because of Linux Alpine upgrade (`3.17` -> `3.16`)
@@ -14,7 +18,7 @@
 - :fire: Fix sensors for Kline sliding openings
 
 ### 2.6.3
-- :fire: Replace hold_mode by preset_mode because of HA 2022.9 deprecation 
+- :fire: Replace hold_mode by preset_mode because of HA 2022.9 deprecation
 
 ### 2.6.2
 - :fire: Fix unknown HA device classes
