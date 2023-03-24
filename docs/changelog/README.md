@@ -5,7 +5,7 @@
 - :star: Add graceful shutdown
 - :star: Add configuration validation
 - :star: Cleanup code (wip)
-- :fire: Mask alarm pin code optional
+- :fire: Make alarm pin code optional
 - :fire: Mask sensitive configuration values in logs
 - :fire: Fix log levels
 
