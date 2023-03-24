@@ -3,13 +3,12 @@ import asyncio
 import logging.config
 import socket
 import sys
-
-import websockets
+import signal
 
 from configuration.Configuration import Configuration
 from mqtt.MqttClient import MqttClient
 from tydom.TydomClient import TydomClient
-from tydom.TydomMessageHandler import TydomMessageHandler
+from tydom.MessageHandler import MessageHandler
 
 # Setup logger configuration
 logging.basicConfig(
@@ -24,7 +23,8 @@ logger.info("Starting tydom2mqtt")
 # Load configuration from env vars (+ fallback to default values)
 configuration = Configuration.load()
 
-# Reconfigure logger after having loaded the configuration (because the log level can have changed)
+# Reconfigure logger after having loaded the configuration (because the
+# log level can have changed)
 for logger_handler in logging.root.handlers[:]:
     logging.root.removeHandler(logger_handler)
 logging.basicConfig(
@@ -39,38 +39,28 @@ if configuration.log_level != 'DEBUG':
 
 # Listen to tydom events.
 async def listen_tydom():
-    while True:
-        try:
-            await tydom_client.connect()
-            await tydom_client.setup()
 
-            while True:
-                try:
-                    incoming_bytes_str = await tydom_client.connection.recv()
-                except websockets.exceptions.ConnectionClosed:
-                    try:
-                        await tydom_client.post_refresh()
-                        continue
-                    except Exception as e:
-                        logger.error("Websocket error: %s", e)
-                        break
-
-                handler = TydomMessageHandler(
+    try:
+        await tydom_client.connect()
+        await tydom_client.setup()
+        while True:
+            try:
+                incoming_bytes_str = await tydom_client.connection.recv()
+                message_handler = MessageHandler(
                     incoming_bytes=incoming_bytes_str,
                     tydom_client=tydom_client,
                     mqtt_client=mqtt_client,
                 )
-                try:
-                    await handler.incoming_triage()
-                except Exception as e:
-                    logger.warning("Unable to handle message: %s", e)
+                await message_handler.incoming_triage()
+            except Exception as e:
+                logger.warning("Unable to handle message: %s", e)
 
-        except socket.gaierror as e:
-            logger.error("Socker error (%s)", e)
-            sys.exit(1)
-        except ConnectionRefusedError as e:
-            logger.error("Connection refused (%s)", e)
-            sys.exit(1)
+    except socket.gaierror as e:
+        logger.error("Socket error (%s)", e)
+        sys.exit(1)
+    except ConnectionRefusedError as e:
+        logger.error("Connection refused (%s)", e)
+        sys.exit(1)
 
 
 # Create tydom client
@@ -93,8 +83,37 @@ mqtt_client = MqttClient(
 )
 
 
-async def main():
-    await mqtt_client.connect()
-    await listen_tydom()
+async def shutdown(signal, loop):
+    logging.info('Received exit signal %s', signal.name)
+    logging.info("Cancelling running tasks")
 
-asyncio.run(main())
+    try:
+        # Close connections
+        await tydom_client.disconnect()
+
+        # Cancel async tasks
+        tasks = [t for t in asyncio.all_tasks(
+        ) if t is not asyncio.current_task()]
+        [task.cancel() for task in tasks]
+        await asyncio.gather(*tasks)
+        logging.info("All running tasks cancelled")
+    except Exception as e:
+        logging.info("Some errors occurred when stopping tasks (%s)", e)
+    finally:
+        loop.stop()
+
+
+def main():
+    loop = asyncio.new_event_loop()
+    signals = (signal.SIGHUP, signal.SIGTERM, signal.SIGINT)
+    for s in signals:
+        loop.add_signal_handler(
+            s, lambda s=s: asyncio.create_task(shutdown(s, loop)))
+
+    loop.create_task(mqtt_client.connect())
+    loop.create_task(listen_tydom())
+    loop.run_forever()
+
+
+if __name__ == "__main__":
+    main()

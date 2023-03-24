@@ -266,5 +266,5 @@ class MqttClient:
                                         level=str(value))
 
     @staticmethod
-    def on_disconnect():
-        logger.info('Disconnected from the mqtt broker')
+    def on_disconnect(cmd, packet):
+        logger.info('Disconnected')

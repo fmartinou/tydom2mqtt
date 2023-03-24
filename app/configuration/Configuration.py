@@ -63,8 +63,7 @@ class Configuration:
         try:
             with open(hassio_options_file_path) as f:
                 logger.info(
-                    'Hassio environment detected: loading configuration from /data/options.json....')
-
+                    'Hassio environment detected: loading configuration from /data/options.json')
                 try:
                     data = json.load(f)
                     logger.debug('Hassio configuration parsed (%s)', data)
@@ -103,7 +102,7 @@ class Configuration:
                         self.mqtt_port = data[MQTT_PORT]
 
                     if MQTT_SSL in data and data[MQTT_SSL] != '':
-                        self.mqtt_ssl = True
+                        self.mqtt_ssl = data[MQTT_SSL]
 
                 except Exception as e:
                     logger.error('Parsing error %s', e)

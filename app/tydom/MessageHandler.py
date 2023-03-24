@@ -208,7 +208,7 @@ device_endpoint = dict()
 device_type = dict()
 
 
-class TydomMessageHandler:
+class MessageHandler:
 
     def __init__(self, incoming_bytes, tydom_client, mqtt_client):
         self.incoming_bytes = incoming_bytes

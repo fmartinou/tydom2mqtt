@@ -127,6 +127,12 @@ class TydomClient:
                 "Exception when trying to connect with websocket (%s)", e)
             sys.exit(1)
 
+    async def disconnect(self):
+        if self.connection is not None:
+            logger.info('Disconnecting')
+            await self.connection.close()
+            logger.info('Disconnected')
+
     # Generate 16 bytes random key for Sec-WebSocket-Keyand convert it to
     # base64
     @staticmethod
