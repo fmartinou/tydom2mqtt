@@ -1,6 +1,6 @@
 # Changelog
 
-# dev
+# 3.0.1
 - :fire: Fix `'module' object is not callable` on several sensors
 
 ### 3.0.0
