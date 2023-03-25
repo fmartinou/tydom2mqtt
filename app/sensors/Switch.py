@@ -1,6 +1,6 @@
 import json
 import logging
-from . import Sensor
+from .Sensor import Sensor
 
 logger = logging.getLogger(__name__)
 switch_config_topic = "homeassistant/switch/tydom/{id}/config"
