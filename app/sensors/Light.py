@@ -1,6 +1,6 @@
 import json
 import logging
-from . import Sensor
+from .Sensor import Sensor
 
 logger = logging.getLogger(__name__)
 light_command_topic = "light/tydom/{id}/set_levelCmd"
@@ -90,7 +90,6 @@ class Light:
                 new_sensor = Sensor(
                     elem_name=i,
                     tydom_attributes_payload=self.attributes,
-                    attributes_topic_from_device=self.config['json_attributes_topic'],
                     mqtt=self.mqtt)
                 await new_sensor.update()
 

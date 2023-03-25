@@ -620,10 +620,9 @@ class MessageHandler:
                             mqtt=self.mqtt_client)
                         await new_gate.update()
                     elif 'device_type' in attr_smoke and attr_smoke['device_type'] == 'sensor':
-                        new_smoke = sensor(
+                        new_smoke = Sensor(
                             elem_name=attr_smoke['element_name'],
                             tydom_attributes_payload=attr_smoke,
-                            attributes_topic_from_device='useless',
                             mqtt=self.mqtt_client)
                         await new_smoke.update()
                     elif 'device_type' in attr_ukn and attr_ukn['device_type'] == 'sensor':

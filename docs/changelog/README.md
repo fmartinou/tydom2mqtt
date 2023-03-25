@@ -1,5 +1,8 @@
 # Changelog
 
+# dev
+- :fire: Fix `'module' object is not callable` on several sensors
+
 ### 3.0.0
 - :star: Add support for Smoke detectors (Tyxal DFR)
 - :star: Add graceful shutdown
