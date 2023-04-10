@@ -149,7 +149,8 @@ class Sensor:
                 self.mqtt.mqtt_client.publish(
                     self.json_attributes_topic,
                     self.elem_value,
-                    qos=0)
+                    qos=0,
+                    retain=True)
             if not self.binary:
                 logger.info(
                     "Sensor created / updated : %s %s",
