@@ -1,6 +1,6 @@
 # Changelog
 
-# dev
+# 3.0.2
 - :star: Add `retain: true` to mqtt published message to avoid losing states when mqtt broker restarts
 
 # 3.0.1
