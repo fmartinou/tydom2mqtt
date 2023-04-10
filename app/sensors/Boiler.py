@@ -104,7 +104,7 @@ class Boiler:
         if self.mqtt is not None:
             self.mqtt.mqtt_client.publish(
                 self.config_topic, json.dumps(
-                    self.config), qos=0)
+                    self.config), qos=0, retain=True)
 
     async def update(self):
         await self.setup()
@@ -114,26 +114,26 @@ class Boiler:
                 self.mqtt.mqtt_client.publish(
                     self.config['current_temperature_topic'],
                     '0' if self.attributes['temperature'] == 'None' else self.attributes['temperature'],
-                    qos=0)
+                    qos=0, retain=True)
             if 'setpoint' in self.attributes:
                 self.mqtt.mqtt_client.publish(
                     self.config['temperature_state_topic'],
                     '10' if self.attributes['setpoint'] == 'None' else self.attributes['setpoint'],
-                    qos=0)
+                    qos=0, retain=True)
             if 'thermicLevel' in self.attributes:
                 self.mqtt.mqtt_client.publish(
                     self.config['mode_state_topic'],
                     "off" if self.attributes['thermicLevel'] == "STOP" else "heat",
-                    qos=0)
+                    qos=0, retain=True)
                 self.mqtt.mqtt_client.publish(
                     self.config['preset_mode_state_topic'],
                     self.attributes['thermicLevel'],
-                    qos=0)
+                    qos=0, retain=True)
             if 'outTemperature' in self.attributes:
                 self.mqtt.mqtt_client.publish(
                     self.config['state_topic'],
                     self.attributes['outTemperature'],
-                    qos=0)
+                    qos=0, retain=True)
 
     @staticmethod
     async def put_temperature(tydom_client, device_id, boiler_id, set_setpoint):

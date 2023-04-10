@@ -55,7 +55,7 @@ class Switch:
         if self.mqtt is not None:
             self.mqtt.mqtt_client.publish(
                 self.config_topic, json.dumps(
-                    self.config), qos=0)
+                    self.config), qos=0, retain=True)
 
     async def update(self):
         await self.setup()
@@ -74,9 +74,9 @@ class Switch:
                 self.level_topic,
                 self.current_level,
                 qos=0,
-                retain=True)  # Switch State
+                retain=True)
             self.mqtt.mqtt_client.publish(
-                self.config['json_attributes_topic'], self.attributes, qos=0)
+                self.config['json_attributes_topic'], self.attributes, qos=0, retain=True)
         logger.info(
             "Switch created / updated : %s %s %s",
             self.name,

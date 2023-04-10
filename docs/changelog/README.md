@@ -1,5 +1,8 @@
 # Changelog
 
+# dev
+- :star: Add `retain: true` to mqtt published message to avoid losing states when mqtt broker restarts
+
 # 3.0.1
 - :fire: Fix `'module' object is not callable` on several sensors
 

@@ -54,7 +54,7 @@ class Alarm:
         if self.mqtt is not None:
             self.mqtt.mqtt_client.publish(
                 self.config_alarm_topic, json.dumps(
-                    self.config), qos=0)  # Alarm Config
+                    self.config), qos=0, retain=True)  # Alarm Config
 
     async def update(self):
         await self.setup()
@@ -73,7 +73,7 @@ class Alarm:
                 qos=0,
                 retain=True)  # Alarm State
             self.mqtt.mqtt_client.publish(
-                self.config['json_attributes_topic'], self.attributes, qos=0)
+                self.config['json_attributes_topic'], self.attributes, qos=0, retain=True)
         logger.info(
             "Alarm created / updated : %s %s %s",
             self.name,
