@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 from dataclasses import dataclass
+from tydom.TydomClient import TydomClient
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,8 @@ TYDOM_ALARM_PIN = 'TYDOM_ALARM_PIN'
 TYDOM_IP = 'TYDOM_IP'
 TYDOM_MAC = 'TYDOM_MAC'
 TYDOM_PASSWORD = 'TYDOM_PASSWORD'
-
+DELTADORE_LOGIN = 'DELTADORE_LOGIN'
+DELTADORE_PASSWORD = 'DELTADORE_PASSWORD'
 
 @dataclass
 class Configuration:
@@ -50,11 +52,14 @@ class Configuration:
         self.tydom_ip = os.getenv(TYDOM_IP, 'mediation.tydom.com')
         self.tydom_mac = os.getenv(TYDOM_MAC, None)
         self.tydom_password = os.getenv(TYDOM_PASSWORD, None)
+        self.deltadore_login = os.getenv(DELTADORE_LOGIN, None)
+        self.deltadore_password = os.getenv(DELTADORE_PASSWORD, None)
 
     @staticmethod
     def load():
         configuration = Configuration()
         configuration.override_configuration_for_hassio()
+        configuration.override_configuration_with_deltadore()
         configuration.validate()
         return configuration
 
@@ -79,6 +84,12 @@ class Configuration:
 
                     if TYDOM_PASSWORD in data and data[TYDOM_PASSWORD] != '':
                         self.tydom_password = data[TYDOM_PASSWORD]
+
+                    if DELTADORE_LOGIN in data and data[DELTADORE_LOGIN] != '':
+                        self.deltadore_login = data[DELTADORE_LOGIN]
+
+                    if DELTADORE_PASSWORD in data and data[DELTADORE_PASSWORD] != '':
+                        self.deltadore_password = data[DELTADORE_PASSWORD]
 
                     if TYDOM_ALARM_PIN in data and data[TYDOM_ALARM_PIN] != '':
                         self.tydom_alarm_pin = str(data[TYDOM_ALARM_PIN])
@@ -109,6 +120,11 @@ class Configuration:
 
         except FileNotFoundError:
             logger.debug('Hassio environment not detected')
+
+    def override_configuration_with_deltadore(self):
+        if self.deltadore_login is not None and self.deltadore_login != '' and self.deltadore_password is not None and self.deltadore_password != '':
+            tydom_password = TydomClient.getTydomCredentials(self.deltadore_login, self.deltadore_password, self.tydom_mac)
+            self.tydom_password = tydom_password
 
     def validate(self):
         configuration_to_print = copy.copy(self)
