@@ -3,9 +3,13 @@
 
 ## Environment variables
 
+Please note that only one of DELTADORE_LOGIN + DELTADORE_PASSWORD or TYDOM_PASSWORD is needed as your Delta Dore account is used to retrieve the Tydom password
+
 | Environment variable   | Required       | Supported values                                  | Default value when missing |
 |------------------------|----------------|---------------------------------------------------|----------------------------|
 | TYDOM_MAC              | :red_circle:   | Tydom MAC address (starting with `001A...`)       |                            |
+| DELTADORE_LOGIN        | :red_circle:   | Delta Dore account login                          |                            |
+| DELTADORE_PASSWORD     | :red_circle:   | Delta Dore account password                       |                            |
 | TYDOM_PASSWORD         | :red_circle:   | Tydom password                                    |                            |
 | TYDOM_IP               | :white_circle: | Tydom IPv4 address or FQDN                        | `mediation.tydom.com`      |
 | TYDOM_ALARM_PIN        | :white_circle: | Tydom Alarm PIN                                   | `None`                     |

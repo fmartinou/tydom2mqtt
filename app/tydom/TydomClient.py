@@ -6,7 +6,10 @@ import ssl
 import sys
 
 import websockets
+import requests
 from requests.auth import HTTPDigestAuth
+from urllib3 import encode_multipart_formdata
+from const import *
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +20,7 @@ class TydomClient:
             mac,
             password,
             alarm_pin=None,
-            host="mediation.tydom.com"):
+            host=MEDIATION_URL):
         logger.debug("Initializing TydomClient Class")
 
         self.password = password
@@ -38,7 +41,7 @@ class TydomClient:
         self.current_poll_index = 0
 
         # Set Host, ssl context and prefix for remote or local connection
-        if self.host == "mediation.tydom.com":
+        if self.host == MEDIATION_URL:
             logger.info("Configure remote mode (%s)", self.host)
             self.remote_mode = True
             self.ssl_context = ssl._create_unverified_context()
@@ -53,6 +56,55 @@ class TydomClient:
             self.cmd_prefix = ""
             self.ping_timeout = None
 
+    @staticmethod
+    def getTydomCredentials(login: str, password: str, macaddress: str):
+        """get tydom credentials from Delta Dore"""
+        try:
+            response = requests.get(DELTADORE_AUTH_URL)
+        
+            json_response = response.json()
+            response.close()
+            signin_url = json_response["token_endpoint"]
+
+            body, ct_header = encode_multipart_formdata(
+                {
+                    "username": f"{login}",
+                    "password": f"{password}",
+                    "grant_type": DELTADORE_AUTH_GRANT_TYPE,
+                    "client_id": DELTADORE_AUTH_CLIENTID,
+                    "scope": DELTADORE_AUTH_SCOPE,
+                }
+            )
+
+            response = requests.post(
+                url=signin_url,
+                headers={"Content-Type": ct_header},
+                data=body,
+            )
+
+            json_response = response.json()
+            response.close()
+            access_token = json_response["access_token"]
+        
+            response = requests.get(DELTADORE_API_SITES + macaddress,
+                headers={"Authorization": f"Bearer {access_token}"})
+
+            json_response = response.json()
+            response.close()
+
+            password = None
+            if (
+                "sites" in json_response
+                and len(json_response["sites"]) > 0
+                and "gateway" in json_response["sites"][0]
+               ):
+                password = json_response["sites"][0]["gateway"]["password"]
+
+            return password
+        
+        except Exception as exception:
+            return None
+        
     async def connect(self):
         logger.info('Connecting to tydom')
         http_headers = {
