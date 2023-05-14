@@ -4,4 +4,3 @@
 .DS_Store
 app/.venv/
 .gitignore
-app/openssl.cnf
