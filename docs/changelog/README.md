@@ -1,6 +1,9 @@
 # Changelog
 
 # 3.0.2
+- :fire: Enable SSL unsafe legacy renegotiation using ssl options instead of adding an openssl_conf.cnf file
+
+# 3.0.2
 - :star: Add `retain: true` to mqtt published message to avoid losing states when mqtt broker restarts
 
 # 3.0.1

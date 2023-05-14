@@ -49,6 +49,7 @@ class TydomClient:
             logger.info("Configure local mode (%s)", self.host)
             self.remote_mode = False
             self.ssl_context = ssl._create_unverified_context()
+            self.ssl_context.options |= 0x4
             self.cmd_prefix = ""
             self.ping_timeout = None
 
