@@ -64,7 +64,6 @@ class TydomClient:
             json_response = response.json()
             response.close()
             signin_url = json_response["token_endpoint"]
-            logger.debug("signin_url : %s", signin_url)
 
             body, ct_header = encode_multipart_formdata(
                 {
