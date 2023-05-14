@@ -9,6 +9,7 @@ import websockets
 import requests
 from requests.auth import HTTPDigestAuth
 from urllib3 import encode_multipart_formdata
+from const import *
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class TydomClient:
             mac,
             password,
             alarm_pin=None,
-            host="mediation.tydom.com"):
+            host=MEDIATION_URL):
         logger.debug("Initializing TydomClient Class")
 
         self.password = password
@@ -40,7 +41,7 @@ class TydomClient:
         self.current_poll_index = 0
 
         # Set Host, ssl context and prefix for remote or local connection
-        if self.host == "mediation.tydom.com":
+        if self.host == MEDIATION_URL:
             logger.info("Configure remote mode (%s)", self.host)
             self.remote_mode = True
             self.ssl_context = ssl._create_unverified_context()
@@ -58,7 +59,7 @@ class TydomClient:
     def getTydomCredentials(login: str, password: str, macaddress: str):
         """get tydom credentials from Delta Dore"""
         try:
-            response = requests.get("https://deltadoreadb2ciot.b2clogin.com/deltadoreadb2ciot.onmicrosoft.com/v2.0/.well-known/openid-configuration?p=B2C_1_AccountProviderROPC_SignIn")
+            response = requests.get(DELTADORE_AUTH_URL)
         
             json_response = response.json()
             response.close()
@@ -69,9 +70,9 @@ class TydomClient:
                 {
                     "username": f"{login}",
                     "password": f"{password}",
-                    "grant_type": "password",
-                    "client_id": "8782839f-3264-472a-ab87-4d4e23524da4",
-                    "scope": "openid profile offline_access https://deltadoreadb2ciot.onmicrosoft.com/iotapi/video_config https://deltadoreadb2ciot.onmicrosoft.com/iotapi/video_allowed https://deltadoreadb2ciot.onmicrosoft.com/iotapi/sites_management_allowed https://deltadoreadb2ciot.onmicrosoft.com/iotapi/sites_management_gateway_credentials https://deltadoreadb2ciot.onmicrosoft.com/iotapi/sites_management_camera_credentials https://deltadoreadb2ciot.onmicrosoft.com/iotapi/comptage_europe_collect_reader https://deltadoreadb2ciot.onmicrosoft.com/iotapi/comptage_europe_site_config_contributor https://deltadoreadb2ciot.onmicrosoft.com/iotapi/pilotage_allowed https://deltadoreadb2ciot.onmicrosoft.com/iotapi/consent_mgt_contributor https://deltadoreadb2ciot.onmicrosoft.com/iotapi/b2caccountprovider_manage_account https://deltadoreadb2ciot.onmicrosoft.com/iotapi/b2caccountprovider_allow_view_account https://deltadoreadb2ciot.onmicrosoft.com/iotapi/tydom_backend_allowed https://deltadoreadb2ciot.onmicrosoft.com/iotapi/websocket_remote_access https://deltadoreadb2ciot.onmicrosoft.com/iotapi/orkestrator_device https://deltadoreadb2ciot.onmicrosoft.com/iotapi/orkestrator_view https://deltadoreadb2ciot.onmicrosoft.com/iotapi/orkestrator_space https://deltadoreadb2ciot.onmicrosoft.com/iotapi/orkestrator_connector https://deltadoreadb2ciot.onmicrosoft.com/iotapi/orkestrator_endpoint https://deltadoreadb2ciot.onmicrosoft.com/iotapi/rule_management_allowed https://deltadoreadb2ciot.onmicrosoft.com/iotapi/collect_read_datas",
+                    "grant_type": DELTADORE_AUTH_GRANT_TYPE,
+                    "client_id": DELTADORE_AUTH_CLIENTID,
+                    "scope": DELTADORE_AUTH_SCOPE,
                 }
             )
 
@@ -85,7 +86,7 @@ class TydomClient:
             response.close()
             access_token = json_response["access_token"]
         
-            response = requests.get(f"https://prod.iotdeltadore.com/sitesmanagement/api/v1/sites?gateway_mac={macaddress}",
+            response = requests.get(DELTADORE_API_SITES + macaddress,
                 headers={"Authorization": f"Bearer {access_token}"})
 
             json_response = response.json()
