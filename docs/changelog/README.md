@@ -1,5 +1,8 @@
 # Changelog
 
+# 3.1.1
+- :fire: Fix startup error
+
 # 3.1.0
 - :star: Retrieve tydom credentials from Delta Dore cloud
 - :fire: Enable SSL unsafe legacy renegotiation using ssl options instead of adding an openssl_conf.cnf file

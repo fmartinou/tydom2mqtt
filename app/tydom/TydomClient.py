@@ -9,7 +9,7 @@ import websockets
 import requests
 from requests.auth import HTTPDigestAuth
 from urllib3 import encode_multipart_formdata
-from const import *
+from .const import *
 
 logger = logging.getLogger(__name__)
 
