@@ -4,8 +4,6 @@ from http.client import HTTPResponse
 from http.server import BaseHTTPRequestHandler
 from io import BytesIO
 
-import urllib3
-
 from sensors.Alarm import Alarm
 from sensors.Boiler import Boiler
 from sensors.Cover import Cover
@@ -255,9 +253,8 @@ class MessageHandler:
                     logger.error(
                         'Error when parsing POST tydom message (%s)', bytes_str)
             elif ("HTTP/1.1" in first):
-                response = self.response_from_bytes(
-                    bytes_str[len(self.cmd_prefix):])
-                incoming = response.data.decode("utf-8")
+                response = self.response_from_bytes(bytes_str[len(self.cmd_prefix):])
+                incoming = response.decode("utf-8")
                 try:
                     await self.parse_response(incoming)
                 except BaseException:
@@ -269,8 +266,7 @@ class MessageHandler:
 
         except Exception as e:
             logger.error(
-                'Technical error when parsing tydom message (%s)',
-                bytes_str)
+                'Technical error when parsing tydom message (error=%s), (message=%s)', e, bytes_str)
             logger.debug('Incoming payload (%s)', incoming)
 
     # Basic response parsing. Typically GET responses + instanciate covers and
@@ -794,7 +790,7 @@ class MessageHandler:
         sock = BytesIOSocket(data)
         response = HTTPResponse(sock)
         response.begin()
-        return urllib3.HTTPResponse.from_httplib(response)
+        return response.read()
 
     @staticmethod
     def put_response_from_bytes(data):

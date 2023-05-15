@@ -1,5 +1,8 @@
 # Changelog
 
+# 3.1.2
+- :fire: Fix command parsing
+
 # 3.1.1
 - :fire: Fix startup error
 
