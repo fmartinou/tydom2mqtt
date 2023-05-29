@@ -54,6 +54,9 @@ async def listen_tydom():
                 await message_handler.incoming_triage()
             except Exception as e:
                 logger.warning("Unable to handle message: %s", e)
+                await tydom_client.disconnect()
+                await tydom_client.connect()
+                await tydom_client.setup()
 
     except socket.gaierror as e:
         logger.error("Socket error (%s)", e)
