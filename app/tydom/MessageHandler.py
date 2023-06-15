@@ -327,7 +327,8 @@ class MessageHandler:
                 "_" + str(i["id_device"])
 
             if i["last_usage"] == 'shutter' or i["last_usage"] == 'klineShutter' or i["last_usage"] == 'light' or i["last_usage"] == 'window' or i["last_usage"] == 'windowFrench' or i["last_usage"] == 'windowSliding' or i[
-                    "last_usage"] == 'belmDoor' or i["last_usage"] == 'klineDoor' or i["last_usage"] == 'klineWindowFrench' or i["last_usage"] == 'klineWindowSliding' or i["last_usage"] == 'garage_door' or i["last_usage"] == 'gate':
+                    "last_usage"] == 'belmDoor' or i["last_usage"] == 'klineDoor' or i["last_usage"] == 'klineWindowFrench' or i["last_usage"] == 'klineWindowSliding' or i["last_usage"] == 'garage_door' or i["last_usage"] == 'gate' or i[
+                        "last_usage"] == 'awning':
                 device_name[device_unique_id] = i["name"]
                 device_type[device_unique_id] = i["last_usage"]
                 device_endpoint[device_unique_id] = i["id_endpoint"]
@@ -452,7 +453,7 @@ class MessageHandler:
                                     attr_light['device_type'] = 'light'
                                     attr_light[element_name] = element_value
 
-                            if type_of_id == 'shutter' or type_of_id == 'klineShutter':
+                            if type_of_id == 'shutter' or type_of_id == 'awning' or type_of_id == 'klineShutter':
                                 if element_name in deviceCoverKeywords and element_validity == 'upToDate':
                                     attr_cover['device_id'] = device_id
                                     attr_cover['endpoint_id'] = endpoint_id
