@@ -328,7 +328,7 @@ class MessageHandler:
 
             if i["last_usage"] == 'shutter' or i["last_usage"] == 'klineShutter' or i["last_usage"] == 'light' or i["last_usage"] == 'window' or i["last_usage"] == 'windowFrench' or i["last_usage"] == 'windowSliding' or i[
                     "last_usage"] == 'belmDoor' or i["last_usage"] == 'klineDoor' or i["last_usage"] == 'klineWindowFrench' or i["last_usage"] == 'klineWindowSliding' or i["last_usage"] == 'garage_door' or i["last_usage"] == 'gate' or i[
-                        "last_usage"] == 'awning':
+                        "last_usage"] == 'awning' or i["last_usage"] == 'other':
                 device_name[device_unique_id] = i["name"]
                 device_type[device_unique_id] = i["last_usage"]
                 device_endpoint[device_unique_id] = i["id_endpoint"]
@@ -578,6 +578,22 @@ class MessageHandler:
                                     attr_ukn['device_type'] = 'sensor'
                                     attr_ukn['element_name'] = element_name
                                     attr_ukn[element_name] = element_value
+
+                            if type_of_id == 'other':
+                                if element_name in deviceLightKeywords and element_validity == 'upToDate':
+                                    attr_light['device_id'] = device_id
+                                    attr_light['endpoint_id'] = endpoint_id
+                                    attr_light['id'] = str(
+                                        device_id) + '_' + str(endpoint_id)
+                                    attr_light['light_name'] = print_id
+                                    attr_light['name'] = print_id
+                                    attr_light['device_type'] = 'light' # later replace with commented condition below
+                                    attr_light[element_name] = element_value
+
+                                    #if condition_to_define_light_or_switch:
+                                    #    attr_light['device_type'] = 'light'
+                                    #else:
+                                    #    attr_light['device_type'] = 'switch'
 
                     except Exception as e:
                         logger.error('msg_data error in parsing !')
