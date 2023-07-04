@@ -1,5 +1,9 @@
 # Changelog
 
+# 3.2.0
+- :star: Add `awning` devices
+- :star: Add `other` devices
+
 # 3.1.2
 - :fire: Fix command parsing
 
