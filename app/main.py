@@ -40,27 +40,32 @@ if configuration.log_level != 'DEBUG':
 # Listen to tydom events.
 async def listen_tydom():
 
-    try:
-        await tydom_client.connect()
-        await tydom_client.setup()
-        while True:
-            try:
-                incoming_bytes_str = await tydom_client.connection.recv()
-                message_handler = MessageHandler(
-                    incoming_bytes=incoming_bytes_str,
-                    tydom_client=tydom_client,
-                    mqtt_client=mqtt_client,
-                )
-                await message_handler.incoming_triage()
-            except Exception as e:
-                logger.warning("Unable to handle message: %s", e)
+    while True:
+        try:
+            await tydom_client.connect()
+            await tydom_client.setup()
+            while True:
+                try:
+                    incoming_bytes_str = await tydom_client.connection.recv()
+                    message_handler = MessageHandler(
+                        incoming_bytes=incoming_bytes_str,
+                        tydom_client=tydom_client,
+                        mqtt_client=mqtt_client,
+                    )
+                    await message_handler.incoming_triage()
+                except websockets.ConnectionClosed as e:
+                    logger.error("Websocket connection closed: %s", e)
+                    await tydom_client.disconnect()
+                    break
+                except Exception as e:
+                    logger.warning("Unable to handle message: %s", e)
 
-    except socket.gaierror as e:
-        logger.error("Socket error (%s)", e)
-        sys.exit(1)
-    except ConnectionRefusedError as e:
-        logger.error("Connection refused (%s)", e)
-        sys.exit(1)
+        except socket.gaierror as e:
+            logger.error("Socket error (%s)", e)
+            sys.exit(1)
+        except ConnectionRefusedError as e:
+            logger.error("Connection refused (%s)", e)
+            sys.exit(1)
 
 
 # Create tydom client
