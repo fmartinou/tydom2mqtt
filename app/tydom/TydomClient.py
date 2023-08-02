@@ -1,5 +1,6 @@
 import base64
 import http.client
+import json
 import logging
 import os
 import ssl
@@ -61,7 +62,7 @@ class TydomClient:
         """get tydom credentials from Delta Dore"""
         try:
             response = requests.get(DELTADORE_AUTH_URL)
-        
+
             json_response = response.json()
             response.close()
             signin_url = json_response["token_endpoint"]
@@ -85,9 +86,9 @@ class TydomClient:
             json_response = response.json()
             response.close()
             access_token = json_response["access_token"]
-        
+
             response = requests.get(DELTADORE_API_SITES + macaddress,
-                headers={"Authorization": f"Bearer {access_token}"})
+                                    headers={"Authorization": f"Bearer {access_token}"})
 
             json_response = response.json()
             response.close()
@@ -97,14 +98,14 @@ class TydomClient:
                 "sites" in json_response
                 and len(json_response["sites"]) > 0
                 and "gateway" in json_response["sites"][0]
-               ):
+            ):
                 password = json_response["sites"][0]["gateway"]["password"]
 
             return password
-        
+
         except Exception as exception:
             return None
-        
+
     async def connect(self):
         logger.info('Connecting to tydom')
         http_headers = {
@@ -250,7 +251,26 @@ class TydomClient:
             body +
             "\r\n\r\n")
         a_bytes = bytes(str_request, "ascii")
-        logger.debug("Sending message to tydom (%s %s)", "PUT data", body)
+        logger.debug("Sending message to tydom (%s %s)",
+                     "PUT devices data", body)
+        await self.connection.send(a_bytes)
+        return 0
+
+    async def put_areas_data(self, area_id, data):
+        formatted_data = []
+        for key, value in data.items():
+            formatted_data.append({"name": key, "value": value})
+        body = json.dumps(formatted_data)
+        str_request = (
+            self.cmd_prefix +
+            f"PUT /areas/{area_id}/data HTTP/1.1\r\nContent-Length: " +
+            str(len(body)) +
+            "\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n" +
+            body +
+            "\r\n\r\n")
+        a_bytes = bytes(str_request, "ascii")
+        logger.debug("Sending message to tydom (%s %s)",
+                     "PUT areas data", body)
         await self.connection.send(a_bytes)
         return 0
 
@@ -385,10 +405,17 @@ class TydomClient:
         req = "GET"
         await self.send_message(method=req, msg=msg_type)
 
+    # Get all areas data
+    async def get_areas_data(self):
+        msg_type = "/areas/data"
+        req = "GET"
+        await self.send_message(method=req, msg=msg_type)
+
     async def get_data(self):
         await self.get_configs_file()
         await self.get_devices_cmeta()
         await self.get_devices_data()
+        await self.get_areas_data()
 
     # Give order to endpoint
     async def get_device_data(self, id):
@@ -397,6 +424,14 @@ class TydomClient:
         str_request = (
             self.cmd_prefix +
             f"GET /devices/{device_id}/endpoints/{device_id}/data HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n")
+        a_bytes = bytes(str_request, "ascii")
+        await self.connection.send(a_bytes)
+
+    async def get_area_data(self, id):
+        device_id = str(id)
+        str_request = (
+            self.cmd_prefix +
+            f"GET /areas/{device_id}/data HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n")
         a_bytes = bytes(str_request, "ascii")
         await self.connection.send(a_bytes)
 

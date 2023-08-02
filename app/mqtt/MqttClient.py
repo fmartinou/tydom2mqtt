@@ -12,6 +12,7 @@ from sensors.Boiler import Boiler
 from sensors.Cover import Cover
 from sensors.Light import Light
 from sensors.Switch import Switch
+from sensors.ShHvac import ShHvac
 
 logger = logging.getLogger(__name__)
 
@@ -264,6 +265,24 @@ class MqttClient:
             endpoint_id = (get_id.split("_"))[1]
             await Switch.put_level_gate(tydom_client=self.tydom, device_id=device_id, switch_id=endpoint_id,
                                         level=str(value))
+
+        elif 'set_shHvacTemperature' in str(topic):
+            value = payload.decode()
+            logger.info(
+                'set_shHvacTemperature message received (topic=%s, message=%s)',
+                topic,
+                value)
+            get_id = (topic.split("/"))[2]
+            device_id = (get_id.split("_"))[0]
+            await ShHvac.put_temperature(tydom_client=self.tydom, device_id=device_id, temperature=str(value))
+
+        elif 'set_shHvacBoost' in str(topic):
+            value = payload.decode()
+            logger.info(
+                'set_shHvacBoost message received (topic=%s, message=%s)', topic, value)
+            get_id = (topic.split("/"))[2]
+            device_id = (get_id.split("_"))[0]
+            await ShHvac.put_boost(tydom_client=self.tydom, device_id=device_id, boost=value)
 
     @staticmethod
     def on_disconnect(cmd, packet):
