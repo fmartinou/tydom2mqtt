@@ -101,7 +101,7 @@ class Cover:
 
     async def update_sensors(self):
         for i, j in self.attributes.items():
-            if not i == 'device_type' or not i == 'id':
+            if not i == 'device_type' and not i == 'id' and not i == 'device_id' and not i == 'endpoint_id':
                 new_sensor = Sensor(
                     elem_name=i,
                     tydom_attributes_payload=self.attributes,
