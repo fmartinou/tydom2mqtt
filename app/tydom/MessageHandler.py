@@ -10,6 +10,7 @@ from sensors.Cover import Cover
 from sensors.Light import Light
 from sensors.Sensor import Sensor
 from sensors.Switch import Switch
+from sensors.ShHvac import ShHvac
 
 logger = logging.getLogger(__name__)
 
@@ -139,6 +140,50 @@ deviceBoilerKeywords = [
     'anticipCoeff',
     'outTemperature']
 
+deviceShHvacKeywords = [
+    # from /devices/data
+    'battDefect',
+    'waterFlowReq',
+    'regTemperature',
+    'devTemperature',
+    'activationIndex',
+    'calibrationStatus',
+    'indexTimeOn',
+    'tempOffset',
+    'jobs',
+    'jobsMP',
+    'softVersion0',
+    'softPlan0',
+    'softVersion1',
+    'softPlan1',
+    'softVersion2',
+    'softPlan2',
+    'uid',
+    # from /areas/data
+    "jobs",
+    "masterSchedSetpoint",
+    "masterAbsSetpoint",
+    "localSetpoint",
+    "antiFrostSetpoint",
+    "currentSetpoint",
+    "masterMode",
+    "localMode",
+    "localSetpRemainingTime",
+    "localSetpRemainingTimeStr",
+    "optionMode",
+    "boost",
+    "boostDuration",
+    "boostRemainingTime",
+    "openWinActive",
+    "winOpened",
+    "localSetpDuration",
+    "localSetpDurationStr",
+    "antiSeizurePeriod",
+    "lockConfig",
+    "displayConfig",
+    "anticipCoeff"
+]
+
 deviceSwitchKeywords = ['thermicDefect']
 deviceSwitchDetailsKeywords = ['thermicDefect']
 
@@ -223,8 +268,9 @@ class MessageHandler:
         try:
             if "Uri-Origin: /refresh/all" in first in first:
                 pass
-            elif ("PUT /devices/data" in first) or ("/devices/cdata" in first):
-                logger.debug('PUT /devices/data message detected !')
+            elif ("PUT /devices/data" in first) or ("/devices/cdata" in first) or ("PUT /areas/data" in first):
+                logger.debug(
+                    'PUT /devices/data or /areas/data message detected !')
                 try:
                     try:
                         incoming = self.parse_put_response(bytes_str)
@@ -236,6 +282,7 @@ class MessageHandler:
                     logger.error(
                         'Error when parsing devices/data tydom message (%s)',
                         bytes_str)
+                    logger.exception(e)
             elif ("scn" in first):
                 try:
                     incoming = get(bytes_str)
@@ -244,6 +291,7 @@ class MessageHandler:
                 except BaseException:
                     logger.error(
                         'Error when parsing Scenarii tydom message (%s)', bytes_str)
+                    logger.exception(e)
             elif ("POST" in first):
                 try:
                     incoming = self.parse_put_response(bytes_str)
@@ -252,14 +300,17 @@ class MessageHandler:
                 except BaseException:
                     logger.error(
                         'Error when parsing POST tydom message (%s)', bytes_str)
+                    logger.exception(e)
             elif ("HTTP/1.1" in first):
-                response = self.response_from_bytes(bytes_str[len(self.cmd_prefix):])
+                response = self.response_from_bytes(
+                    bytes_str[len(self.cmd_prefix):])
                 incoming = response.decode("utf-8")
                 try:
                     await self.parse_response(incoming)
                 except BaseException:
                     logger.error(
                         'Error when parsing HTTP/1.1 tydom message (%s)', bytes_str)
+                    logger.exception(e)
             else:
                 logger.warning(
                     'Unknown tydom message type received (%s)', bytes_str)
@@ -268,6 +319,7 @@ class MessageHandler:
             logger.error(
                 'Technical error when parsing tydom message (error=%s), (message=%s)', e, bytes_str)
             logger.debug('Incoming payload (%s)', incoming)
+            logger.exception(e)
 
     # Basic response parsing. Typically GET responses + instanciate covers and
     # alarm class for updating data
@@ -318,6 +370,8 @@ class MessageHandler:
                         pass
                 except Exception as e:
                     logger.error('Error on parsing tydom response (%s)', e)
+                    logger.error('Incoming data (%s)', data)
+                    logger.exception(e)
             logger.debug('Incoming data parsed with success')
 
     @staticmethod
@@ -333,7 +387,7 @@ class MessageHandler:
                 device_type[device_unique_id] = i["last_usage"]
                 device_endpoint[device_unique_id] = i["id_endpoint"]
 
-            if i["last_usage"] == 'boiler' or i["last_usage"] == 'conso':
+            if i["last_usage"] == 'boiler' or i["last_usage"] == 'conso' or i["last_usage"] == 'sh_hvac':
                 device_name[device_unique_id] = i["name"]
                 device_type[device_unique_id] = i["last_usage"]
                 device_endpoint[device_unique_id] = i["id_endpoint"]
@@ -409,285 +463,315 @@ class MessageHandler:
         logger.debug('Metadata configuration updated')
 
     async def parse_devices_data(self, parsed):
-        for i in parsed:
-            for endpoint in i["endpoints"]:
-                if endpoint["error"] == 0 and len(endpoint["data"]) > 0:
-                    try:
-                        attr_alarm = {}
-                        attr_cover = {}
-                        attr_door = {}
-                        attr_ukn = {}
-                        attr_window = {}
-                        attr_light = {}
-                        attr_gate = {}
-                        attr_boiler = {}
-                        attr_smoke = {}
-                        device_id = i["id"]
-                        endpoint_id = endpoint["id"]
-                        unique_id = str(endpoint_id) + "_" + str(device_id)
-                        name_of_id = self.get_name_from_id(unique_id)
-                        type_of_id = self.get_type_from_id(unique_id)
+        if (type(parsed) is list):
+            for i in parsed:
+                if "endpoints" in i:  # case of GET /devices/data
+                    for endpoint in i["endpoints"]:
+                        await self.parse_endpoint_data(endpoint, i["id"])
+                else:  # case of GET /areas/data
+                    await self.parse_endpoint_data(i, i["id"])
+        elif (type(parsed) is dict):
+            await self.parse_endpoint_data(parsed, parsed["id"])
+        else:
+            logger.error('Unknown data type')
+            logger.debug(parsed)
 
-                        logger.info(
-                            'Device update (id=%s, endpoint=%s, name=%s, type=%s)',
-                            device_id,
-                            endpoint_id,
-                            name_of_id,
-                            type_of_id)
+    async def parse_endpoint_data(self, endpoint, device_id):
+        if endpoint["error"] == 0 and len(endpoint["data"]) > 0:
+            try:
+                attr_alarm = {}
+                attr_cover = {}
+                attr_door = {}
+                attr_ukn = {}
+                attr_window = {}
+                attr_light = {}
+                attr_gate = {}
+                attr_boiler = {}
+                attr_sh_hvac = {}
+                attr_smoke = {}
+                endpoint_id = endpoint["id"]
+                unique_id = str(endpoint_id) + "_" + str(device_id)
+                name_of_id = self.get_name_from_id(unique_id)
+                type_of_id = self.get_type_from_id(unique_id)
 
-                        for elem in endpoint["data"]:
-                            element_name = elem["name"]
-                            element_value = elem["value"]
-                            element_validity = elem["validity"]
-                            print_id = name_of_id if len(
-                                name_of_id) != 0 else device_id
+                logger.info(
+                    'Device update (id=%s, endpoint=%s, name=%s, type=%s)',
+                    device_id,
+                    endpoint_id,
+                    name_of_id,
+                    type_of_id)
 
-                            if type_of_id == 'light':
-                                if element_name in deviceLightKeywords and element_validity == 'upToDate':
-                                    attr_light['device_id'] = device_id
-                                    attr_light['endpoint_id'] = endpoint_id
-                                    attr_light['id'] = str(
-                                        device_id) + '_' + str(endpoint_id)
-                                    attr_light['light_name'] = print_id
-                                    attr_light['name'] = print_id
-                                    attr_light['device_type'] = 'light'
-                                    attr_light[element_name] = element_value
+                for elem in endpoint["data"]:
+                    element_name = elem["name"]
+                    element_value = elem["value"]
+                    element_validity = elem["validity"]
+                    print_id = name_of_id if len(
+                        name_of_id) != 0 else device_id
 
-                            if type_of_id == 'shutter' or type_of_id == 'awning' or type_of_id == 'klineShutter':
-                                if element_name in deviceCoverKeywords and element_validity == 'upToDate':
-                                    attr_cover['device_id'] = device_id
-                                    attr_cover['endpoint_id'] = endpoint_id
-                                    attr_cover['id'] = str(
-                                        device_id) + '_' + str(endpoint_id)
-                                    attr_cover['cover_name'] = print_id
-                                    attr_cover['name'] = print_id
-                                    attr_cover['device_type'] = 'cover'
+                    if type_of_id == 'light':
+                        if element_name in deviceLightKeywords and element_validity == 'upToDate':
+                            attr_light['device_id'] = device_id
+                            attr_light['endpoint_id'] = endpoint_id
+                            attr_light['id'] = str(
+                                device_id) + '_' + str(endpoint_id)
+                            attr_light['light_name'] = print_id
+                            attr_light['name'] = print_id
+                            attr_light['device_type'] = 'light'
+                            attr_light[element_name] = element_value
 
-                                    if element_name == 'slope':
-                                        attr_cover['tilt'] = element_value
-                                    else:
-                                        attr_cover[element_name] = element_value
+                    if type_of_id == 'shutter' or type_of_id == 'awning' or type_of_id == 'klineShutter':
+                        if element_name in deviceCoverKeywords and element_validity == 'upToDate':
+                            attr_cover['device_id'] = device_id
+                            attr_cover['endpoint_id'] = endpoint_id
+                            attr_cover['id'] = str(
+                                device_id) + '_' + str(endpoint_id)
+                            attr_cover['cover_name'] = print_id
+                            attr_cover['name'] = print_id
+                            attr_cover['device_type'] = 'cover'
 
-                            if type_of_id == 'belmDoor' or type_of_id == 'klineDoor':
-                                if element_name in deviceDoorKeywords and element_validity == 'upToDate':
-                                    attr_door['device_id'] = device_id
-                                    attr_door['endpoint_id'] = endpoint_id
-                                    attr_door['id'] = str(
-                                        device_id) + '_' + str(endpoint_id)
-                                    attr_door['door_name'] = print_id
-                                    attr_door['name'] = print_id
-                                    attr_door['device_type'] = 'sensor'
-                                    attr_door['element_name'] = element_name
-                                    attr_door[element_name] = element_value
+                            if element_name == 'slope':
+                                attr_cover['tilt'] = element_value
+                            else:
+                                attr_cover[element_name] = element_value
 
-                            if type_of_id == 'windowFrench' or type_of_id == 'window' or type_of_id == 'windowSliding' or type_of_id == 'klineWindowFrench' or type_of_id == 'klineWindowSliding':
-                                if element_name in deviceDoorKeywords and element_validity == 'upToDate':
-                                    attr_window['device_id'] = device_id
-                                    attr_window['endpoint_id'] = endpoint_id
-                                    attr_window['id'] = str(
-                                        device_id) + '_' + str(endpoint_id)
-                                    attr_window['door_name'] = print_id
-                                    attr_window['name'] = print_id
-                                    attr_window['device_type'] = 'sensor'
-                                    attr_window['element_name'] = element_name
-                                    attr_window[element_name] = element_value
+                    if type_of_id == 'belmDoor' or type_of_id == 'klineDoor':
+                        if element_name in deviceDoorKeywords and element_validity == 'upToDate':
+                            attr_door['device_id'] = device_id
+                            attr_door['endpoint_id'] = endpoint_id
+                            attr_door['id'] = str(
+                                device_id) + '_' + str(endpoint_id)
+                            attr_door['door_name'] = print_id
+                            attr_door['name'] = print_id
+                            attr_door['device_type'] = 'sensor'
+                            attr_door['element_name'] = element_name
+                            attr_door[element_name] = element_value
 
-                            if type_of_id == 'boiler':
-                                if element_name in deviceBoilerKeywords and element_validity == 'upToDate':
-                                    attr_boiler['device_id'] = device_id
-                                    attr_boiler['endpoint_id'] = endpoint_id
-                                    attr_boiler['id'] = str(
-                                        device_id) + '_' + str(endpoint_id)
-                                    # attr_boiler['boiler_name'] = print_id
-                                    attr_boiler['name'] = print_id
-                                    attr_boiler['device_type'] = 'climate'
-                                    attr_boiler[element_name] = element_value
+                    if type_of_id == 'windowFrench' or type_of_id == 'window' or type_of_id == 'windowSliding' or type_of_id == 'klineWindowFrench' or type_of_id == 'klineWindowSliding':
+                        if element_name in deviceDoorKeywords and element_validity == 'upToDate':
+                            attr_window['device_id'] = device_id
+                            attr_window['endpoint_id'] = endpoint_id
+                            attr_window['id'] = str(
+                                device_id) + '_' + str(endpoint_id)
+                            attr_window['door_name'] = print_id
+                            attr_window['name'] = print_id
+                            attr_window['device_type'] = 'sensor'
+                            attr_window['element_name'] = element_name
+                            attr_window[element_name] = element_value
 
-                            if type_of_id == 'alarm':
-                                if element_name in deviceAlarmKeywords and element_validity == 'upToDate':
-                                    attr_alarm['device_id'] = device_id
-                                    attr_alarm['endpoint_id'] = endpoint_id
-                                    attr_alarm['id'] = str(
-                                        device_id) + '_' + str(endpoint_id)
-                                    attr_alarm['alarm_name'] = "Tyxal Alarm"
-                                    attr_alarm['name'] = "Tyxal Alarm"
-                                    attr_alarm['device_type'] = 'alarm_control_panel'
-                                    attr_alarm[element_name] = element_value
+                    if type_of_id == 'boiler':
+                        if element_name in deviceBoilerKeywords and element_validity == 'upToDate':
+                            attr_boiler['device_id'] = device_id
+                            attr_boiler['endpoint_id'] = endpoint_id
+                            attr_boiler['id'] = str(
+                                device_id) + '_' + str(endpoint_id)
+                            # attr_boiler['boiler_name'] = print_id
+                            attr_boiler['name'] = print_id
+                            attr_boiler['device_type'] = 'climate'
+                            attr_boiler[element_name] = element_value
 
-                            if type_of_id == 'garage_door' or type_of_id == 'gate':
-                                if element_name in deviceSwitchKeywords and element_validity == 'upToDate':
-                                    attr_gate['device_id'] = device_id
-                                    attr_gate['endpoint_id'] = endpoint_id
-                                    attr_gate['id'] = str(
-                                        device_id) + '_' + str(endpoint_id)
-                                    attr_gate['switch_name'] = print_id
-                                    attr_gate['name'] = print_id
-                                    attr_gate['device_type'] = 'switch'
-                                    attr_gate[element_name] = element_value
+                    if type_of_id == 'alarm':
+                        if element_name in deviceAlarmKeywords and element_validity == 'upToDate':
+                            attr_alarm['device_id'] = device_id
+                            attr_alarm['endpoint_id'] = endpoint_id
+                            attr_alarm['id'] = str(
+                                device_id) + '_' + str(endpoint_id)
+                            attr_alarm['alarm_name'] = "Tyxal Alarm"
+                            attr_alarm['name'] = "Tyxal Alarm"
+                            attr_alarm['device_type'] = 'alarm_control_panel'
+                            attr_alarm[element_name] = element_value
 
-                            if type_of_id == 'conso':
-                                if element_name in device_conso_keywords and element_validity == "upToDate":
-                                    attr_conso = {
-                                        'device_id': device_id,
-                                        'endpoint_id': endpoint_id,
-                                        'id': str(device_id) + '_' + str(endpoint_id),
-                                        'name': print_id,
-                                        'device_type': 'sensor',
-                                        element_name: element_value}
+                    if type_of_id == 'garage_door' or type_of_id == 'gate':
+                        if element_name in deviceSwitchKeywords and element_validity == 'upToDate':
+                            attr_gate['device_id'] = device_id
+                            attr_gate['endpoint_id'] = endpoint_id
+                            attr_gate['id'] = str(
+                                device_id) + '_' + str(endpoint_id)
+                            attr_gate['switch_name'] = print_id
+                            attr_gate['name'] = print_id
+                            attr_gate['device_type'] = 'switch'
+                            attr_gate[element_name] = element_value
 
-                                    if element_name in device_conso_classes:
-                                        attr_conso['device_class'] = device_conso_classes[element_name]
+                    if type_of_id == 'conso':
+                        if element_name in device_conso_keywords and element_validity == "upToDate":
+                            attr_conso = {
+                                'device_id': device_id,
+                                'endpoint_id': endpoint_id,
+                                'id': str(device_id) + '_' + str(endpoint_id),
+                                'name': print_id,
+                                'device_type': 'sensor',
+                                element_name: element_value}
 
-                                    if element_name in device_conso_unit_of_measurement:
-                                        attr_conso['unit_of_measurement'] = device_conso_unit_of_measurement[element_name]
+                            if element_name in device_conso_classes:
+                                attr_conso['device_class'] = device_conso_classes[element_name]
 
-                                    new_conso = Sensor(
-                                        elem_name=element_name,
-                                        tydom_attributes_payload=attr_conso,
-                                        mqtt=self.mqtt_client)
-                                    await new_conso.update()
+                            if element_name in device_conso_unit_of_measurement:
+                                attr_conso['unit_of_measurement'] = device_conso_unit_of_measurement[element_name]
 
-                            if type_of_id == 'smoke':
-                                if element_name in deviceSmokeKeywords and element_validity == 'upToDate':
-                                    attr_smoke['device_id'] = device_id
-                                    attr_smoke['device_class'] = 'smoke'
-                                    attr_smoke['endpoint_id'] = endpoint_id
-                                    attr_smoke['id'] = str(
-                                        device_id) + '_' + str(endpoint_id)
-                                    attr_smoke['name'] = print_id
-                                    attr_smoke['device_type'] = 'sensor'
-                                    attr_smoke['element_name'] = element_name
-                                    attr_smoke[element_name] = element_value
+                            new_conso = Sensor(
+                                elem_name=element_name,
+                                tydom_attributes_payload=attr_conso,
+                                mqtt=self.mqtt_client)
+                            await new_conso.update()
 
-                            if type_of_id == 'unknown':
-                                if element_name in deviceMotionKeywords and element_validity == 'upToDate':
-                                    attr_ukn['device_id'] = device_id
-                                    attr_ukn['endpoint_id'] = endpoint_id
-                                    attr_ukn['id'] = str(
-                                        device_id) + '_' + str(endpoint_id)
-                                    attr_ukn['name'] = print_id
-                                    attr_ukn['device_type'] = 'sensor'
-                                    attr_ukn['element_name'] = element_name
-                                    attr_ukn[element_name] = element_value
-                                elif element_name in deviceDoorKeywords and element_validity == 'upToDate':
-                                    attr_ukn['device_id'] = device_id
-                                    attr_ukn['endpoint_id'] = endpoint_id
-                                    attr_ukn['id'] = str(
-                                        device_id) + '_' + str(endpoint_id)
-                                    attr_ukn['name'] = print_id
-                                    attr_ukn['device_type'] = 'sensor'
-                                    attr_ukn['element_name'] = element_name
-                                    attr_ukn[element_name] = element_value
+                    if type_of_id == 'sh_hvac':
+                        if element_name in deviceShHvacKeywords and element_validity == 'upToDate':
+                            attr_sh_hvac['device_id'] = device_id
+                            attr_sh_hvac['endpoint_id'] = endpoint_id
+                            attr_sh_hvac['id'] = str(
+                                device_id) + '_' + str(endpoint_id)
+                            attr_sh_hvac['name'] = print_id
+                            attr_sh_hvac['device_type'] = 'sh_hvac'
+                            attr_sh_hvac[element_name] = element_value
 
-                            if type_of_id == 'others':
-                                if element_name in deviceLightKeywords and element_validity == 'upToDate':
-                                    attr_light['device_id'] = device_id
-                                    attr_light['endpoint_id'] = endpoint_id
-                                    attr_light['id'] = str(
-                                        device_id) + '_' + str(endpoint_id)
-                                    attr_light['light_name'] = print_id
-                                    attr_light['name'] = print_id
-                                    attr_light['device_type'] = 'light' # later replace with commented condition below
-                                    attr_light[element_name] = element_value
+                    if type_of_id == 'smoke':
+                        if element_name in deviceSmokeKeywords and element_validity == 'upToDate':
+                            attr_smoke['device_id'] = device_id
+                            attr_smoke['device_class'] = 'smoke'
+                            attr_smoke['endpoint_id'] = endpoint_id
+                            attr_smoke['id'] = str(
+                                device_id) + '_' + str(endpoint_id)
+                            attr_smoke['name'] = print_id
+                            attr_smoke['device_type'] = 'sensor'
+                            attr_smoke['element_name'] = element_name
+                            attr_smoke[element_name] = element_value
 
-                                    #if condition_to_define_light_or_switch:
-                                    #    attr_light['device_type'] = 'light'
-                                    #else:
-                                    #    attr_light['device_type'] = 'switch'
+                    if type_of_id == 'unknown':
+                        if element_name in deviceMotionKeywords and element_validity == 'upToDate':
+                            attr_ukn['device_id'] = device_id
+                            attr_ukn['endpoint_id'] = endpoint_id
+                            attr_ukn['id'] = str(
+                                device_id) + '_' + str(endpoint_id)
+                            attr_ukn['name'] = print_id
+                            attr_ukn['device_type'] = 'sensor'
+                            attr_ukn['element_name'] = element_name
+                            attr_ukn[element_name] = element_value
+                        elif element_name in deviceDoorKeywords and element_validity == 'upToDate':
+                            attr_ukn['device_id'] = device_id
+                            attr_ukn['endpoint_id'] = endpoint_id
+                            attr_ukn['id'] = str(
+                                device_id) + '_' + str(endpoint_id)
+                            attr_ukn['name'] = print_id
+                            attr_ukn['device_type'] = 'sensor'
+                            attr_ukn['element_name'] = element_name
+                            attr_ukn[element_name] = element_value
 
-                    except Exception as e:
-                        logger.error('msg_data error in parsing !')
-                        logger.error(e)
+                    if type_of_id == 'others':
+                        if element_name in deviceLightKeywords and element_validity == 'upToDate':
+                            attr_light['device_id'] = device_id
+                            attr_light['endpoint_id'] = endpoint_id
+                            attr_light['id'] = str(
+                                device_id) + '_' + str(endpoint_id)
+                            attr_light['light_name'] = print_id
+                            attr_light['name'] = print_id
+                            # later replace with commented condition below
+                            attr_light['device_type'] = 'light'
+                            attr_light[element_name] = element_value
 
-                    if 'device_type' in attr_cover and attr_cover['device_type'] == 'cover':
-                        new_cover = Cover(
-                            tydom_attributes=attr_cover,
+                            # if condition_to_define_light_or_switch:
+                            #    attr_light['device_type'] = 'light'
+                            # else:
+                            #    attr_light['device_type'] = 'switch'
+
+            except Exception as e:
+                logger.error('msg_data error in parsing !')
+                logger.error(e)
+                logger.exception(e)
+
+            if 'device_type' in attr_cover and attr_cover['device_type'] == 'cover':
+                new_cover = Cover(
+                    tydom_attributes=attr_cover,
+                    mqtt=self.mqtt_client)
+                await new_cover.update()
+            elif 'device_type' in attr_door and attr_door['device_type'] == 'sensor':
+                new_door = Sensor(
+                    elem_name=attr_door['element_name'],
+                    tydom_attributes_payload=attr_door,
+                    mqtt=self.mqtt_client)
+                await new_door.update()
+            elif 'device_type' in attr_window and attr_window['device_type'] == 'sensor':
+                new_window = Sensor(
+                    elem_name=attr_window['element_name'],
+                    tydom_attributes_payload=attr_window,
+                    mqtt=self.mqtt_client)
+                await new_window.update()
+            elif 'device_type' in attr_light and attr_light['device_type'] == 'light':
+                new_light = Light(
+                    tydom_attributes=attr_light,
+                    mqtt=self.mqtt_client)
+                await new_light.update()
+            elif 'device_type' in attr_boiler and attr_boiler['device_type'] == 'climate':
+                new_sh_hvac = Boiler(
+                    tydom_attributes=attr_boiler,
+                    tydom_client=self.tydom_client,
+                    mqtt=self.mqtt_client)
+                await new_sh_hvac.update()
+            elif 'device_type' in attr_gate and attr_gate['device_type'] == 'switch':
+                new_gate = Switch(
+                    tydom_attributes=attr_gate,
+                    mqtt=self.mqtt_client)
+                await new_gate.update()
+            elif 'device_type' in attr_smoke and attr_smoke['device_type'] == 'sensor':
+                new_smoke = Sensor(
+                    elem_name=attr_smoke['element_name'],
+                    tydom_attributes_payload=attr_smoke,
+                    mqtt=self.mqtt_client)
+                await new_smoke.update()
+            elif 'device_type' in attr_ukn and attr_ukn['device_type'] == 'sensor':
+                new_ukn = Sensor(
+                    elem_name=attr_ukn['element_name'],
+                    tydom_attributes_payload=attr_ukn,
+                    mqtt=self.mqtt_client)
+                await new_ukn.update()
+            elif 'device_type' in attr_sh_hvac and attr_sh_hvac['device_type'] == 'sh_hvac':
+                new_sh_hvac = ShHvac(
+                    tydom_attributes=attr_sh_hvac,
+                    tydom_client=self.tydom_client,
+                    mqtt=self.mqtt_client)
+                await new_sh_hvac.update()
+
+            # Get last known state (for alarm) # NEW METHOD
+            elif 'device_type' in attr_alarm and attr_alarm['device_type'] == 'alarm_control_panel':
+                state = None
+                sos_state = False
+                try:
+
+                    if ('alarmState' in attr_alarm and attr_alarm['alarmState'] == "ON") or (
+                            'alarmState' in attr_alarm and attr_alarm['alarmState']) == "QUIET":
+                        state = "triggered"
+
+                    elif 'alarmState' in attr_alarm and attr_alarm['alarmState'] == "DELAYED":
+                        state = "pending"
+
+                    if 'alarmSOS' in attr_alarm and attr_alarm['alarmSOS'] == "true":
+                        state = "triggered"
+                        sos_state = True
+
+                    elif 'alarmMode' in attr_alarm and attr_alarm["alarmMode"] == "ON":
+                        state = "armed_away"
+                    elif 'alarmMode' in attr_alarm and attr_alarm["alarmMode"] == "ZONE":
+                        state = "armed_home"
+                    elif 'alarmMode' in attr_alarm and attr_alarm["alarmMode"] == "OFF":
+                        state = "disarmed"
+                    elif 'alarmMode' in attr_alarm and attr_alarm["alarmMode"] == "MAINTENANCE":
+                        state = "disarmed"
+
+                    if (sos_state):
+                        logger.warning("SOS !")
+
+                    if not (state is None):
+                        alarm = Alarm(
+                            current_state=state,
+                            alarm_pin=self.tydom_client.alarm_pin,
+                            tydom_attributes=attr_alarm,
                             mqtt=self.mqtt_client)
-                        await new_cover.update()
-                    elif 'device_type' in attr_door and attr_door['device_type'] == 'sensor':
-                        new_door = Sensor(
-                            elem_name=attr_door['element_name'],
-                            tydom_attributes_payload=attr_door,
-                            mqtt=self.mqtt_client)
-                        await new_door.update()
-                    elif 'device_type' in attr_window and attr_window['device_type'] == 'sensor':
-                        new_window = Sensor(
-                            elem_name=attr_window['element_name'],
-                            tydom_attributes_payload=attr_window,
-                            mqtt=self.mqtt_client)
-                        await new_window.update()
-                    elif 'device_type' in attr_light and attr_light['device_type'] == 'light':
-                        new_light = Light(
-                            tydom_attributes=attr_light,
-                            mqtt=self.mqtt_client)
-                        await new_light.update()
-                    elif 'device_type' in attr_boiler and attr_boiler['device_type'] == 'climate':
-                        new_boiler = Boiler(
-                            tydom_attributes=attr_boiler,
-                            tydom_client=self.tydom_client,
-                            mqtt=self.mqtt_client)
-                        await new_boiler.update()
-                    elif 'device_type' in attr_gate and attr_gate['device_type'] == 'switch':
-                        new_gate = Switch(
-                            tydom_attributes=attr_gate,
-                            mqtt=self.mqtt_client)
-                        await new_gate.update()
-                    elif 'device_type' in attr_smoke and attr_smoke['device_type'] == 'sensor':
-                        new_smoke = Sensor(
-                            elem_name=attr_smoke['element_name'],
-                            tydom_attributes_payload=attr_smoke,
-                            mqtt=self.mqtt_client)
-                        await new_smoke.update()
-                    elif 'device_type' in attr_ukn and attr_ukn['device_type'] == 'sensor':
-                        new_ukn = Sensor(
-                            elem_name=attr_ukn['element_name'],
-                            tydom_attributes_payload=attr_ukn,
-                            mqtt=self.mqtt_client)
-                        await new_ukn.update()
+                        await alarm.update()
 
-                    # Get last known state (for alarm) # NEW METHOD
-                    elif 'device_type' in attr_alarm and attr_alarm['device_type'] == 'alarm_control_panel':
-                        state = None
-                        sos_state = False
-                        try:
-
-                            if ('alarmState' in attr_alarm and attr_alarm['alarmState'] == "ON") or (
-                                    'alarmState' in attr_alarm and attr_alarm['alarmState']) == "QUIET":
-                                state = "triggered"
-
-                            elif 'alarmState' in attr_alarm and attr_alarm['alarmState'] == "DELAYED":
-                                state = "pending"
-
-                            if 'alarmSOS' in attr_alarm and attr_alarm['alarmSOS'] == "true":
-                                state = "triggered"
-                                sos_state = True
-
-                            elif 'alarmMode' in attr_alarm and attr_alarm["alarmMode"] == "ON":
-                                state = "armed_away"
-                            elif 'alarmMode' in attr_alarm and attr_alarm["alarmMode"] == "ZONE":
-                                state = "armed_home"
-                            elif 'alarmMode' in attr_alarm and attr_alarm["alarmMode"] == "OFF":
-                                state = "disarmed"
-                            elif 'alarmMode' in attr_alarm and attr_alarm["alarmMode"] == "MAINTENANCE":
-                                state = "disarmed"
-
-                            if (sos_state):
-                                logger.warning("SOS !")
-
-                            if not (state is None):
-                                alarm = Alarm(
-                                    current_state=state,
-                                    alarm_pin=self.tydom_client.alarm_pin,
-                                    tydom_attributes=attr_alarm,
-                                    mqtt=self.mqtt_client)
-                                await alarm.update()
-
-                        except Exception as e:
-                            logger.error("Error in alarm parsing !")
-                            logger.error(e)
-                            pass
-                    else:
-                        pass
+                except Exception as e:
+                    logger.error("Error in alarm parsing !")
+                    logger.error(e)
+                    pass
+            else:
+                pass
 
     async def parse_devices_cdata(self, parsed):
         for i in parsed:
