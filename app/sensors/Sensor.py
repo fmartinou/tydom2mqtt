@@ -111,7 +111,8 @@ class Sensor:
 
         self.config_sensor_topic = sensor_config_topic.format(id=self.id)
 
-        self.config = {'name': self.name, 'unique_id': self.id}
+        self.config = {'name': self.parent_device_name + ' ' + self.name,
+                       'unique_id': self.id}
         try:
             self.config['device_class'] = self.device_class
         except AttributeError:
