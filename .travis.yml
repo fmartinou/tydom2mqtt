@@ -8,7 +8,6 @@ env:
     - DOCKER_CLI_EXPERIMENTAL=enabled
 
 before_install:
-
   - export IMAGE_VERSION=${TRAVIS_BRANCH//\//\_}
   - export IMAGE_VERSION=${IMAGE_VERSION//\#/\_}
 
@@ -23,7 +22,6 @@ before_install:
   - cat /proc/sys/fs/binfmt_misc/qemu-aarch64
 
 install:
-
   # Install dependencies
   - (cd app && pip install -r requirements.txt)
 
@@ -36,12 +34,10 @@ install:
   # Run UT (todo)
 
 script:
-
   # Build docker image
   - docker build -t tydom2mqtt .
 
 after_success:
-
   # Override image version with latest if master branch
   - if [ "$TRAVIS_BRANCH" == "master" ] ; then export IMAGE_VERSION=latest; fi
 
@@ -49,6 +45,6 @@ after_success:
   - if [ ! -z "$TRAVIS_TAG" ] ; then export IMAGE_VERSION=$TRAVIS_TAG; fi
 
   # Build & push image
-  - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - make prepare
   - make build IMAGE_NAME=tydom2mqtt IMAGE_VERSION=$IMAGE_VERSION PLATFORMS=linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64 DOCKER_USERNAME=$DOCKER_USERNAME
