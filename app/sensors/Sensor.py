@@ -27,9 +27,9 @@ class Sensor:
         # extracted from json, but it will make sensor not in payload to be
         # considered offline....
         self.parent_device_id = str(tydom_attributes_payload['id'])
+        self.parent_device_name = str(tydom_attributes_payload['name'])
         self.id = elem_name + '_tydom_' + str(tydom_attributes_payload['id'])
-        self.name = elem_name + '_tydom_' + '_' + \
-            str(tydom_attributes_payload['name']).replace(" ", "_")
+        self.name = elem_name
         if 'device_class' in tydom_attributes_payload.keys():
             self.device_class = tydom_attributes_payload['device_class']
 
@@ -49,12 +49,12 @@ class Sensor:
                 "true",
                 "false",
                 "True",
-                "False"] or isinstance(
-                self.elem_value,
-                bool)):
+                "False",
+                "ON",
+                "OFF"] or isinstance(self.elem_value, bool)):
             self.binary = True
 
-            if self.elem_value or self.elem_value == "True" or self.elem_value == "true" or self.elem_value == "1":
+            if (isinstance(self.elem_value, bool) and self.elem_value) or self.elem_value == "True" or self.elem_value == "true" or self.elem_value == "1" or self.elem_value == "ON":
                 self.elem_value = "ON"
             else:
                 self.elem_value = "OFF"
@@ -106,13 +106,13 @@ class Sensor:
     async def setup(self):
         self.device = {
             'manufacturer': 'Delta Dore',
-            'model': 'Sensor',
-            'name': self.name,
-            'identifiers': self.parent_device_id + '_sensors'}
+            'name': self.parent_device_name,
+            'identifiers': self.parent_device_id}
 
         self.config_sensor_topic = sensor_config_topic.format(id=self.id)
 
-        self.config = {'name': self.name, 'unique_id': self.id}
+        self.config = {'name': self.parent_device_name + ' ' + self.name,
+                       'unique_id': self.id}
         try:
             self.config['device_class'] = self.device_class
         except AttributeError:
