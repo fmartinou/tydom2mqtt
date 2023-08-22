@@ -1,5 +1,11 @@
 # Changelog
 
+# 3.3.0
+- :star: Add support for Radiator valves with thermostat
+- :star: Home-Assistant sensors improvements (naming, ON/OFF value support...)
+- :fire: Reconnect when connection to the Tydom is lost
+- :fire: Fix update_sensors function bad filtering
+
 # 3.2.0
 - :star: Add `awning` devices
 - :star: Add `other` devices
