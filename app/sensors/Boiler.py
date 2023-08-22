@@ -15,8 +15,8 @@ preset_mode_state_topic = "climate/tydom/{id}/thermicLevel"
 preset_mode_command_topic = "climate/tydom/{id}/set_thermicLevel"
 out_temperature_state_topic = "sensor/tydom/{id}/temperature"
 
-#temperature = current_temperature_topic
-#setpoint= temperature_command_topic
+# temperature = current_temperature_topic
+# setpoint= temperature_command_topic
 # temperature_unit=C
 # "modes": ["STOP", "ANTI-FROST","ECO", "COMFORT"],
 #####################################
@@ -27,8 +27,8 @@ out_temperature_state_topic = "sensor/tydom/{id}/temperature"
 # thermicLevel STOP ECO ...
 # auhorisation HEATING
 # hvacMode NORMAL None (si off)
-#timeDelay : 0
-#tempoOn : False
+# timeDelay : 0
+# tempoOn : False
 # antifrost True False
 # openingdetected False
 # presenceDetected False
@@ -96,7 +96,7 @@ class Boiler:
                 self.config['preset_modes'] = [
                     "STOP", "ANTI_FROST", "ECO", "COMFORT", "AUTO"]
             else:
-                self.config['preset_modes'] = [ k for k in await self.tydom_client.get_manual_presets() ]
+                self.config['preset_modes'] = [k for k in await self.tydom_client.get_manual_presets()]
             self.config['preset_mode_state_topic'] = preset_mode_state_topic.format(
                 id=self.id)
             self.config['preset_mode_command_topic'] = preset_mode_command_topic.format(
@@ -125,8 +125,9 @@ class Boiler:
                     qos=0, retain=True)
                 if await self.tydom_client.get_manual_presets() is not None:
                     presets = await self.tydom_client.get_manual_presets()
-                    if len([ i for i in presets if float(presets[i]) == float(self.attributes['setpoint']) ]) == 1:
-                        set_preset = [ i for i in presets if float(presets[i]) == float(self.attributes['setpoint']) ][0]
+                    if len([i for i in presets if float(presets[i]) == float(self.attributes['setpoint'])]) == 1:
+                        set_preset = [i for i in presets if float(
+                            presets[i]) == float(self.attributes['setpoint'])][0]
                     elif await self.tydom_client.get_current_preset(self.device_id) == "none":
                         set_preset = await self.tydom_client.get_current_preset(self.device_id)
                     elif (float(self.attributes['setpoint']) == float(presets[await self.tydom_client.get_current_preset(self.device_id)])):
@@ -148,7 +149,7 @@ class Boiler:
                         self.attributes['thermicLevel'],
                         qos=0, retain=True)
                 else:
-                     self.mqtt.mqtt_client.publish(
+                    self.mqtt.mqtt_client.publish(
                         self.config['preset_mode_state_topic'],
                         await self.tydom_client.get_current_preset(self.device_id),
                         qos=0, retain=True)
@@ -176,11 +177,12 @@ class Boiler:
     @staticmethod
     async def put_thermic_level(tydom_client, device_id, boiler_id, set_thermic_level):
         if not (set_thermic_level == ''):
-            logger.info("Set thermic level (device=%s, level=%s)", device_id, set_thermic_level)
+            logger.info("Set thermic level (device=%s, level=%s)",
+                        device_id, set_thermic_level)
             await tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', set_thermic_level)
             if await tydom_client.get_manual_presets() is not None:
-                await tydom_client.set_current_preset(device_id, set_thermic_level )
+                await tydom_client.set_current_preset(device_id, set_thermic_level)
                 presets = await tydom_client.get_manual_presets()
                 if await tydom_client.get_current_preset(device_id) != 'none':
-                    logger.info("%s", presets[ await tydom_client.get_current_preset(device_id) ])
+                    logger.info("%s", presets[await tydom_client.get_current_preset(device_id)])
                     await tydom_client.put_devices_data(device_id, boiler_id, 'setpoint', presets[await tydom_client.get_current_preset(device_id)])
