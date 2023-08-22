@@ -39,7 +39,7 @@ class Switch:
             'identifiers': self.id}
         self.config_topic = switch_config_topic.format(id=self.id)
         self.config = {
-            'name': self.name,
+            'name': None,  # set an MQTT entity's name to None to mark it as the main feature of a device
             'unique_id': self.id,
             'command_topic': switch_command_topic.format(
                 id=self.id),
