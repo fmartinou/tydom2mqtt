@@ -43,7 +43,7 @@ class ShHvac:
 
         self.config_topic = thermostat_config_topic.format(id=self.id)
         self.config = {
-            'name': self.name,
+            'name': None,  # set an MQTT entity's name to None to mark it as the main feature of a device
             'unique_id': self.id,
             'device': self.device,
             'temperature_unit ': 'C',
@@ -64,7 +64,7 @@ class ShHvac:
         self.switch_config_topic = thermpstat_boost_config_topic.format(
             id=self.id)
         self.switch_config = {
-            'name': self.name + ' Boost',
+            'name': 'Boost',
             'unique_id': self.id + '_boost',
             'device': self.device,
             'payload_on': 'ON',

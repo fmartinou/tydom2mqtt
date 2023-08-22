@@ -37,7 +37,7 @@ class Light:
             'identifiers': self.id}
         self.config_topic = light_config_topic.format(id=self.id)
         self.config = {
-            'name': self.name,
+            'name': None,  # set an MQTT entity's name to None to mark it as the main feature of a device
             'brightness_scale': 100,
             'unique_id': self.id,
             'optimistic': True,
