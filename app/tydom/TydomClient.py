@@ -21,7 +21,8 @@ class TydomClient:
             mac,
             password,
             alarm_pin=None,
-            host=MEDIATION_URL):
+            host=MEDIATION_URL,
+            presets_manual=None):
         logger.debug("Initializing TydomClient Class")
 
         self.password = password
@@ -40,6 +41,9 @@ class TydomClient:
         # Some devices (like Tywatt) need polling
         self.poll_device_urls = []
         self.current_poll_index = 0
+        if presets_manual is not None:
+            self.presets_manual = json.loads(presets_manual)
+            self.current_preset = {}
 
         # Set Host, ssl context and prefix for remote or local connection
         if self.host == MEDIATION_URL:
@@ -100,7 +104,7 @@ class TydomClient:
                 and "gateway" in json_response["sites"][0]
             ):
                 password = json_response["sites"][0]["gateway"]["password"]
-
+            logger.debug("Your Tydom password : %s", json_response["sites"][0]["gateway"]["password"]) 
             return password
 
         except Exception as exception:
@@ -445,3 +449,18 @@ class TydomClient:
         await self.get_info()
         await self.post_refresh()
         await self.get_data()
+
+    async def get_manual_presets(self):
+        logger.debug("get presets")
+        return self.presets_manual
+    
+    async def get_current_preset(self, boiler_id):
+        logger.debug("get preset for %s", boiler_id)
+        print(self.current_preset)
+        if str(boiler_id) not in self.current_preset:
+            await self.set_current_preset(str(boiler_id), "none" )
+        return self.current_preset[str(boiler_id)]
+    
+    async def set_current_preset(self, boiler_id, preset):
+        logger.debug("set preset %s for %s", preset, boiler_id)
+        self.current_preset[str(boiler_id)] = str(preset)

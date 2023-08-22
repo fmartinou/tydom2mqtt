@@ -23,6 +23,7 @@ TYDOM_MAC = 'TYDOM_MAC'
 TYDOM_PASSWORD = 'TYDOM_PASSWORD'
 DELTADORE_LOGIN = 'DELTADORE_LOGIN'
 DELTADORE_PASSWORD = 'DELTADORE_PASSWORD'
+PRESETS_MANUAL='PRESETS_MANUAL'
 
 @dataclass
 class Configuration:
@@ -38,6 +39,7 @@ class Configuration:
     tydom_ip = str
     tydom_mac = str
     tydom_password = str
+    presets_manual = list
 
     def __init__(self):
         self.log_level = os.getenv(LOG_LEVEL, 'INFO').upper()
@@ -54,6 +56,7 @@ class Configuration:
         self.tydom_password = os.getenv(TYDOM_PASSWORD, None)
         self.deltadore_login = os.getenv(DELTADORE_LOGIN, None)
         self.deltadore_password = os.getenv(DELTADORE_PASSWORD, None)
+        self.presets_manual = os.getenv(PRESETS_MANUAL, None)
 
     @staticmethod
     def load():
