@@ -758,13 +758,16 @@ class MessageHandler:
                     if (sos_state):
                         logger.warning("SOS !")
 
+                    #alarm shall be update Whatever its state because sensor can be updated without any state
+                    alarm = Alarm(
+                        current_state=state,
+                        alarm_pin=self.tydom_client.alarm_pin,
+                        tydom_attributes=attr_alarm,
+                        mqtt=self.mqtt_client)
                     if not (state is None):
-                        alarm = Alarm(
-                            current_state=state,
-                            alarm_pin=self.tydom_client.alarm_pin,
-                            tydom_attributes=attr_alarm,
-                            mqtt=self.mqtt_client)
                         await alarm.update()
+                    else:
+                        await alarm.update_sensors()
 
                 except Exception as e:
                     logger.error("Error in alarm parsing !")
