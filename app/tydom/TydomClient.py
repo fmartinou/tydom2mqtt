@@ -22,7 +22,7 @@ class TydomClient:
             password,
             alarm_pin=None,
             host=MEDIATION_URL,
-            presets_manual=None):
+            thermostat_custom_presets=None):
         logger.debug("Initializing TydomClient Class")
 
         self.password = password
@@ -41,8 +41,8 @@ class TydomClient:
         # Some devices (like Tywatt) need polling
         self.poll_device_urls = []
         self.current_poll_index = 0
-        if presets_manual is not None:
-            self.presets_manual = json.loads(presets_manual)
+        if thermostat_custom_presets is not None:
+            self.thermostat_custom_presets = json.loads(thermostat_custom_presets)
             self.current_preset = {}
 
         # Set Host, ssl context and prefix for remote or local connection
@@ -450,17 +450,17 @@ class TydomClient:
         await self.post_refresh()
         await self.get_data()
 
-    async def get_manual_presets(self):
+    async def get_thermostat_custom_presets(self):
         logger.debug("get presets")
-        return self.presets_manual
+        return self.thermostat_custom_presets
     
-    async def get_current_preset(self, boiler_id):
+    async def get_thermostat_custom_current_preset(self, boiler_id):
         logger.debug("get preset for %s", boiler_id)
         print(self.current_preset)
         if str(boiler_id) not in self.current_preset:
-            await self.set_current_preset(str(boiler_id), "none" )
+            await self.set_thermostat_custom_current_preset(str(boiler_id), "none" )
         return self.current_preset[str(boiler_id)]
     
-    async def set_current_preset(self, boiler_id, preset):
+    async def set_thermostat_custom_current_preset(self, boiler_id, preset):
         logger.debug("set preset %s for %s", preset, boiler_id)
         self.current_preset[str(boiler_id)] = str(preset)

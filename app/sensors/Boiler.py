@@ -92,11 +92,11 @@ class Boiler:
                 id=self.id)
             self.config['mode_command_topic'] = mode_command_topic.format(
                 id=self.id)
-            if await self.tydom_client.get_manual_presets() is None:
+            if await self.tydom_client.get_thermostat_custom_presets() is None:
                 self.config['preset_modes'] = [
                     "STOP", "ANTI_FROST", "ECO", "COMFORT", "AUTO"]
             else:
-                self.config['preset_modes'] = [k for k in await self.tydom_client.get_manual_presets()]
+                self.config['preset_modes'] = [k for k in await self.tydom_client.get_thermostat_custom_presets()]
             self.config['preset_mode_state_topic'] = preset_mode_state_topic.format(
                 id=self.id)
             self.config['preset_mode_command_topic'] = preset_mode_command_topic.format(
@@ -123,15 +123,15 @@ class Boiler:
                     self.config['temperature_state_topic'],
                     '19' if self.attributes['setpoint'] == 'None' else self.attributes['setpoint'],
                     qos=0, retain=True)
-                if await self.tydom_client.get_manual_presets() is not None:
-                    presets = await self.tydom_client.get_manual_presets()
+                if await self.tydom_client.get_thermostat_custom_presets() is not None:
+                    presets = await self.tydom_client.get_thermostat_custom_presets()
                     if len([i for i in presets if float(presets[i]) == float(self.attributes['setpoint'])]) == 1:
                         set_preset = [i for i in presets if float(
                             presets[i]) == float(self.attributes['setpoint'])][0]
-                    elif await self.tydom_client.get_current_preset(self.device_id) == "none":
-                        set_preset = await self.tydom_client.get_current_preset(self.device_id)
-                    elif (float(self.attributes['setpoint']) == float(presets[await self.tydom_client.get_current_preset(self.device_id)])):
-                        set_preset = await self.tydom_client.get_current_preset(self.device_id)
+                    elif await self.tydom_client.get_thermostat_custom_current_preset(self.device_id) == "none":
+                        set_preset = await self.tydom_client.get_thermostat_custom_current_preset(self.device_id)
+                    elif (float(self.attributes['setpoint']) == float(presets[await self.tydom_client.get_thermostat_custom_current_preset(self.device_id)])):
+                        set_preset = await self.tydom_client.get_thermostat_custom_current_preset(self.device_id)
                     else:
                         set_preset = 'none'
                     self.mqtt.mqtt_client.publish(
@@ -143,7 +143,7 @@ class Boiler:
                     self.config['mode_state_topic'],
                     "off" if self.attributes['thermicLevel'] == "STOP" else "heat",
                     qos=0, retain=True)
-                if await self.tydom_client.get_manual_presets() is None:
+                if await self.tydom_client.get_thermostat_custom_presets() is None:
                     self.mqtt.mqtt_client.publish(
                         self.config['preset_mode_state_topic'],
                         self.attributes['thermicLevel'],
@@ -151,7 +151,7 @@ class Boiler:
                 else:
                     self.mqtt.mqtt_client.publish(
                         self.config['preset_mode_state_topic'],
-                        await self.tydom_client.get_current_preset(self.device_id),
+                        await self.tydom_client.get_thermostat_custom_current_preset(self.device_id),
                         qos=0, retain=True)
             if 'outTemperature' in self.attributes:
                 self.mqtt.mqtt_client.publish(
@@ -180,9 +180,9 @@ class Boiler:
             logger.info("Set thermic level (device=%s, level=%s)",
                         device_id, set_thermic_level)
             await tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', set_thermic_level)
-            if await tydom_client.get_manual_presets() is not None:
-                await tydom_client.set_current_preset(device_id, set_thermic_level)
-                presets = await tydom_client.get_manual_presets()
-                if await tydom_client.get_current_preset(device_id) != 'none':
-                    logger.info("%s", presets[await tydom_client.get_current_preset(device_id)])
-                    await tydom_client.put_devices_data(device_id, boiler_id, 'setpoint', presets[await tydom_client.get_current_preset(device_id)])
+            if await tydom_client.get_thermostat_custom_presets() is not None:
+                await tydom_client.set_thermostat_custom_current_preset(device_id, set_thermic_level)
+                presets = await tydom_client.get_thermostat_custom_presets()
+                if await tydom_client.get_thermostat_custom_current_preset(device_id) != 'none':
+                    logger.info("%s", presets[await tydom_client.get_thermostat_custom_current_preset(device_id)])
+                    await tydom_client.put_devices_data(device_id, boiler_id, 'setpoint', presets[await tydom_client.get_thermostat_custom_current_preset(device_id)])
