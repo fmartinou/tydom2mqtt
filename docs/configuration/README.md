@@ -21,6 +21,7 @@ Please note that only one of DELTADORE_LOGIN + DELTADORE_PASSWORD or TYDOM_PASSW
 | MQTT_PASSWORD          | :white_circle: | Mqtt broker password if authentication is enabled | `None`                     |
 | MQTT_SSL               | :white_circle: | Mqtt broker ssl enabled                           | `false`                    |
 | LOG_LEVEL              | :white_circle: | Log level (`DEBUG`, `INFO`, `WARNING`, `ERROR`)   | `ERROR`                    |
+| THERMOSTAT_CUSTOM_PRESETS | :white_circle: | Set custom Presets for THERMOSTAT like [4890](https://www.deltadore.fr/domotique/gestion-chauffage/micromodule-recepteur/recepteur-rf4890-ref-6050615) <br/> format : { 'preset': 'temp'} (exemple { 'ECO' : '17' })   |                     |
 
 ## Complete example
 
@@ -47,3 +48,26 @@ docker run -d --name tydom2mqtt \
   fmartinou/tydom2mqtt
 ```
 <!-- tabs:end -->
+
+## THERMOSTAT_CUSTOM_PRESETS parameter
+
+### Why this parameter ?
+
+For systems like underfloor heating system, delta dore sells to other mark like Thermor some equipment like  [4890](https://www.deltadore.fr/domotique/gestion-chauffage/micromodule-recepteur/recepteur-rf4890-ref-6050615). 
+The problem is these sondes are controlled by an offline Thermostat. But each 4890 are independant and use X3D to set temperature, the offline thermostat just connect to it and ask them to change the target temperature, the sondes itself is an independant thermostat with current temperature (depends on system, internal temperature or offline thermostat temperature). The 4890 is compatible with Tydom and can be control by offline thermostat and Tydom.
+But each of 4890 are not a full themostat and doesn't have presets, each controller must set their own presets if needed.
+
+### How to use
+
+Set environment variables : THERMOSTAT_CUSTOM_PRESETS with a map of compatible presets ("STOP", "ANTI_FROST", "ECO", "COMFORT", "AUTO")
+
+exemple :
+
+```bash
+docker run -d --name tydom2mqtt \
+  -e TYDOM_MAC="001A25XXXXXX" \
+  -e TYDOM_PASSWORD="azerty123456789" \
+  -e TYDOM_IP="192.168.1.33" \ 
+  -e THERMOSTAT_CUSTOM_PRESETS='{"ECO": "17", "COMFORT": "20"}'
+  fmartinou/tydom2mqtt
+```
