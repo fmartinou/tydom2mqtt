@@ -15,8 +15,8 @@ preset_mode_state_topic = "climate/tydom/{id}/thermicLevel"
 preset_mode_command_topic = "climate/tydom/{id}/set_thermicLevel"
 out_temperature_state_topic = "sensor/tydom/{id}/temperature"
 
-#temperature = current_temperature_topic
-#setpoint= temperature_command_topic
+# temperature = current_temperature_topic
+# setpoint= temperature_command_topic
 # temperature_unit=C
 # "modes": ["STOP", "ANTI-FROST","ECO", "COMFORT"],
 #####################################
@@ -27,8 +27,8 @@ out_temperature_state_topic = "sensor/tydom/{id}/temperature"
 # thermicLevel STOP ECO ...
 # auhorisation HEATING
 # hvacMode NORMAL None (si off)
-#timeDelay : 0
-#tempoOn : False
+# timeDelay : 0
+# tempoOn : False
 # antifrost True False
 # openingdetected False
 # presenceDetected False
@@ -78,7 +78,8 @@ class Boiler:
 
         # Check if device is a heater with thermostat sensor
         else:
-            self.config['name'] = self.name
+            # set an MQTT entity's name to None to mark it as the main feature of a device
+            self.config['name'] = None
             self.device['model'] = 'Climate'
             self.config_topic = climate_config_topic.format(id=self.id)
             self.config['temperature_command_topic'] = temperature_command_topic.format(
@@ -153,5 +154,6 @@ class Boiler:
     @staticmethod
     async def put_thermic_level(tydom_client, device_id, boiler_id, set_thermic_level):
         if not (set_thermic_level == ''):
-            logger.info("Set thermic level (device=%s, level=%s)", device_id, set_thermic_level)
+            logger.info("Set thermic level (device=%s, level=%s)",
+                        device_id, set_thermic_level)
             await tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', set_thermic_level)
