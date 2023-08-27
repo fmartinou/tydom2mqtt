@@ -124,20 +124,21 @@ class Boiler:
                     '19' if self.attributes['setpoint'] == 'None' else self.attributes['setpoint'],
                     qos=0, retain=True)
                 if await self.tydom_client.get_thermostat_custom_presets() is not None:
-                    presets = await self.tydom_client.get_thermostat_custom_presets()
-                    if len([i for i in presets if float(presets[i]) == float(self.attributes['setpoint'])]) == 1:
-                        set_preset = [i for i in presets if float(
-                            presets[i]) == float(self.attributes['setpoint'])][0]
-                    elif await self.tydom_client.get_thermostat_custom_current_preset(self.device_id) == "none":
-                        set_preset = await self.tydom_client.get_thermostat_custom_current_preset(self.device_id)
-                    elif (float(self.attributes['setpoint']) == float(presets[await self.tydom_client.get_thermostat_custom_current_preset(self.device_id)])):
-                        set_preset = await self.tydom_client.get_thermostat_custom_current_preset(self.device_id)
-                    else:
-                        set_preset = 'none'
-                    self.mqtt.mqtt_client.publish(
-                        self.config['preset_mode_state_topic'],
-                        set_preset,
-                        qos=0, retain=True)
+                    if self.attributes['setpoint'] is not None :
+                        presets = await self.tydom_client.get_thermostat_custom_presets()
+                        if len([i for i in presets if float(presets[i]) == float(self.attributes['setpoint'])]) == 1:
+                            set_preset = [i for i in presets if float(
+                                presets[i]) == float(self.attributes['setpoint'])][0]
+                        elif await self.tydom_client.get_thermostat_custom_current_preset(self.device_id) == "none":
+                            set_preset = await self.tydom_client.get_thermostat_custom_current_preset(self.device_id)
+                        elif (float(self.attributes['setpoint']) == float(presets[await self.tydom_client.get_thermostat_custom_current_preset(self.device_id)])):
+                            set_preset = await self.tydom_client.get_thermostat_custom_current_preset(self.device_id)
+                        else:
+                            set_preset = 'none'
+                        self.mqtt.mqtt_client.publish(
+                            self.config['preset_mode_state_topic'],
+                            set_preset,
+                            qos=0, retain=True)
             if 'thermicLevel' in self.attributes:
                 self.mqtt.mqtt_client.publish(
                     self.config['mode_state_topic'],
