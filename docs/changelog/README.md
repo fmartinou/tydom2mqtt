@@ -1,5 +1,8 @@
 # Changelog
 
+# dev
+- :fire: Fix uncaught exception at startup
+
 # 3.3.1
 - :fire: Fix HA 2023.8 mqtt entity naming convention warnings
 - :fire: Fix Alarm attributes not updated

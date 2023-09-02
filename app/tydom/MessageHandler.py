@@ -343,7 +343,7 @@ class MessageHandler:
                 msg_type = 'msg_info'
 
             if msg_type is None:
-                logger.warning('Unknown message type received', data)
+                logger.warning('Unknown message type received (%s)', data)
             else:
                 logger.debug('Message received detected as (%s)', msg_type)
                 try:
