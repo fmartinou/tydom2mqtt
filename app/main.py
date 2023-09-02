@@ -74,7 +74,8 @@ tydom_client = TydomClient(
     mac=configuration.tydom_mac,
     host=configuration.tydom_ip,
     password=configuration.tydom_password,
-    alarm_pin=configuration.tydom_alarm_pin)
+    alarm_pin=configuration.tydom_alarm_pin,
+    thermostat_custom_presets=configuration.thermostat_custom_presets)
 
 # Create mqtt client
 mqtt_client = MqttClient(
