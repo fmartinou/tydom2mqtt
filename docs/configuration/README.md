@@ -5,23 +5,23 @@
 
 Please note that only one of DELTADORE_LOGIN + DELTADORE_PASSWORD or TYDOM_PASSWORD is needed as your Delta Dore account is used to retrieve the Tydom password
 
-| Environment variable   | Required       | Supported values                                  | Default value when missing |
-|------------------------|----------------|---------------------------------------------------|----------------------------|
-| TYDOM_MAC              | :red_circle:   | Tydom MAC address (starting with `001A...`)       |                            |
-| DELTADORE_LOGIN        | :red_circle:   | Delta Dore account login                          |                            |
-| DELTADORE_PASSWORD     | :red_circle:   | Delta Dore account password                       |                            |
-| TYDOM_PASSWORD         | :red_circle:   | Tydom password                                    |                            |
-| TYDOM_IP               | :white_circle: | Tydom IPv4 address or FQDN                        | `mediation.tydom.com`      |
-| TYDOM_ALARM_PIN        | :white_circle: | Tydom Alarm PIN                                   | `None`                     |
-| TYDOM_ALARM_HOME_ZONE  | :white_circle: | Tydom alarm home zone                             | `1`                        |
-| TYDOM_ALARM_NIGHT_ZONE | :white_circle: | Tydom alarm night zone                            | `2`                        |
-| MQTT_HOST              | :white_circle: | Mqtt broker IPv4 or FQDN                          | `localhost`                |
-| MQTT_PORT              | :white_circle: | Mqtt broker port                                  | `1883`                     |
-| MQTT_USER              | :white_circle: | Mqtt broker user if authentication is enabled     | `None`                     |
-| MQTT_PASSWORD          | :white_circle: | Mqtt broker password if authentication is enabled | `None`                     |
-| MQTT_SSL               | :white_circle: | Mqtt broker ssl enabled                           | `false`                    |
-| LOG_LEVEL              | :white_circle: | Log level (`DEBUG`, `INFO`, `WARNING`, `ERROR`)   | `ERROR`                    |
-| THERMOSTAT_CUSTOM_PRESETS | :white_circle: | Set custom Presets for THERMOSTAT like [4890](https://www.deltadore.fr/domotique/gestion-chauffage/micromodule-recepteur/recepteur-rf4890-ref-6050615) <br/> format : { 'preset': 'temp'} (exemple { 'ECO' : '17' })   |                     |
+| Environment variable      | Required       | Supported values                                                                                                                                                                                                           | Default value when missing |
+|---------------------------|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------|
+| TYDOM_MAC                 | :red_circle:   | Tydom MAC address (starting with `001A...`)                                                                                                                                                                                |                            |
+| DELTADORE_LOGIN           | :red_circle:   | Delta Dore account login                                                                                                                                                                                                   |                            |
+| DELTADORE_PASSWORD        | :red_circle:   | Delta Dore account password                                                                                                                                                                                                |                            |
+| TYDOM_PASSWORD            | :red_circle:   | Tydom password                                                                                                                                                                                                             |                            |
+| TYDOM_IP                  | :white_circle: | Tydom IPv4 address or FQDN                                                                                                                                                                                                 | `mediation.tydom.com`      |
+| TYDOM_ALARM_PIN           | :white_circle: | Tydom Alarm PIN                                                                                                                                                                                                            | `None`                     |
+| TYDOM_ALARM_HOME_ZONE     | :white_circle: | Tydom alarm home zone                                                                                                                                                                                                      | `1`                        |
+| TYDOM_ALARM_NIGHT_ZONE    | :white_circle: | Tydom alarm night zone                                                                                                                                                                                                     | `2`                        |
+| MQTT_HOST                 | :white_circle: | Mqtt broker IPv4 or FQDN                                                                                                                                                                                                   | `localhost`                |
+| MQTT_PORT                 | :white_circle: | Mqtt broker port                                                                                                                                                                                                           | `1883`                     |
+| MQTT_USER                 | :white_circle: | Mqtt broker user if authentication is enabled                                                                                                                                                                              | `None`                     |
+| MQTT_PASSWORD             | :white_circle: | Mqtt broker password if authentication is enabled                                                                                                                                                                          | `None`                     |
+| MQTT_SSL                  | :white_circle: | Mqtt broker ssl enabled                                                                                                                                                                                                    | `false`                    |
+| LOG_LEVEL                 | :white_circle: | Log level (`DEBUG`, `INFO`, `WARNING`, `ERROR`)                                                                                                                                                                            | `ERROR`                    |
+| THERMOSTAT_CUSTOM_PRESETS | :white_circle: | Set custom Presets for THERMOSTATS like [4890](https://www.deltadore.fr/domotique/gestion-chauffage/micromodule-recepteur/recepteur-rf4890-ref-6050615) <br/> Format : { 'preset': 'temp'} <br/> Example { 'ECO' : '17' }  |                            |
 
 ## Complete example
 
@@ -49,25 +49,40 @@ docker run -d --name tydom2mqtt \
 ```
 <!-- tabs:end -->
 
-## THERMOSTAT_CUSTOM_PRESETS parameter
+## THERMOSTAT_CUSTOM_PRESETS property
 
-### Why this parameter ?
+### Why this configuration property?
 
-For systems like underfloor heating system, delta dore sells to other mark like Thermor some equipment like  [4890](https://www.deltadore.fr/domotique/gestion-chauffage/micromodule-recepteur/recepteur-rf4890-ref-6050615). 
-The problem is these sondes are controlled by an offline Thermostat. But each 4890 are independant and use X3D to set temperature, the offline thermostat just connect to it and ask them to change the target temperature, the sondes itself is an independant thermostat with current temperature (depends on system, internal temperature or offline thermostat temperature). The 4890 is compatible with Tydom and can be control by offline thermostat and Tydom.
-But each of 4890 are not a full themostat and doesn't have presets, each controller must set their own presets if needed.
+Delta Dore sells underfloor heating devices to other brands (Thermor...); [for example this one](https://www.deltadore.fr/domotique/gestion-chauffage/micromodule-recepteur/recepteur-rf4890-ref-6050615). \
+These sensors are controlled from an offline Thermostat but can also be controlled from Tydom using the X3D radio protocol. \
+The problem is that these sensors don't have presets built-in on their own. \
+It's on the controller end to manage and set presets if needed; that's the purpose of this configuration property.
 
 ### How to use
 
-Set environment variables : THERMOSTAT_CUSTOM_PRESETS with a map of compatible presets ("STOP", "ANTI_FROST", "ECO", "COMFORT", "AUTO")
+Set the environment variables `THERMOSTAT_CUSTOM_PRESETS` with a JSON map of compatible presets among
+`"STOP", "ANTI_FROST", "ECO", "COMFORT", "AUTO"`
 
-exemple :
+### Example
 
+
+<!-- tabs:start -->
+#### **Docker Compose**
+```yaml
+version: '3'
+
+services:
+  tydom2mqtt:
+    image: fmartinou/tydom2mqtt
+    environment:
+      - THERMOSTAT_CUSTOM_PRESETS='{"ECO": "17", "COMFORT": "20"}'
+    ...
+```
+#### **Docker**
 ```bash
 docker run -d --name tydom2mqtt \
-  -e TYDOM_MAC="001A25XXXXXX" \
-  -e TYDOM_PASSWORD="azerty123456789" \
-  -e TYDOM_IP="192.168.1.33" \ 
+  ...
   -e THERMOSTAT_CUSTOM_PRESETS='{"ECO": "17", "COMFORT": "20"}'
   fmartinou/tydom2mqtt
 ```
+<!-- tabs:end -->
