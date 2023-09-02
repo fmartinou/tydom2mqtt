@@ -1,5 +1,8 @@
 # Changelog
 
+# 3.4.1
+- :fire: Fix thermostat custom presets when not used
+
 # 3.4.0
 - :star: Add thermostat custom presets
 - :fire: Fix uncaught exception at startup
