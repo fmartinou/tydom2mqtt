@@ -70,7 +70,7 @@ class Boiler:
             self.config['name'] = 'Out Temperature'
             self.device['model'] = 'Sensor'
             self.config['device_class'] = 'temperature'
-            self.config['unit_of_measurement'] = 'C'
+            self.config['unit_of_measurement'] = '°C'
             self.config_topic = sensor_config_topic.format(id=self.id)
             self.config['state_topic'] = out_temperature_state_topic.format(
                 id=self.id)
