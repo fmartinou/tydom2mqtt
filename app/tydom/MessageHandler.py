@@ -217,6 +217,11 @@ device_conso_classes = {
     'energyIndexHeatGas': 'energy',
     'outTemperature': 'temperature'}
 
+device_conso_state_class = {
+    'energyIndexHeatWatt': 'total_increasing',
+    'energyIndexECSWatt': 'total_increasing'
+}
+
 device_conso_unit_of_measurement = {
     'energyInstantTotElec': 'A',
     'energyInstantTotElec_Min': 'A',
@@ -606,6 +611,10 @@ class MessageHandler:
 
                             if element_name in device_conso_unit_of_measurement:
                                 attr_conso['unit_of_measurement'] = device_conso_unit_of_measurement[element_name]
+
+                            # Permet la prise en charge des 'long term retention statistics' 
+                            if element_name in device_conso_state_class:
+                                attr_conso['state_class'] = device_conso_state_class[element_name]
 
                             new_conso = Sensor(
                                 elem_name=element_name,
