@@ -2,6 +2,7 @@
 import asyncio
 import logging.config
 import socket
+import websockets
 import sys
 import signal
 
