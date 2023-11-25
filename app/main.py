@@ -4,6 +4,7 @@ import logging.config
 import socket
 import sys
 import signal
+import websockets
 
 from configuration.Configuration import Configuration
 from mqtt.MqttClient import MqttClient
