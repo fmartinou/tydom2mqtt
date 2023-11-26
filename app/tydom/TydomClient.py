@@ -44,6 +44,7 @@ class TydomClient:
         self.current_poll_index = 0
         self.in_memory = {}
         self.polling_interval = int(polling_interval)
+        self.in_memory = {}
 
         if thermostat_custom_presets is None:
             self.thermostat_custom_presets = None
@@ -492,4 +493,3 @@ class TydomClient:
                 if name in self.in_memory[id]:
                     return self.in_memory[id][name]
             return None
-
