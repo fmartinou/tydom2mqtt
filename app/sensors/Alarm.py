@@ -106,5 +106,8 @@ class Alarm:
         elif asked_state == 'DISARM':
             value = 'OFF'
             zone_id = None
+		elif asked_state == 'PANIC':
+            value = 'PANIC'
+            zone_id = None
 
         await tydom_client.put_alarm_cdata(device_id=device_id, alarm_id=alarm_id, value=value, zone_id=zone_id)
