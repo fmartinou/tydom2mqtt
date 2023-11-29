@@ -76,7 +76,10 @@ class Switch:
                 qos=0,
                 retain=True)
             self.mqtt.mqtt_client.publish(
-                self.config['json_attributes_topic'], self.attributes, qos=0, retain=True)
+                self.config['json_attributes_topic'],
+                self.attributes,
+                qos=0,
+                retain=True)
         logger.info(
             "Switch created / updated : %s %s %s",
             self.name,

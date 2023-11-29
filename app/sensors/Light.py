@@ -51,11 +51,11 @@ class Light:
                 id=self.id),
             'json_attributes_topic': light_attributes_topic.format(
                 id=self.id),
-            'payload_off':"OFF",
+            'payload_off': "OFF",
             'payload_on': "ON",
             'on_command_type': "brightness",
             'retain': 'false',
-            'state_value_template: "{{ 'ON' if value | int(0) > 0 else 'OFF' }}"
+            'state_value_template': "{{ 'ON' if value | int(0) > 0 else 'OFF' }}",
             'device': self.device}
 
         if self.mqtt is not None:
@@ -79,7 +79,10 @@ class Light:
             self.mqtt.mqtt_client.publish(
                 self.level_topic, self.current_level, qos=0, retain=True)
             self.mqtt.mqtt_client.publish(
-                self.config['json_attributes_topic'], self.attributes, qos=0, retain=True)
+                self.config['json_attributes_topic'],
+                self.attributes,
+                qos=0,
+                retain=True)
         logger.info(
             "light created / updated : %s %s %s",
             self.name,

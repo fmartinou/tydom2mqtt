@@ -92,7 +92,10 @@ class Cover:
 
         if self.mqtt is not None:
             self.mqtt.mqtt_client.publish(
-                self.config['json_attributes_topic'], self.attributes, qos=0, retain=True)
+                self.config['json_attributes_topic'],
+                self.attributes,
+                qos=0,
+                retain=True)
 
         logger.info(
             "Cover created / updated : %s %s",
