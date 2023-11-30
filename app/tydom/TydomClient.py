@@ -45,7 +45,8 @@ class TydomClient:
         if thermostat_custom_presets is None:
             self.thermostat_custom_presets = None
         else:
-            self.thermostat_custom_presets = json.loads(thermostat_custom_presets)
+            self.thermostat_custom_presets = json.loads(
+                thermostat_custom_presets)
             self.current_preset = {}
 
         # Set Host, ssl context and prefix for remote or local connection
@@ -94,8 +95,10 @@ class TydomClient:
             response.close()
             access_token = json_response["access_token"]
 
-            response = requests.get(DELTADORE_API_SITES + macaddress,
-                                    headers={"Authorization": f"Bearer {access_token}"})
+            response = requests.get(
+                DELTADORE_API_SITES + macaddress,
+                headers={
+                    "Authorization": f"Bearer {access_token}"})
 
             json_response = response.json()
             response.close()
@@ -107,7 +110,8 @@ class TydomClient:
                 and "gateway" in json_response["sites"][0]
             ):
                 password = json_response["sites"][0]["gateway"]["password"]
-            logger.debug("Your Tydom password : %s", json_response["sites"][0]["gateway"]["password"]) 
+            logger.debug("Your Tydom password : %s",
+                         json_response["sites"][0]["gateway"]["password"])
             return password
 
         except Exception as exception:
@@ -151,7 +155,8 @@ class TydomClient:
         websocket_headers = {}
         try:
             # Local installations are unauthenticated but we don't *know* that for certain
-            # so we'll EAFP, try to use the header and fallback if we're unable.
+            # so we'll EAFP, try to use the header and fallback if we're
+            # unable.
             nonce = res.headers["WWW-Authenticate"].split(",", 3)
             # Build websocket headers
             websocket_headers = {
@@ -286,10 +291,12 @@ class TydomClient:
         # Credits to @mgcrea on github !
         # AWAY # "PUT /devices/{}/endpoints/{}/cdata?name=alarmCmd HTTP/1.1\r\ncontent-length: 29\r\ncontent-type: application/json; charset=utf-8\r\ntransac-id: request_124\r\n\r\n\r\n{"value":"ON","pwd":{}}\r\n\r\n"
         # HOME "PUT /devices/{}/endpoints/{}/cdata?name=zoneCmd HTTP/1.1\r\ncontent-length: 41\r\ncontent-type: application/json; charset=utf-8\r\ntransac-id: request_46\r\n\r\n\r\n{"value":"ON","pwd":"{}","zones":[1]}\r\n\r\n"
-        # DISARM "PUT /devices/{}/endpoints/{}/cdata?name=alarmCmd
+        # DISARM "PUT /devices/{}/endpoints/{}/cdata?name=alarmCmd HTTP/1.1\r\ncontent-length: 30\r\ncontent-type: application/json; charset=utf-8\r\ntransac-id: request_7\r\n\r\n\r\n{"value":"OFF","pwd":"{}"}\r\n\r\n"
+        # PANIC (Active la sirène) "PUT
+        # /devices/{}/endpoints/{}/cdata?name=alarmCmd
         # HTTP/1.1\r\ncontent-length: 30\r\ncontent-type: application/json;
         # charset=utf-8\r\ntransac-id:
-        # request_7\r\n\r\n\r\n{"value":"OFF","pwd":"{}"}\r\n\r\n"
+        # request_7\r\n\r\n\r\n{"value":"PANIC","pwd":"{}"}\r\n\r\n"
 
         # variables:
         # id
@@ -302,8 +309,10 @@ class TydomClient:
             logger.warning("Tydom alarm pin is not set!")
             pass
         try:
-
-            if zone_id is None:
+            if value is "ACK":
+                cmd = "ackEventCmd"
+                body = ('{"pwd":"' + str(self.alarm_pin) + '"}')
+            elif zone_id is None:
                 cmd = "alarmCmd"
                 body = ('{"value":"' + str(value) +
                         '","pwd":"' + str(self.alarm_pin) + '"}')
@@ -428,9 +437,7 @@ class TydomClient:
     async def get_device_data(self, id):
         # 10 here is the endpoint = the device (shutter in this case) to open.
         device_id = str(id)
-        str_request = (
-            self.cmd_prefix +
-            f"GET /devices/{device_id}/endpoints/{device_id}/data HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n")
+        str_request = (self.cmd_prefix + f"GET /devices/{device_id}/endpoints/{device_id}/data HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n")
         a_bytes = bytes(str_request, "ascii")
         await self.connection.send(a_bytes)
 
@@ -456,14 +463,14 @@ class TydomClient:
     async def get_thermostat_custom_presets(self):
         logger.debug("get presets")
         return self.thermostat_custom_presets
-    
+
     async def get_thermostat_custom_current_preset(self, boiler_id):
         logger.debug("get preset for %s", boiler_id)
         print(self.current_preset)
         if str(boiler_id) not in self.current_preset:
-            await self.set_thermostat_custom_current_preset(str(boiler_id), "none" )
+            await self.set_thermostat_custom_current_preset(str(boiler_id), "none")
         return self.current_preset[str(boiler_id)]
-    
+
     async def set_thermostat_custom_current_preset(self, boiler_id, preset):
         logger.debug("set preset %s for %s", preset, boiler_id)
         self.current_preset[str(boiler_id)] = str(preset)

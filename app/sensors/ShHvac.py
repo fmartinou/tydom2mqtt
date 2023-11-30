@@ -104,24 +104,24 @@ class ShHvac:
             if 'regTemperature' in self.attributes:
                 sensors['reg_temperature'] = {
                     'reg_temperature': 'None' if not isinstance(
-                        self.attributes['regTemperature'], float) else self.attributes['regTemperature'],
+                        self.attributes['regTemperature'],
+                        float) else self.attributes['regTemperature'],
                     'device_class': 'temperature',
-                    'unit_of_measurement': '°C'
-                } | self.attributes
+                    'unit_of_measurement': '°C'} | self.attributes
             if 'devTemperature' in self.attributes:
                 sensors['dev_temperature'] = {
                     'dev_temperature': 'None' if not isinstance(
-                        self.attributes['devTemperature'], float) else self.attributes['devTemperature'],
+                        self.attributes['devTemperature'],
+                        float) else self.attributes['devTemperature'],
                     'device_class': 'temperature',
-                    'unit_of_measurement': '°C'
-                } | self.attributes
+                    'unit_of_measurement': '°C'} | self.attributes
             if 'activationIndex' in self.attributes:
                 sensors['activation_index'] = {
                     'activation_index': 'None' if not isinstance(
-                        self.attributes['activationIndex'], int) else self.attributes['activationIndex'],
+                        self.attributes['activationIndex'],
+                        int) else self.attributes['activationIndex'],
                     'device_class': 'water',
-                    'unit_of_measurement': 'm³'
-                } | self.attributes
+                    'unit_of_measurement': 'm³'} | self.attributes
             if 'boost' in self.attributes:
                 sensors['boost'] = {
                     'boost': self.attributes['boost'],
@@ -130,17 +130,17 @@ class ShHvac:
             if 'boostRemainingTime' in self.attributes:
                 sensors['boost_remaining_time'] = {
                     'boost_remaining_time': 'None' if not isinstance(
-                        self.attributes['boostRemainingTime'], int) else self.attributes['boostRemainingTime'],
+                        self.attributes['boostRemainingTime'],
+                        int) else self.attributes['boostRemainingTime'],
                     'device_class': 'duration',
-                    'unit_of_measurement': 'min'
-                } | self.attributes
+                    'unit_of_measurement': 'min'} | self.attributes
             if 'currentSetpoint' in self.attributes:
                 sensors['current_setpoint'] = {
                     'current_setpoint': 'None' if not isinstance(
-                        self.attributes['currentSetpoint'], float) else self.attributes['currentSetpoint'],
+                        self.attributes['currentSetpoint'],
+                        float) else self.attributes['currentSetpoint'],
                     'device_class': 'temperature',
-                    'unit_of_measurement': '°C'
-                } | self.attributes
+                    'unit_of_measurement': '°C'} | self.attributes
 
             # create sensors
             for i, j in sensors.items():
@@ -151,7 +151,8 @@ class ShHvac:
                 await new_sensor.update()
 
             # publish current temperature topic
-            # not sure the diff of regTemperature and devTemperature, use regTemperature for now
+            # not sure the diff of regTemperature and devTemperature, use
+            # regTemperature for now
             if 'regTemperature' in self.attributes:
                 self.mqtt.mqtt_client.publish(
                     self.config['current_temperature_topic'],
@@ -160,7 +161,8 @@ class ShHvac:
                     retain=True)
 
             # publish current set temperature topic
-            # not sure the diff of currentSetpoint and a localSetpoint, use currentSetpoint for now
+            # not sure the diff of currentSetpoint and a localSetpoint, use
+            # currentSetpoint for now
             if 'currentSetpoint' in self.attributes:
                 self.mqtt.mqtt_client.publish(
                     self.config['temperature_state_topic'],
@@ -169,7 +171,8 @@ class ShHvac:
                     retain=True)
 
             # publish current mode topic
-            # if waterFlowReq is true, then the mode is 'heat', otherwise it's 'off'
+            # if waterFlowReq is true, then the mode is 'heat', otherwise it's
+            # 'off'
             if 'waterFlowReq' in self.attributes:
                 self.mqtt.mqtt_client.publish(
                     self.config['mode_state_topic'],
@@ -179,7 +182,10 @@ class ShHvac:
 
             # publish all attributes
             self.mqtt.mqtt_client.publish(
-                self.config['json_attributes_topic'], self.attributes, qos=0, retain=True)
+                self.config['json_attributes_topic'],
+                self.attributes,
+                qos=0,
+                retain=True)
 
             # publish boost state
             if 'boost' in self.attributes:

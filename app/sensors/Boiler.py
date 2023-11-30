@@ -78,7 +78,8 @@ class Boiler:
 
         # Check if device is a heater with thermostat sensor
         else:
-            # set an MQTT entity's name to None to mark it as the main feature of a device
+            # set an MQTT entity's name to None to mark it as the main feature
+            # of a device
             self.config['name'] = None
             self.device['model'] = 'Climate'
             self.config_topic = climate_config_topic.format(id=self.id)
@@ -125,11 +126,14 @@ class Boiler:
                     '19' if self.attributes['setpoint'] == 'None' else self.attributes['setpoint'],
                     qos=0, retain=True)
                 if await self.tydom_client.get_thermostat_custom_presets() is not None:
-                    if self.attributes['setpoint'] is not None :
+                    if self.attributes['setpoint'] is not None:
                         presets = await self.tydom_client.get_thermostat_custom_presets()
-                        if len([i for i in presets if float(presets[i]) == float(self.attributes['setpoint'])]) == 1:
-                            set_preset = [i for i in presets if float(
-                                presets[i]) == float(self.attributes['setpoint'])][0]
+                        if len([i for i in presets if float(presets[i])
+                               == float(self.attributes['setpoint'])]) == 1:
+                            set_preset = [
+                                i for i in presets if float(
+                                    presets[i]) == float(
+                                    self.attributes['setpoint'])][0]
                         elif await self.tydom_client.get_thermostat_custom_current_preset(self.device_id) == "none":
                             set_preset = await self.tydom_client.get_thermostat_custom_current_preset(self.device_id)
                         elif (float(self.attributes['setpoint']) == float(presets[await self.tydom_client.get_thermostat_custom_current_preset(self.device_id)])):

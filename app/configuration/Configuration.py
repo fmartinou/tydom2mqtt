@@ -57,7 +57,8 @@ class Configuration:
         self.tydom_password = os.getenv(TYDOM_PASSWORD, None)
         self.deltadore_login = os.getenv(DELTADORE_LOGIN, None)
         self.deltadore_password = os.getenv(DELTADORE_PASSWORD, None)
-        self.thermostat_custom_presets = os.getenv(THERMOSTAT_CUSTOM_PRESETS, None)
+        self.thermostat_custom_presets = os.getenv(
+            THERMOSTAT_CUSTOM_PRESETS, None)
 
     @staticmethod
     def load():
@@ -158,7 +159,11 @@ class Configuration:
         logger.info('The configuration is valid')
 
     def to_json(self):
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        return json.dumps(
+            self,
+            default=lambda o: o.__dict__,
+            sort_keys=True,
+            indent=4)
 
     @staticmethod
     def mask_value(value, nb=1, char='*'):

@@ -317,7 +317,9 @@ class MessageHandler:
 
         except Exception as e:
             logger.error(
-                'Technical error when parsing tydom message (error=%s), (message=%s)', e, bytes_str)
+                'Technical error when parsing tydom message (error=%s), (message=%s)',
+                e,
+                bytes_str)
             logger.debug('Incoming payload (%s)', incoming)
             logger.exception(e)
 
@@ -463,14 +465,14 @@ class MessageHandler:
         logger.debug('Metadata configuration updated')
 
     async def parse_devices_data(self, parsed):
-        if (type(parsed) is list):
+        if (isinstance(parsed, list)):
             for i in parsed:
                 if "endpoints" in i:  # case of GET /devices/data
                     for endpoint in i["endpoints"]:
                         await self.parse_endpoint_data(endpoint, i["id"])
                 else:  # case of GET /areas/data
                     await self.parse_endpoint_data(i, i["id"])
-        elif (type(parsed) is dict):
+        elif (isinstance(parsed, dict)):
             await self.parse_endpoint_data(parsed, parsed["id"])
         else:
             logger.error('Unknown data type')
@@ -758,7 +760,8 @@ class MessageHandler:
                     if (sos_state):
                         logger.warning("SOS !")
 
-                    #alarm shall be update Whatever its state because sensor can be updated without any state
+                    # alarm shall be update Whatever its state because sensor
+                    # can be updated without any state
                     alarm = Alarm(
                         current_state=state,
                         alarm_pin=self.tydom_client.alarm_pin,
