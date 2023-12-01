@@ -1,5 +1,11 @@
 # Changelog
 
+# 3.4.2
+- :star: Add `PANIC` and `ACK` alarm commands
+- :star: Add `state_class` to Home-Assistant energy sensors
+- :fire: Fix `websocket is not defined` error
+- :fire: Fix `syntax error` on light component
+
 # 3.4.1
 - :fire: Fix thermostat custom presets when not used
 
