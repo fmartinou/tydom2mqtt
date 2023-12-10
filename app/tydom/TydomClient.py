@@ -309,7 +309,7 @@ class TydomClient:
             logger.warning("Tydom alarm pin is not set!")
             pass
         try:
-            if value is "ACK":
+            if value == "ACK":
                 cmd = "ackEventCmd"
                 body = ('{"pwd":"' + str(self.alarm_pin) + '"}')
             elif zone_id is None:
