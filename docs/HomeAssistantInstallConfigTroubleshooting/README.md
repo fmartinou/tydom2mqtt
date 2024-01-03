@@ -22,12 +22,12 @@ As Mosquito is available in the HomeAutomation official add-ons store, its insta
 2) Find the "Mosquitto broker" add-on and click it.
 3) Click on the "INSTALL" button.
 
-For more information, please visit [`mosquito` Git page](https://github.com/home-assistant/addons/blob/master/mosquitto/DOCS.md)
+For more information, please visit [`mosquito`](https://github.com/home-assistant/addons/blob/master/mosquitto/DOCS.md) Git Page
 
 # Overall Configuration
 ## Create a valid HomeAssistant user
 MQTT will requires a valid user name and password that is declared and valid in HomeAssistant. That user does not requires to have admin right.\
-Some user name are reserved (e.g. homeassistant) and should not be used. I use 'mqtt-users' which is valid.
+Some user names are reserved (e.g. homeassistant) and should not be used. I use 'mqtt-users' which is valid.
 Those are declared in:\
 Settings->People then Users Tab
 
@@ -36,7 +36,7 @@ Settings->People then Users Tab
 ## Mosquitto, the MQTT Brooker
 Mosquitto beeing availaible with the offical Add-ons store, you will find it easily. Just:\
 Settings -> Add-ons\
-**Note:** Add-ons are not the same as Integrations and are configured in diffent places.
+**Note:** Add-ons are not the same as Integrations and are configured in different places.
 
 Click on the Icon Add-on-store at the bottom right corner of the screen and you will get the following page.
 
@@ -48,7 +48,7 @@ Locate and click the icon Mosquitto Brooker. You will get the following page. Ju
 
 Once the add-on installation is completed, you will find a configuration page.\
 You will need to enter the user and password that were previously declared in HomeAssistant (People/users). The documentation can be confusing but without a valid user name it will not work.\
-You can add complexity with more security. Often it's a good idea to get it work first and then complexify the setting. 
+You can add complexity with more security. Often it's a good idea to get it working first and then complexify the setting. 
 
 ![mosquitto-config](mosquitto-config.png)
 
@@ -67,11 +67,11 @@ As tydom2mqqt will 'talk' to HomeAssistant via Mosquitto MQTT Brooker, we will n
 
  ** The Tydom Gateway password can be a problem**\
  Older TyDom accept to connect without password, newer don't.
- Some people report that using the last 6 digits of the MAC address works, That was not my case and I had to ack the ssl connection to recover that password. I have documented the procedure which is not that simplebut feasible.\
- [`TyDom password` HowTo](https://community.home-assistant.io/t/integrating-new-2023-tydom-deltadore-x3d-zigbee-gateway-with-home-assistant-solved/537503)
+ Some people report that using the last 6 digits of the MAC address works, That was not my case and I had to ack the ssl connection to recover that password. I have documented the procedure which is not that simple but feasible.\
+ [`TyDom password`](https://community.home-assistant.io/t/integrating-new-2023-tydom-deltadore-x3d-zigbee-gateway-with-home-assistant-solved/537503) HowTo
 
 Other configuration entries are self explanatory. You will need to give the same user name and password as for Mosquitto.
-A bug requires to setup a PIN for the Alarm even if you do not have an alarm, any number will do.
+A bug requires to setup a PIN for the Alarm even if you do not have an alarm, any 6 digits number will do.
 
  ![tydom2mqtt-config](tydom2mqtt-config.png)
 
@@ -89,7 +89,7 @@ A bug requires to setup a PIN for the Alarm even if you do not have an alarm, an
   ## Debug
   If your system does not present any TyDom devices in HomeAssistant, something has gone wrong. The easier is to debug following the data chain.\
   1) Can tydom2mqtt connect to the TyDom Gateway?
-  2) Can tydome2mqtt connect to the Mosquitto Broker?
+  2) Can tydom2mqtt connect to the Mosquitto Broker?
   3) Can HomeAssistant MQTT integration connect to Mosquitto Brooker.
 
   Start by checking that the corresponding docker containers are up and running. From the host / HomeAssistan console you should see something like this :\
@@ -144,7 +144,7 @@ The interresting part starts around line 70. You should see the connection to th
 ## If more debug is required
 You can install the add-on MQTT Explorer.\
 This is not an official HomeAssistant Add-on and it will require to be installed like Tydom2MQTT add-on.\
-[`MQTT Explorer` Home Page](https://community.home-assistant.io/t/addon-mqtt-explorer-new-version/603739)
+[`MQTT Explorer`](https://community.home-assistant.io/t/addon-mqtt-explorer-new-version/603739) Home Page
 
 ![mqtt-explorer-connect](mqtt-explorer-connect.png)
 ![mqtt-explorer-UI](mqtt-explorer-UI.png)
