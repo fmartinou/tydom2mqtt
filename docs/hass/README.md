@@ -12,4 +12,7 @@ Install the [`tydom2mqtt` hass.io add-on](https://github.com/fmartinou/hassio-ad
 
 ?> Regardless the solution you choose, Home Assistant will automatically discover `tydom2mqtt` sensors using [MQTT Discovery](https://www.home-assistant.io/docs/mqtt/discovery/).
 
+?> **Detailled installation documentation:**\
+([HowTo Integrate tydom2mqqt with MQTT Brooker "Mosquito"](/HomeAssistantInstallConfigTroubleshooting/))
+
 ?> [Please find here the community Home-Assistant tydom2mqtt thread](https://community.home-assistant.io/t/tydom2mqtt-delta-dore-custom-component-wip/151333)
