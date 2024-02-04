@@ -73,7 +73,10 @@ class Alarm:
                 qos=0,
                 retain=True)  # Alarm State
             self.mqtt.mqtt_client.publish(
-                self.config['json_attributes_topic'], self.attributes, qos=0, retain=True)
+                self.config['json_attributes_topic'],
+                self.attributes,
+                qos=0,
+                retain=True)
         logger.info(
             "Alarm created / updated : %s %s %s",
             self.name,
@@ -105,6 +108,12 @@ class Alarm:
             zone_id = night_zone
         elif asked_state == 'DISARM':
             value = 'OFF'
+            zone_id = None
+        elif asked_state == 'PANIC':
+            value = 'PANIC'
+            zone_id = None
+        elif asked_state == 'ACK':
+            value = 'ACK'
             zone_id = None
 
         await tydom_client.put_alarm_cdata(device_id=device_id, alarm_id=alarm_id, value=value, zone_id=zone_id)

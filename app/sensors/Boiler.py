@@ -26,7 +26,7 @@ action_topic = "climate/tydom/{id}/action"
 # anticipCoeff 30 (seulement si thermostat)
 
 # thermicLevel STOP ECO ...
-# auhorisation HEATING
+# auhorisation "support": ["STOP", "HEATING", "COOLING"]
 # hvacMode NORMAL None (si off)
 # timeDelay : 0
 # tempoOn : False
@@ -81,7 +81,8 @@ class Boiler:
 
         # Check if device is a heater with thermostat sensor
         else:
-            # set an MQTT entity's name to None to mark it as the main feature of a device
+            # set an MQTT entity's name to None to mark it as the main feature
+            # of a device
             self.config['name'] = None
             self.device['model'] = 'Climate'
             self.config_topic = climate_config_topic.format(id=self.id)
@@ -91,7 +92,7 @@ class Boiler:
                 id=self.id)
             self.config['current_temperature_topic'] = current_temperature_topic.format(
                 id=self.id)
-            self.config['modes'] = ["off", "heat"]
+            self.config['modes'] = ["off", "heat","cool"]
             self.config['mode_state_topic'] = mode_state_topic.format(
                 id=self.id)
             self.config['mode_command_topic'] = mode_command_topic.format(
@@ -162,11 +163,14 @@ class Boiler:
                         "idle" if self.current_temp > self.current_setpoint else "heating",
                         qos=1, retain=True)
                 if await self.tydom_client.get_thermostat_custom_presets() is not None:
-                    if self.attributes['setpoint'] is not None :
+                    if self.attributes['setpoint'] is not None:
                         presets = await self.tydom_client.get_thermostat_custom_presets()
-                        if len([i for i in presets if float(presets[i]) == float(self.attributes['setpoint'])]) == 1:
-                            set_preset = [i for i in presets if float(
-                                presets[i]) == float(self.attributes['setpoint'])][0]
+                        if len([i for i in presets if float(presets[i])
+                               == float(self.attributes['setpoint'])]) == 1:
+                            set_preset = [
+                                i for i in presets if float(
+                                    presets[i]) == float(
+                                    self.attributes['setpoint'])][0]
                         elif await self.tydom_client.get_thermostat_custom_current_preset(self.device_id) == "none":
                             set_preset = await self.tydom_client.get_thermostat_custom_current_preset(self.device_id)
                         elif (float(self.attributes['setpoint']) == float(presets[await self.tydom_client.get_thermostat_custom_current_preset(self.device_id)])):
@@ -197,6 +201,11 @@ class Boiler:
                     self.config['state_topic'],
                     self.attributes['outTemperature'],
                     qos=0, retain=True)
+            if 'authorization' in self.attributes:
+                self.mqtt.mqtt_client.publish(
+                    self.config['mode_state_topic'],
+                   "off" if self.attributes['authorization'] == "STOP" else "cool" if self.attributes['authorization'] == "COOLING" else "heat",
+                    qos=0, retain=True)         
 
     @staticmethod
     async def put_temperature(tydom_client, device_id, boiler_id, set_setpoint):

@@ -21,6 +21,7 @@ TYDOM_ALARM_PIN = 'TYDOM_ALARM_PIN'
 TYDOM_IP = 'TYDOM_IP'
 TYDOM_MAC = 'TYDOM_MAC'
 TYDOM_PASSWORD = 'TYDOM_PASSWORD'
+TYDOM_POLLING_INTERVAL = 'TYDOM_POLLING_INTERVAL'
 DELTADORE_LOGIN = 'DELTADORE_LOGIN'
 DELTADORE_PASSWORD = 'DELTADORE_PASSWORD'
 THERMOSTAT_CUSTOM_PRESETS = 'THERMOSTAT_CUSTOM_PRESETS'
@@ -41,6 +42,7 @@ class Configuration:
     tydom_mac = str
     tydom_password = str
     thermostat_custom_presets = list
+    tydom_polling_interval = int
 
     def __init__(self):
         self.log_level = os.getenv(LOG_LEVEL, 'INFO').upper()
@@ -55,9 +57,11 @@ class Configuration:
         self.tydom_ip = os.getenv(TYDOM_IP, 'mediation.tydom.com')
         self.tydom_mac = os.getenv(TYDOM_MAC, None)
         self.tydom_password = os.getenv(TYDOM_PASSWORD, None)
+        self.tydom_polling_interval = os.getenv(TYDOM_POLLING_INTERVAL,300)
         self.deltadore_login = os.getenv(DELTADORE_LOGIN, None)
         self.deltadore_password = os.getenv(DELTADORE_PASSWORD, None)
-        self.thermostat_custom_presets = os.getenv(THERMOSTAT_CUSTOM_PRESETS, None)
+        self.thermostat_custom_presets = os.getenv(
+            THERMOSTAT_CUSTOM_PRESETS, None)
 
     @staticmethod
     def load():
@@ -88,6 +92,9 @@ class Configuration:
 
                     if TYDOM_PASSWORD in data and data[TYDOM_PASSWORD] != '':
                         self.tydom_password = data[TYDOM_PASSWORD]
+                        
+                    if TYDOM_POLLING_INTERVAL in data and data[TYDOM_POLLING_INTERVAL] != '':
+                        self.tydom_polling_interval = data[TYDOM_POLLING_INTERVAL]    
 
                     if DELTADORE_LOGIN in data and data[DELTADORE_LOGIN] != '':
                         self.deltadore_login = data[DELTADORE_LOGIN]
@@ -158,7 +165,11 @@ class Configuration:
         logger.info('The configuration is valid')
 
     def to_json(self):
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        return json.dumps(
+            self,
+            default=lambda o: o.__dict__,
+            sort_keys=True,
+            indent=4)
 
     @staticmethod
     def mask_value(value, nb=1, char='*'):

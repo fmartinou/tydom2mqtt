@@ -53,7 +53,8 @@ class Sensor:
                 "OFF"] or isinstance(self.elem_value, bool)):
             self.binary = True
 
-            if (isinstance(self.elem_value, bool) and self.elem_value) or self.elem_value == "True" or self.elem_value == "true" or self.elem_value == "1" or self.elem_value == "ON":
+            if (isinstance(self.elem_value, bool)
+                    and self.elem_value) or self.elem_value == "True" or self.elem_value == "true" or self.elem_value == "1" or self.elem_value == "ON":
                 self.elem_value = "ON"
             else:
                 self.elem_value = "OFF"

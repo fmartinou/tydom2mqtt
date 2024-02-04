@@ -279,7 +279,9 @@ class MqttClient:
         elif 'set_shHvacBoost' in str(topic):
             value = payload.decode()
             logger.info(
-                'set_shHvacBoost message received (topic=%s, message=%s)', topic, value)
+                'set_shHvacBoost message received (topic=%s, message=%s)',
+                topic,
+                value)
             get_id = (topic.split("/"))[2]
             device_id = (get_id.split("_"))[0]
             await ShHvac.put_boost(tydom_client=self.tydom, device_id=device_id, boost=value)
