@@ -20,6 +20,7 @@ class TydomClient:
             self,
             mac,
             password,
+            polling_interval,
             alarm_pin=None,
             host=MEDIATION_URL,
             thermostat_custom_presets=None):
@@ -41,6 +42,7 @@ class TydomClient:
         # Some devices (like Tywatt) need polling
         self.poll_device_urls = []
         self.current_poll_index = 0
+        self.polling_interval = int(polling_interval)
 
         if thermostat_custom_presets is None:
             self.thermostat_custom_presets = None
@@ -363,17 +365,15 @@ class TydomClient:
 
     # Refresh (all)
     async def post_refresh(self):
+        logger.debug("running post_refresh")
         msg_type = "/refresh/all"
         req = "POST"
         await self.send_message(method=req, msg=msg_type)
         # Get poll device data
         nb_poll_devices = len(self.poll_device_urls)
-        if self.current_poll_index < nb_poll_devices - 1:
-            self.current_poll_index = self.current_poll_index + 1
-        else:
-            self.current_poll_index = 0
-        if nb_poll_devices > 0:
-            await self.get_poll_device_data(self.poll_device_urls[self.current_poll_index])
+        logger.debug("nb_poll_devices : %d",nb_poll_devices)
+        for polling_device in self.poll_device_urls:
+            await self.get_poll_device_data(polling_device);
 
     # Get the moments (programs)
     async def get_moments(self):
@@ -450,6 +450,7 @@ class TydomClient:
         await self.connection.send(a_bytes)
 
     async def get_poll_device_data(self, url):
+        logger.debug("get_poll_device_data : %s",url)
         msg_type = url
         req = "GET"
         await self.send_message(method=req, msg=msg_type)
