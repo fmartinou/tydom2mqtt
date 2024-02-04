@@ -1,5 +1,9 @@
 # Changelog
 
+# dev
+- :star: Add device polling 
+- :star: Add HVAC cool mode
+
 # 3.4.2
 - :star: Add `PANIC` and `ACK` alarm commands
 - :star: Add `state_class` to Home-Assistant energy sensors

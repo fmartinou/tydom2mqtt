@@ -70,11 +70,21 @@ async def listen_tydom():
             sys.exit(1)
 
 
+async def poll_device_tydom():
+    while True:
+        try:
+            await asyncio.sleep(tydom_client.polling_interval)
+            await tydom_client.post_refresh()
+        except Exception as e:
+            logger.warning("poll_device_tydom error : %s", e)
+            break
+
 # Create tydom client
 tydom_client = TydomClient(
     mac=configuration.tydom_mac,
     host=configuration.tydom_ip,
     password=configuration.tydom_password,
+    polling_interval=configuration.tydom_polling_interval,
     alarm_pin=configuration.tydom_alarm_pin,
     thermostat_custom_presets=configuration.thermostat_custom_presets)
 
@@ -120,6 +130,7 @@ def main():
 
     loop.create_task(mqtt_client.connect())
     loop.create_task(listen_tydom())
+    loop.create_task(poll_device_tydom())
     loop.run_forever()
 
 

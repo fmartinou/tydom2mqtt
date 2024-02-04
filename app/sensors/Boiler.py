@@ -25,7 +25,7 @@ out_temperature_state_topic = "sensor/tydom/{id}/temperature"
 # anticipCoeff 30 (seulement si thermostat)
 
 # thermicLevel STOP ECO ...
-# auhorisation HEATING
+# auhorisation "support": ["STOP", "HEATING", "COOLING"]
 # hvacMode NORMAL None (si off)
 # timeDelay : 0
 # tempoOn : False
@@ -89,7 +89,7 @@ class Boiler:
                 id=self.id)
             self.config['current_temperature_topic'] = current_temperature_topic.format(
                 id=self.id)
-            self.config['modes'] = ["off", "heat"]
+            self.config['modes'] = ["off", "heat","cool"]
             self.config['mode_state_topic'] = mode_state_topic.format(
                 id=self.id)
             self.config['mode_command_topic'] = mode_command_topic.format(
@@ -164,6 +164,11 @@ class Boiler:
                     self.config['state_topic'],
                     self.attributes['outTemperature'],
                     qos=0, retain=True)
+            if 'authorization' in self.attributes:
+                self.mqtt.mqtt_client.publish(
+                    self.config['mode_state_topic'],
+                   "off" if self.attributes['authorization'] == "STOP" else "cool" if self.attributes['authorization'] == "COOLING" else "heat",
+                    qos=0, retain=True)         
 
     @staticmethod
     async def put_temperature(tydom_client, device_id, boiler_id, set_setpoint):
