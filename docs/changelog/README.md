@@ -1,8 +1,9 @@
 # Changelog
 
-# dev
+# 3.4.3
 - :star: Add device polling 
 - :star: Add HVAC cool mode
+- :star: Automatically set HVAC action when setpoint > current temp
 
 # 3.4.2
 - :star: Add `PANIC` and `ACK` alarm commands
