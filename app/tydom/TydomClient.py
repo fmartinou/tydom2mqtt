@@ -42,7 +42,9 @@ class TydomClient:
         # Some devices (like Tywatt) need polling
         self.poll_device_urls = []
         self.current_poll_index = 0
+        self.in_memory = {}
         self.polling_interval = int(polling_interval)
+        self.in_memory = {}
 
         if thermostat_custom_presets is None:
             self.thermostat_custom_presets = None
@@ -344,8 +346,7 @@ class TydomClient:
 
             a_bytes = bytes(str_request, "ascii")
             logger.debug(
-                "Sending message to tydom (%s %s)"
-                "PUT cdata",
+                "Sending message to tydom (%s) PUT cdata",
                 body)
 
             try:
@@ -467,7 +468,6 @@ class TydomClient:
 
     async def get_thermostat_custom_current_preset(self, boiler_id):
         logger.debug("get preset for %s", boiler_id)
-        print(self.current_preset)
         if str(boiler_id) not in self.current_preset:
             await self.set_thermostat_custom_current_preset(str(boiler_id), "none")
         return self.current_preset[str(boiler_id)]
@@ -475,3 +475,21 @@ class TydomClient:
     async def set_thermostat_custom_current_preset(self, boiler_id, preset):
         logger.debug("set preset %s for %s", preset, boiler_id)
         self.current_preset[str(boiler_id)] = str(preset)
+
+    async def set_in_memory(self, id, name, value):
+        logger.debug("set %s, %s : %s in memory", id, name, value)
+        if id not in self.in_memory:
+            self.in_memory |= {id: {name: value}}
+        else:
+            self.in_memory[id] |= {name: value}
+        logger.debug("Memory state : %s", self.in_memory )
+
+    async def get_in_memory(self, id, name=None):
+        logger.debug("get %s, %s in memory", id, name)
+        if name is None:
+            return self.in_memory[id]
+        else:
+            if id in self.in_memory:
+                if name in self.in_memory[id]:
+                    return self.in_memory[id][name]
+            return None
