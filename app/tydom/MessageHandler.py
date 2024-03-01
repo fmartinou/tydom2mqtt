@@ -105,6 +105,29 @@ deviceDoorDetailsKeywords = [
     'intrusion',
     'battDefect']
 
+deviceAutomaticDoorKeywords = ['podPosition']
+deviceAutomaticDoorDetailsKeywords = [
+    'podPosition']
+
+deviceGarageDoorKeywords = [
+    'level',
+    'onDusk',
+    'onFavPos',
+    'onPresenceDetected'
+    'thermicDefect',
+    'loadDefect',
+    'cmdDefect',
+    'battDefect']
+deviceGarageDoorDetailsKeywords = [
+    'level',
+    'onDusk',
+    'onFavPos',
+    'onPresenceDetected'
+    'thermicDefect',
+    'loadDefect',
+    'cmdDefect',
+    'battDefect']
+
 deviceCoverKeywords = [
     'position',
     'slope',
