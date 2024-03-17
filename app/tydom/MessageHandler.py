@@ -7,6 +7,7 @@ from io import BytesIO
 from sensors.Alarm import Alarm
 from sensors.Boiler import Boiler
 from sensors.Cover import Cover
+from sensors.Garage import Garage
 from sensors.Light import Light
 from sensors.Sensor import Sensor
 from sensors.Switch import Switch
@@ -103,8 +104,26 @@ deviceDoorDetailsKeywords = [
     'thermicDefect',
     'obstacleDefect',
     'intrusion',
+deviceGaragelKeywords = [
+    'level',
+    'onDusk',
+    'onFavPos',
+    'onPresenceDetected'
+    'thermicDefect',
+    'loadDefect',
+    'cmdDefect',
     'battDefect']
-
+    
+deviceGarageDetailsKeywords = [
+    'level',
+    'onDusk',
+    'onFavPos',
+    'onPresenceDetected'
+    'thermicDefect',
+    'loadDefect',
+    'cmdDefect',
+    'battDefect']
+    
 deviceCoverKeywords = [
     'position',
     'slope',
@@ -384,7 +403,7 @@ class MessageHandler:
 
             if i["last_usage"] == 'shutter' or i["last_usage"] == 'klineShutter' or i["last_usage"] == 'light' or i["last_usage"] == 'window' or i["last_usage"] == 'windowFrench' or i["last_usage"] == 'windowSliding' or i[
                     "last_usage"] == 'belmDoor' or i["last_usage"] == 'klineDoor' or i["last_usage"] == 'klineWindowFrench' or i["last_usage"] == 'klineWindowSliding' or i["last_usage"] == 'garage_door' or i["last_usage"] == 'gate' or i[
-                        "last_usage"] == 'awning' or i["last_usage"] == 'others':
+                        "last_usage"] == 'awning' or i["last_usage"] == 'garage_door_horizontal' or i["last_usage"] == 'others':
                 device_name[device_unique_id] = i["name"]
                 device_type[device_unique_id] = i["last_usage"]
                 device_endpoint[device_unique_id] = i["id_endpoint"]
@@ -483,6 +502,7 @@ class MessageHandler:
             try:
                 attr_alarm = {}
                 attr_cover = {}
+                attr_garage = {}
                 attr_door = {}
                 attr_ukn = {}
                 attr_window = {}
@@ -582,16 +602,20 @@ class MessageHandler:
                             attr_alarm['device_type'] = 'alarm_control_panel'
                             attr_alarm[element_name] = element_value
 
-                    if type_of_id == 'garage_door' or type_of_id == 'gate':
-                        if element_name in deviceSwitchKeywords and element_validity == 'upToDate':
-                            attr_gate['device_id'] = device_id
-                            attr_gate['endpoint_id'] = endpoint_id
-                            attr_gate['id'] = str(
+                    if type_of_id == 'garage_door_horizontal' or type_of_id == 'garage_door' or type_of_id == 'gate':
+                        if element_name in deviceGaragelKeywords and element_validity == 'upToDate':
+                            attr_garage['device_id'] = device_id
+                            attr_garage['endpoint_id'] = endpoint_id
+                            attr_garage['id'] = str(
                                 device_id) + '_' + str(endpoint_id)
-                            attr_gate['switch_name'] = print_id
-                            attr_gate['name'] = print_id
-                            attr_gate['device_type'] = 'switch'
-                            attr_gate[element_name] = element_value
+                            attr_garage['cover_name'] = print_id
+                            attr_garage['name'] = print_id
+                            attr_garage['device_type'] = 'garage'
+                            if type_of_id == 'garage_door':
+                                attr_garage['cover_class'] = 'garage'
+                            else:
+                                attr_garage['cover_class'] = 'gate'
+                            attr_garage[element_name] = element_value
 
                     if type_of_id == 'conso':
                         if element_name in device_conso_keywords and element_validity == "upToDate":
@@ -684,6 +708,11 @@ class MessageHandler:
                     tydom_attributes=attr_cover,
                     mqtt=self.mqtt_client)
                 await new_cover.update()
+            elif 'device_type' in attr_garage and attr_garage['device_type'] == 'garage':
+                new_garage = Garage(
+                    tydom_attributes=attr_garage,
+                    mqtt=self.mqtt_client)
+                await new_garage.update()
             elif 'device_type' in attr_door and attr_door['device_type'] == 'sensor':
                 new_door = Sensor(
                     elem_name=attr_door['element_name'],
