@@ -3,12 +3,7 @@ name: Docker Image CI
 on:
   release:
       types: [published]
-  push:
-    branches:
-      - master
-    tags:
-      - '*.*.*'
-    
+
 jobs:
 
   build:
