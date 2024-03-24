@@ -1,8 +1,8 @@
 name: Docker Image CI
 
 on:
-  release:
-      types: [published]
+  push:
+    branches: [ main ]
 
 jobs:
 
@@ -23,6 +23,6 @@ jobs:
         name: koleos6/tydom2mqtt
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-        tags: "latest,${{ steps.pre-step.outputs.release-version }}"
+        tags: "latest,3.4.5"
         registry: ghcr.io
             
