@@ -23,6 +23,6 @@ jobs:
         name: koleos6/tydom2mqtt
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-        tags: "latest,3.4.5"
+        tags: "3.4.5"
         registry: ghcr.io
             
