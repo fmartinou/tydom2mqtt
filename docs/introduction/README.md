@@ -1,15 +1,12 @@
 # Introduction
 
-![Docker pulls](https://img.shields.io/docker/pulls/fmartinou/tydom2mqtt)
-![License](https://img.shields.io/github/license/fmartinou/tydom2mqtt)
-![Travis](https://img.shields.io/travis/fmartinou/tydom2mqtt/master)
-
 **tydom2mqtt** allows you to integrate Deltadore Tydom Hubs to MQTT.
 
 ## Quick start
 
 ### Run the Docker image
 The easiest way to start is to deploy the official _**tydom2mqtt**_ image.
+NB: fork from fmartinou/tydom2mqtt (https://github.com/fmartinou/tydom2mqtt)
 
 <!-- tabs:start -->
 #### **Docker Compose**
@@ -18,7 +15,7 @@ version: '3'
 
 services:
   tydom2mqtt:
-    image: fmartinou/tydom2mqtt
+    image: koleos6/tydom2mqtt
     container_name: tydom2mqtt
     environment:
       - TYDOM_MAC=001A25XXXXXX
@@ -41,12 +38,12 @@ docker run -d --name tydom2mqtt \
 So maybe take a look at the [Hass.io add-on version](/hass/)!
 ## Contact & Support
 
-- Create a [GitHub issue](https://github.com/fmartinou/tydom2mqtt/issues) for bug reports, feature requests, or questions
-- Add a ⭐️ [star on GitHub](https://github.com/fmartinou/tydom2mqtt) to support the project!
+- Create a [GitHub issue](https://github.com/koleos6/tydom2mqtt/issues) for bug reports, feature requests, or questions
+- Add a ⭐️ [star on GitHub](https://github.com/koleos6/tydom2mqtt) to support the project!
 
 ## License
 
-This project is licensed under the [MIT license](https://github.com/fmartinou/tydom2mqtt/blob/master/LICENSE).
+This project is licensed under the [MIT license](https://github.com/koleos6/tydom2mqtt/blob/master/LICENSE).
 
 <!-- GitHub Buttons -->
 <script async defer src="https://buttons.github.io/buttons.js"></script>

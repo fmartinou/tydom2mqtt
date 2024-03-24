@@ -1,5 +1,9 @@
 # Changelog
 
+# 3.4.4 - FORK from fmartinou
+- :star: add management of garage doors as a shutter and not a switch, also add garage_door_horizontal management
+- :star: add management of Pack Tysense Outdoor
+
 # 3.4.3
 - :star: Add device polling 
 - :star: Add HVAC cool mode
