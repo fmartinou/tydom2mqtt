@@ -12,6 +12,7 @@ from sensors.Light import Light
 from sensors.Sensor import Sensor
 from sensors.Switch import Switch
 from sensors.ShHvac import ShHvac
+from sensors.AutomaticDoor import AutomaticDoor
 
 logger = logging.getLogger(__name__)
 
@@ -103,8 +104,12 @@ deviceDoorDetailsKeywords = [
     'onFavPos',
     'thermicDefect',
     'obstacleDefect',
-    'intrusion']
-    
+    'intrusion',
+    'battDefect']
+
+deviceAutomaticDoorKeywords = ['podPosition']
+deviceAutomaticDoorDetailsKeywords = ['podPosition']
+
 deviceGaragelKeywords = [
     'level',
     'onDusk',
@@ -525,6 +530,8 @@ class MessageHandler:
                 attr_sh_hvac = {}
                 attr_smoke = {}
                 attr_sensor = {}
+                attr_automatic_door = {}
+                
                 endpoint_id = endpoint["id"]
                 unique_id = str(endpoint_id) + "_" + str(device_id)
                 name_of_id = self.get_name_from_id(unique_id)
@@ -581,6 +588,17 @@ class MessageHandler:
                             attr_door['device_type'] = 'sensor'
                             attr_door['element_name'] = element_name
                             attr_door[element_name] = element_value
+
+                    if type_of_id == 'belmDoor' or type_of_id == 'klineDoor':
+                        if element_name in deviceAutomaticDoorKeywords and element_validity == 'upToDate':
+                            attr_automatic_door['device_id'] = device_id
+                            attr_automatic_door['endpoint_id'] = endpoint_id
+                            attr_automatic_door['id'] = str(
+                                device_id) + '_' + str(endpoint_id)
+                            attr_automatic_door['name'] = print_id
+                            attr_automatic_door['device_type'] = 'AutomaticDoor'
+                            attr_automatic_door['element_name'] = element_name
+                            attr_automatic_door[element_name] = element_value
 
                     if type_of_id == 'windowFrench' or type_of_id == 'window' or type_of_id == 'windowSliding' or type_of_id == 'klineWindowFrench' or type_of_id == 'klineWindowSliding':
                         if element_name in deviceDoorKeywords and element_validity == 'upToDate':
@@ -790,6 +808,12 @@ class MessageHandler:
                     tydom_client=self.tydom_client,
                     mqtt=self.mqtt_client)
                 await new_sh_hvac.update()
+            elif 'device_type' in attr_automatic_door and attr_automatic_door['device_type'] == 'AutomaticDoor':
+                new_automatic_door = AutomaticDoor(
+                    tydom_attributes=attr_automatic_door,
+                    tydom_client=self.tydom_client,
+                    mqtt=self.mqtt_client)
+                await new_automatic_door.update()
 
             # Get last known state (for alarm) # NEW METHOD
             elif 'device_type' in attr_alarm and attr_alarm['device_type'] == 'alarm_control_panel':

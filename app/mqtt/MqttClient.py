@@ -14,6 +14,7 @@ from sensors.Garage import Garage
 from sensors.Light import Light
 from sensors.Switch import Switch
 from sensors.ShHvac import ShHvac
+from sensors.AutomaticDoor import AutomaticDoor
 
 logger = logging.getLogger(__name__)
 
@@ -186,7 +187,7 @@ class MqttClient:
             get_id = (topic.split("/"))[2]
             device_id = (get_id.split("_"))[0]
             endpoint_id = (get_id.split("_"))[1]
-            await Light.put_level_cmd(tydom_client=self.tydom, device_id=device_id, light_id=endpoint_id,
+            await Light.put_level_cmd(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id,
                                       level_cmd=str(value))
 
         elif ('set_level' in str(topic)) and not ('set_levelCmd' in str(topic)):
@@ -198,8 +199,18 @@ class MqttClient:
             get_id = (topic.split("/"))[2]
             device_id = (get_id.split("_"))[0]
             endpoint_id = (get_id.split("_"))[1]
-            await Light.put_level(tydom_client=self.tydom, device_id=device_id, light_id=endpoint_id,
+            await Light.put_level(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id,
                                   level=str(value))
+        elif 'open_automatic_door' in str(topic):
+            value =  payload.decode()
+            logger.info(
+                'open_automatic_door message received (topic=%s, message=%s)',
+                topic,
+                value)
+            get_id = (topic.split("/"))[2]
+            device_id = (get_id.split("_"))[0]
+            endpoint_id = (get_id.split("_"))[1]
+            await AutomaticDoor.put_podPosition(tydom_client=self.tydom, device_id=device_id, door_id=endpoint_id, position='OPEN')
 
         elif ('set_alarm_state' in str(topic)) and not ('homeassistant' in str(topic)):
             value = payload.decode()
