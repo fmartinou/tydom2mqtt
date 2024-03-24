@@ -29,6 +29,12 @@ class Garage:
             self.current_level = None        
         
         self.set_level = set_level
+        self.current_position = set_level
+        
+        if 'position' in tydom_attributes:
+            self.current_position = self.attributes['position']
+        
+        
         self.mqtt = mqtt
 
     async def setup(self):
@@ -42,8 +48,6 @@ class Garage:
             'name': None,  # set an MQTT entity's name to None to mark it as the main feature of a device
             'unique_id': self.id,
             'command_topic': cover_command_topic.format(
-                id=self.id),
-            'state_topic': cover_state_topic.format(
                 id=self.id),
             'position_topic': cover_position_topic.format(
                 id=self.id),
@@ -75,13 +79,15 @@ class Garage:
         
         self.level_topic = cover_state_topic.format(
             id=self.id, current_level=self.current_level)
-
+            
         if self.mqtt is not None:
+        #and 'position' in self.attributes:
             self.mqtt.mqtt_client.publish(
                 self.config['position_topic'],
                 self.current_level,
-                qos=0, 
-                retain=True)
+                qos=0, retain=True)
+                
+        if self.mqtt is not None:
             self.mqtt.mqtt_client.publish(
                 self.level_topic,
                 self.current_level,
