@@ -141,7 +141,19 @@ deviceCoverDetailsKeywords = [
     'battDefect',
     'position',
     'slope']
-
+    
+deviceSensorsKeywords = [
+    'outTemperature',
+    'lightPower',
+    'configSensor',
+    'configTemp',
+    'battDefect']
+deviceSensorsDetailsKeywords = [
+    'outTemperature'
+    'lightPower',
+    'battDefect',
+    'configSensor',
+    'configTemp']
 deviceBoilerKeywords = [
     'thermicLevel',
     'delayThermicLevel',
@@ -404,7 +416,7 @@ class MessageHandler:
 
             if i["last_usage"] == 'shutter' or i["last_usage"] == 'klineShutter' or i["last_usage"] == 'light' or i["last_usage"] == 'window' or i["last_usage"] == 'windowFrench' or i["last_usage"] == 'windowSliding' or i[
                     "last_usage"] == 'belmDoor' or i["last_usage"] == 'klineDoor' or i["last_usage"] == 'klineWindowFrench' or i["last_usage"] == 'klineWindowSliding' or i["last_usage"] == 'garage_door' or i["last_usage"] == 'gate' or i[
-                        "last_usage"] == 'awning' or i["last_usage"] == 'garage_door_horizontal' or i["last_usage"] == 'others':
+                        "last_usage"] == 'awning' or i["last_usage"] == 'garage_door_horizontal' or i["last_usage"] == 'others' or i["last_usage"] == 'sensorSun' or i["last_usage"] == 'sensorThermo':
                 device_name[device_unique_id] = i["name"]
                 device_type[device_unique_id] = i["last_usage"]
                 device_endpoint[device_unique_id] = i["id_endpoint"]
@@ -512,6 +524,7 @@ class MessageHandler:
                 attr_boiler = {}
                 attr_sh_hvac = {}
                 attr_smoke = {}
+                attr_sensor = {}
                 endpoint_id = endpoint["id"]
                 unique_id = str(endpoint_id) + "_" + str(device_id)
                 name_of_id = self.get_name_from_id(unique_id)
@@ -580,6 +593,17 @@ class MessageHandler:
                             attr_window['device_type'] = 'sensor'
                             attr_window['element_name'] = element_name
                             attr_window[element_name] = element_value
+
+                    if type_of_id == 'sensorThermo' or type_of_id == 'sensorSun':
+                        if element_name in deviceSensorsKeywords and element_validity == 'upToDate':
+                            attr_sensor['device_id'] = device_id
+                            attr_sensor['endpoint_id'] = endpoint_id
+                            attr_sensor['id'] = str(
+                                device_id) + '_' + str(endpoint_id)
+                            attr_sensor['name'] = print_id
+                            attr_sensor['device_type'] = 'sensor'
+                            attr_sensor['element_name'] = element_name
+                            attr_sensor[element_name] = element_value
 
                     if type_of_id == 'boiler':
                         if element_name in deviceBoilerKeywords and element_validity == 'upToDate':
@@ -726,6 +750,12 @@ class MessageHandler:
                     tydom_attributes_payload=attr_window,
                     mqtt=self.mqtt_client)
                 await new_window.update()
+            elif 'device_type' in attr_sensor and attr_sensor['device_type'] == 'sensor':
+                new_sensor = Sensor(
+                    elem_name=attr_sensor['element_name'],
+                    tydom_attributes_payload=attr_sensor,
+                    mqtt=self.mqtt_client)
+                await new_sensor.update()
             elif 'device_type' in attr_light and attr_light['device_type'] == 'light':
                 new_light = Light(
                     tydom_attributes=attr_light,
