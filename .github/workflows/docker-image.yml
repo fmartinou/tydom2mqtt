@@ -16,3 +16,8 @@ jobs:
     - uses: actions/checkout@v3
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+    - name: Publish Docker
+      uses: elgohr/Publish-Docker-Github-Action@v5
+      with:
+        name: koleos6/tydom2mqtt
+            
