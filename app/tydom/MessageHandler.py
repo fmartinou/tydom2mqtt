@@ -104,8 +104,9 @@ deviceDoorDetailsKeywords = [
     'onFavPos',
     'thermicDefect',
     'obstacleDefect',
-    'intrusion']
-    
+    'intrusion',
+    'battDefect']
+
 deviceAutomaticDoorKeywords = ['podPosition']
 deviceAutomaticDoorDetailsKeywords = ['podPosition']
 
