@@ -20,4 +20,6 @@ jobs:
       uses: elgohr/Publish-Docker-Github-Action@v5
       with:
         name: koleos6/tydom2mqtt
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
             
