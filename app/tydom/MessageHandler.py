@@ -103,7 +103,8 @@ deviceDoorDetailsKeywords = [
     'onFavPos',
     'thermicDefect',
     'obstacleDefect',
-    'intrusion',
+    'intrusion']
+    
 deviceGaragelKeywords = [
     'level',
     'onDusk',
