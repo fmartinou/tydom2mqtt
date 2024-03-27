@@ -5,7 +5,7 @@ on:
     branches: [ "master" ]
 
 env:
-  REGISTRY_IMAGE: user/app
+  REGISTRY_IMAGE: koleos6/tydom2mqtt
 
 jobs:
   build:
