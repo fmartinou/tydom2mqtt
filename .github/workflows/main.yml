@@ -1,9 +1,8 @@
-name: ci
+name: ci docker hub
 
 on:
   push:
-    branches:
-      - "main"
+    branches: [ "master" ]
 
 env:
   REGISTRY_IMAGE: user/app
