@@ -2,7 +2,7 @@ name: ci docker hub
 
 on:
   push:
-    branches: [ "master" ]
+    tags: [ "*.*.*" ]
 
 env:
   REGISTRY_IMAGE: koleos6/tydom2mqtt
