@@ -1,7 +1,7 @@
 # Changelog
 
 #3.4.7
--
+- :star: Sensor name used in MQTT instead of "Mosquito"
 
 #3.4.6
 - Docker modifications
