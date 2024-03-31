@@ -1,5 +1,11 @@
 # Changelog
 
+#3.4.7
+-
+
+#3.4.6
+- Docker modifications
+
 #3.4.5
 - :star: Add automatic doors
 - :fire: Fix errors on garage component
