@@ -2,6 +2,7 @@
 
 #3.4.7
 - :star: Sensor name used in MQTT instead of "Mosquito"
+- :fire: Fix doors missing sensors
 
 #3.4.6
 - Docker modifications

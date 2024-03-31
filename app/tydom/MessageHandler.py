@@ -99,13 +99,20 @@ deviceLightDetailsKeywords = [
     'onPresenceDetected',
     'onDusk']
 
-deviceDoorKeywords = ['openState', 'intrusionDetect']
+deviceDoorKeywords = [
+    'openState',
+    'intrusionDetect',
+    'battDefect',
+    'supervisionMode',
+    'calibrationDefect']
 deviceDoorDetailsKeywords = [
     'onFavPos',
     'thermicDefect',
     'obstacleDefect',
-    'intrusion',
-    'battDefect']
+    'intrusionDetect',
+    'battDefect',
+    'supervisionMode'
+    'calibrationDefect']
 
 deviceAutomaticDoorKeywords = ['podPosition']
 deviceAutomaticDoorDetailsKeywords = ['podPosition']
