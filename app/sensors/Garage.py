@@ -53,6 +53,8 @@ class Garage:
                 id=self.id),
             'level_topic': cover_level_topic.format(
                 id=self.id),
+            'set_position_topic': cover_set_level_topic.format(
+                id=self.id),
             'payload_open': "ON",
             'payload_close': "OFF",
             'payload_stop': "STOP",
