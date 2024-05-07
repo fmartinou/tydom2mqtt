@@ -25,6 +25,8 @@ TYDOM_POLLING_INTERVAL = 'TYDOM_POLLING_INTERVAL'
 DELTADORE_LOGIN = 'DELTADORE_LOGIN'
 DELTADORE_PASSWORD = 'DELTADORE_PASSWORD'
 THERMOSTAT_CUSTOM_PRESETS = 'THERMOSTAT_CUSTOM_PRESETS'
+THERMOSTAT_COOL_MODE_TEMP_DEFAULT = 'THERMOSTAT_COOL_MODE_TEMP_DEFAULT'
+THERMOSTAT_HEAT_MODE_TEMP_DEFAULT = 'THERMOSTAT_HEAT_MODE_TEMP_DEFAULT'
 
 
 @dataclass
@@ -42,6 +44,8 @@ class Configuration:
     tydom_mac = str
     tydom_password = str
     thermostat_custom_presets = list
+    thermostat_cool_mode_temp_default = int
+    thermostat_heat_mode_temp_default = int
     tydom_polling_interval = int
 
     def __init__(self):
@@ -57,11 +61,15 @@ class Configuration:
         self.tydom_ip = os.getenv(TYDOM_IP, 'mediation.tydom.com')
         self.tydom_mac = os.getenv(TYDOM_MAC, None)
         self.tydom_password = os.getenv(TYDOM_PASSWORD, None)
-        self.tydom_polling_interval = os.getenv(TYDOM_POLLING_INTERVAL,300)
+        self.tydom_polling_interval = os.getenv(TYDOM_POLLING_INTERVAL, 300)
         self.deltadore_login = os.getenv(DELTADORE_LOGIN, None)
         self.deltadore_password = os.getenv(DELTADORE_PASSWORD, None)
         self.thermostat_custom_presets = os.getenv(
             THERMOSTAT_CUSTOM_PRESETS, None)
+        self.thermostat_cool_mode_temp_default = os.getenv(
+            THERMOSTAT_COOL_MODE_TEMP_DEFAULT, 26)
+        self.thermostat_heat_mode_temp_default = os.getenv(
+            THERMOSTAT_HEAT_MODE_TEMP_DEFAULT, 16)
 
     @staticmethod
     def load():
@@ -92,9 +100,10 @@ class Configuration:
 
                     if TYDOM_PASSWORD in data and data[TYDOM_PASSWORD] != '':
                         self.tydom_password = data[TYDOM_PASSWORD]
-                        
+
                     if TYDOM_POLLING_INTERVAL in data and data[TYDOM_POLLING_INTERVAL] != '':
-                        self.tydom_polling_interval = data[TYDOM_POLLING_INTERVAL]    
+                        self.tydom_polling_interval = int(
+                            data[TYDOM_POLLING_INTERVAL])
 
                     if DELTADORE_LOGIN in data and data[DELTADORE_LOGIN] != '':
                         self.deltadore_login = data[DELTADORE_LOGIN]
@@ -110,6 +119,12 @@ class Configuration:
 
                     if TYDOM_ALARM_NIGHT_ZONE in data and data[TYDOM_ALARM_NIGHT_ZONE] != '':
                         self.tydom_alarm_night_zone = data[TYDOM_ALARM_NIGHT_ZONE]
+
+                    if THERMOSTAT_COOL_MODE_TEMP_DEFAULT in data[THERMOSTAT_COOL_MODE_TEMP_DEFAULT] != '':
+                        self.thermostat_cool_mode_temp_default = data[THERMOSTAT_COOL_MODE_TEMP_DEFAULT]
+
+                    if THERMOSTAT_HEAT_MODE_TEMP_DEFAULT in data[THERMOSTAT_HEAT_MODE_TEMP_DEFAULT] != '':
+                        self.thermostat_heat_mode_temp_default = data[THERMOSTAT_HEAT_MODE_TEMP_DEFAULT]
 
                     if MQTT_HOST in data and data[MQTT_HOST] != '':
                         self.mqtt_host = data[MQTT_HOST]

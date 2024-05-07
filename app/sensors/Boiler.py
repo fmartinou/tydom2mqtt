@@ -60,6 +60,7 @@ class Boiler:
         self.tydom_client = tydom_client
         self.current_temp = None
         self.current_setpoint = None
+        self.current_authorization = None
 
     async def setup(self):
         self.config = {}
@@ -92,7 +93,7 @@ class Boiler:
                 id=self.id)
             self.config['current_temperature_topic'] = current_temperature_topic.format(
                 id=self.id)
-            self.config['modes'] = ["off", "heat","cool"]
+            self.config['modes'] = ["off", "heat", "cool"]
             self.config['mode_state_topic'] = mode_state_topic.format(
                 id=self.id)
             self.config['mode_command_topic'] = mode_command_topic.format(
@@ -121,47 +122,53 @@ class Boiler:
 
         if self.mqtt is not None:
             self.current_temp = await self.tydom_client.get_in_memory(
-                    self.id,
-                    "current_temp", 
-                )
+                self.id,
+                "current_temp",
+            )
             self.current_setpoint = await self.tydom_client.get_in_memory(
-                    self.id,
-                    "current_setpoint", 
-                )
-            if 'temperature' in self.attributes:
-                self.current_temp = '0' if self.attributes['temperature'] == 'None' else self.attributes['temperature']
+                self.id,
+                "current_setpoint",
+            )
+            self.current_authorization = await self.tydom_client.get_in_memory(
+                self.id,
+                "current_authorization",
+            )
+
+            if 'authorization' in self.attributes and self.attributes['authorization'] is not None:
+                self.current_authorization = self.attributes['authorization']
                 await self.tydom_client.set_in_memory(
                     self.id,
-                    "current_temp", 
+                    "current_authorization",
+                    self.current_authorization
+                )
+
+            if 'temperature' in self.attributes:
+                self.current_temp = '0' if self.attributes[
+                    'temperature'] == 'None' else self.attributes['temperature']
+                await self.tydom_client.set_in_memory(
+                    self.id,
+                    "current_temp",
                     self.current_temp
                 )
+
                 self.mqtt.mqtt_client.publish(
                     self.config['current_temperature_topic'],
-                    self.current_temp,
+                    '0' if self.attributes['temperature'] == 'None' else self.attributes['temperature'],
                     qos=0, retain=True)
-                if self.current_setpoint is not None:
-                    logger.info("set hvac action")
-                    self.mqtt.mqtt_client.publish(
-                        self.config['action_topic'],
-                        "idle" if self.current_temp > self.current_setpoint else "heating",
-                        qos=1, retain=True)
+
             if 'setpoint' in self.attributes:
-                self.current_setpoint = '19' if self.attributes['setpoint'] == 'None' else self.attributes['setpoint']
+                self.current_setpoint = str(self.tydom_client.thermostat_heat_mode_temp_default) if self.attributes[
+                    'setpoint'] == 'None' else self.attributes['setpoint']
                 await self.tydom_client.set_in_memory(
                     self.id,
-                    "current_setpoint", 
+                    "current_setpoint",
                     self.current_setpoint
                 )
                 self.mqtt.mqtt_client.publish(
                     self.config['temperature_state_topic'],
                     self.current_setpoint,
                     qos=0, retain=True)
-                if self.current_temp is not None:
-                    logger.info("set hvac action")
-                    self.mqtt.mqtt_client.publish(
-                        self.config['action_topic'],
-                        "idle" if self.current_temp > self.current_setpoint else "heating",
-                        qos=1, retain=True)
+
                 if await self.tydom_client.get_thermostat_custom_presets() is not None:
                     if self.attributes['setpoint'] is not None:
                         presets = await self.tydom_client.get_thermostat_custom_presets()
@@ -181,10 +188,34 @@ class Boiler:
                             self.config['preset_mode_state_topic'],
                             set_preset,
                             qos=0, retain=True)
-            if 'thermicLevel' in self.attributes:
+
+            if self.current_setpoint is not None and self.current_temp is not None:
+                if self.current_authorization is not None:
+                    if self.current_authorization == 'HEATING':
+                        self.mqtt.mqtt_client.publish(
+                            self.config['action_topic'],
+                            "idle" if self.current_temp > self.current_setpoint else "heating",
+                            qos=1, retain=True)
+                    elif self.current_authorization == 'COOLING':
+                        self.mqtt.mqtt_client.publish(
+                            self.config['action_topic'],
+                            "idle" if self.current_temp < self.current_setpoint else "cooling",
+                            qos=1, retain=True)
+                    elif self.current_authorization == 'STOP':
+                        self.mqtt.mqtt_client.publish(
+                            self.config['action_topic'],
+                            "off",
+                            qos=1, retain=True)
+                else:
+                    self.mqtt.mqtt_client.publish(
+                        self.config['action_topic'],
+                        "idle" if self.current_temp > self.current_setpoint else "heating",
+                        qos=1, retain=True)
+
+            if 'thermicLevel' in self.attributes and self.attributes['thermicLevel']:
                 self.mqtt.mqtt_client.publish(
                     self.config['mode_state_topic'],
-                    "off" if self.attributes['thermicLevel'] == "STOP" else "heat",
+                    "off" if self.attributes['thermicLevel'] == "STOP" else "cool" if self.attributes['thermicLevel'] is None else "heat",
                     qos=0, retain=True)
                 if await self.tydom_client.get_thermostat_custom_presets() is None:
                     self.mqtt.mqtt_client.publish(
@@ -202,10 +233,15 @@ class Boiler:
                     self.attributes['outTemperature'],
                     qos=0, retain=True)
             if 'authorization' in self.attributes:
+                logger.debug(
+                    'authorization : publish  %s to %s',
+                    self.config['mode_state_topic'],
+                    "off" if self.attributes['authorization'] == "STOP" else "cool" if self.attributes['authorization'] == "COOLING" else "heat")
                 self.mqtt.mqtt_client.publish(
                     self.config['mode_state_topic'],
-                   "off" if self.attributes['authorization'] == "STOP" else "cool" if self.attributes['authorization'] == "COOLING" else "heat",
-                    qos=0, retain=True)         
+                    "off" if self.attributes['authorization'] == "STOP" else "cool" if self.attributes['authorization'] == "COOLING" else "heat",
+                    qos=0,
+                    retain=True)
 
     @staticmethod
     async def put_temperature(tydom_client, device_id, boiler_id, set_setpoint):
@@ -216,11 +252,21 @@ class Boiler:
     @staticmethod
     async def put_hvac_mode(tydom_client, device_id, boiler_id, set_hvac_mode):
         logger.info("%s %s %s", boiler_id, 'set_hvacMode', set_hvac_mode)
+
         if set_hvac_mode == 'off':
             await tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', 'STOP')
+            await tydom_client.put_devices_data(device_id, boiler_id, 'authorization', "STOP")
+            await tydom_client.put_devices_data(device_id, boiler_id, 'hvacMode', set_hvac_mode)
+        elif set_hvac_mode == 'cool':
+            await tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', '')
+            await tydom_client.put_devices_data(device_id, boiler_id, 'setpoint', str(tydom_client.thermostat_heat_mode_temp_default))
+            await tydom_client.put_devices_data(device_id, boiler_id, 'authorization', "COOLING")
+            await tydom_client.put_devices_data(device_id, boiler_id, 'hvacMode', set_hvac_mode)
         else:
-            await tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', 'COMFORT')
-            await tydom_client.put_devices_data(device_id, boiler_id, 'setpoint', '19')
+            await tydom_client.put_devices_data(device_id, boiler_id, 'hvacMode', 'heat')
+            await tydom_client.put_devices_data(device_id, boiler_id, 'thermicLevel', '')
+            await tydom_client.put_devices_data(device_id, boiler_id, 'setpoint', str(tydom_client.thermostat_cool_mode_temp_default))
+            await tydom_client.put_devices_data(device_id, boiler_id, 'authorization', "HEATING")
 
     @staticmethod
     async def put_thermic_level(tydom_client, device_id, boiler_id, set_thermic_level):
