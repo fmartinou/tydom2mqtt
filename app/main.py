@@ -75,7 +75,7 @@ async def poll_device_tydom():
         try:
             await asyncio.sleep(tydom_client.polling_interval)
             await tydom_client.post_refresh()
-        except Exception as e:
+        except Exception as e: 
             logger.warning("poll_device_tydom error : %s", e)
             break
 

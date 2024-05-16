@@ -21,9 +21,12 @@ class TydomClient:
             mac,
             password,
             polling_interval,
-            alarm_pin=None,
+            thermostat_cool_mode_temp_default,
+            thermostat_heat_mode_temp_default,
             host=MEDIATION_URL,
+            alarm_pin=None,
             thermostat_custom_presets=None):
+
         logger.debug("Initializing TydomClient Class")
 
         self.password = password
@@ -44,7 +47,6 @@ class TydomClient:
         self.current_poll_index = 0
         self.in_memory = {}
         self.polling_interval = int(polling_interval)
-        self.in_memory = {}
 
         if thermostat_custom_presets is None:
             self.thermostat_custom_presets = None
@@ -52,6 +54,11 @@ class TydomClient:
             self.thermostat_custom_presets = json.loads(
                 thermostat_custom_presets)
             self.current_preset = {}
+
+        self.thermostat_cool_mode_temp_default = int(
+            thermostat_cool_mode_temp_default)
+        self.thermostat_heat_mode_temp_default = int(
+            thermostat_heat_mode_temp_default)
 
         # Set Host, ssl context and prefix for remote or local connection
         if self.host == MEDIATION_URL:
@@ -346,7 +353,8 @@ class TydomClient:
 
             a_bytes = bytes(str_request, "ascii")
             logger.debug(
-                "Sending message to tydom (%s) PUT cdata",
+                "Sending message to tydom (%s %s)"
+                "PUT cdata",
                 body)
 
             try:
@@ -372,9 +380,25 @@ class TydomClient:
         await self.send_message(method=req, msg=msg_type)
         # Get poll device data
         nb_poll_devices = len(self.poll_device_urls)
-        logger.debug("nb_poll_devices : %d",nb_poll_devices)
+        logger.debug("nb_poll_devices : %d", nb_poll_devices)
         for polling_device in self.poll_device_urls:
-            await self.get_poll_device_data(polling_device);
+            await self.get_poll_device_data(polling_device)
+
+    async def post_hvac_mode(self, mode):
+        body = '{"mode":"' + mode + '","support":["STOP","HEATING","COOLING"]}'
+        str_request = (
+            self.cmd_prefix +
+            f"POST /events/home/hvac HTTP/1.1\r\nContent-Length: " +
+            str(
+                len(body)) +
+            "\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n" +
+            body +
+            "\r\n\r\n0\r\n\r\n")
+        a_bytes = bytes(str_request, "ascii")
+        logger.debug("Sending message to tydom (%s %s)",
+                     "POST_hvac_mode", body)
+        await self.connection.send(a_bytes)
+        return 0
 
     # Get the moments (programs)
     async def get_moments(self):
@@ -438,7 +462,9 @@ class TydomClient:
     async def get_device_data(self, id):
         # 10 here is the endpoint = the device (shutter in this case) to open.
         device_id = str(id)
-        str_request = (self.cmd_prefix + f"GET /devices/{device_id}/endpoints/{device_id}/data HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n")
+        str_request = (
+            self.cmd_prefix +
+            f"GET /devices/{device_id}/endpoints/{device_id}/data HTTP/1.1\r\nContent-Length: 0\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n")
         a_bytes = bytes(str_request, "ascii")
         await self.connection.send(a_bytes)
 
@@ -451,7 +477,7 @@ class TydomClient:
         await self.connection.send(a_bytes)
 
     async def get_poll_device_data(self, url):
-        logger.debug("get_poll_device_data : %s",url)
+        logger.debug("get_poll_device_data : %s", url)
         msg_type = url
         req = "GET"
         await self.send_message(method=req, msg=msg_type)
@@ -482,7 +508,7 @@ class TydomClient:
             self.in_memory |= {id: {name: value}}
         else:
             self.in_memory[id] |= {name: value}
-        logger.debug("Memory state : %s", self.in_memory )
+        logger.debug("Memory state : %s", self.in_memory)
 
     async def get_in_memory(self, id, name=None):
         logger.debug("get %s, %s in memory", id, name)

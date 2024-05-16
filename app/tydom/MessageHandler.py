@@ -266,7 +266,7 @@ class MessageHandler:
         incoming = None
         first = str(bytes_str[:40])
 
-        logger.debug('RECV MSG %s', bytes_str)
+        logger.info('RECV MSG %s', bytes_str)
 
         try:
             if "Uri-Origin: /refresh/all" in first in first:
