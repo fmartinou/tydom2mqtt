@@ -241,8 +241,7 @@ class Boiler:
                     "off" if self.attributes['authorization'] == "STOP" else "cool" if self.attributes['authorization'] == "COOLING" else "heat")
                 self.mqtt.mqtt_client.publish(
                     self.config['mode_state_topic'],
-                    "off" if self.attributes['authorization'] == "STOP" else "cool" if self.attributes[
-                        'authorization'] == "COOLING" else "heat",
+                    "off" if self.attributes['authorization'] == "STOP" else "cool" if self.attributes['authorization'] == "COOLING" else "heat",
                     qos=0,
                     retain=True)
 
