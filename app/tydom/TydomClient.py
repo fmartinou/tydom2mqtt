@@ -384,22 +384,6 @@ class TydomClient:
         for polling_device in self.poll_device_urls:
             await self.get_poll_device_data(polling_device)
 
-    async def post_hvac_mode(self, mode):
-        body = '{"mode":"' + mode + '","support":["STOP","HEATING","COOLING"]}'
-        str_request = (
-            self.cmd_prefix +
-            f"POST /events/home/hvac HTTP/1.1\r\nContent-Length: " +
-            str(
-                len(body)) +
-            "\r\nContent-Type: application/json; charset=UTF-8\r\nTransac-Id: 0\r\n\r\n" +
-            body +
-            "\r\n\r\n0\r\n\r\n")
-        a_bytes = bytes(str_request, "ascii")
-        logger.debug("Sending message to tydom (%s %s)",
-                     "POST_hvac_mode", body)
-        await self.connection.send(a_bytes)
-        return 0
-
     # Get the moments (programs)
     async def get_moments(self):
         msg_type = "/moments/file"
