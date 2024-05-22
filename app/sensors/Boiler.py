@@ -192,20 +192,22 @@ class Boiler:
             if self.current_setpoint is not None and self.current_temp is not None:
                 if self.current_authorization is not None:
                     if self.current_authorization == 'HEATING':
-                        self.mqtt.mqtt_client.publish(
-                            self.config['action_topic'],
-                            "idle" if self.current_temp > self.current_setpoint else "heating",
-                            qos=1, retain=True)
+                        if self.current_temp > self.current_setpoint:
+                            hvac_action = "idle"
+                        else:
+                            hvac_action = "heating"
                     elif self.current_authorization == 'COOLING':
-                        self.mqtt.mqtt_client.publish(
-                            self.config['action_topic'],
-                            "idle" if self.current_temp < self.current_setpoint else "cooling",
-                            qos=1, retain=True)
+                        if self.current_temp > self.current_setpoint:
+                            hvac_action = "idle"
+                        else:
+                            hvac_action = "cooling"
                     elif self.current_authorization == 'STOP':
-                        self.mqtt.mqtt_client.publish(
-                            self.config['action_topic'],
-                            "off",
-                            qos=1, retain=True)
+                        hvac_action = "off"
+
+                    self.mqtt.mqtt_client.publish(
+                        self.config['action_topic'],
+                        hvac_action,
+                        qos=1, retain=True)
                 else:
                     self.mqtt.mqtt_client.publish(
                         self.config['action_topic'],
@@ -239,7 +241,8 @@ class Boiler:
                     "off" if self.attributes['authorization'] == "STOP" else "cool" if self.attributes['authorization'] == "COOLING" else "heat")
                 self.mqtt.mqtt_client.publish(
                     self.config['mode_state_topic'],
-                    "off" if self.attributes['authorization'] == "STOP" else "cool" if self.attributes['authorization'] == "COOLING" else "heat",
+                    "off" if self.attributes['authorization'] == "STOP" else "cool" if self.attributes[
+                        'authorization'] == "COOLING" else "heat",
                     qos=0,
                     retain=True)
 
