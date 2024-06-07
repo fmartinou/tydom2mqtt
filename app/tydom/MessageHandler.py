@@ -265,6 +265,7 @@ class MessageHandler:
         bytes_str = self.incoming_bytes
         incoming = None
         first = str(bytes_str[:40])
+
         try:
             if "Uri-Origin: /refresh/all" in first in first:
                 pass

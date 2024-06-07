@@ -85,6 +85,8 @@ tydom_client = TydomClient(
     host=configuration.tydom_ip,
     password=configuration.tydom_password,
     polling_interval=configuration.tydom_polling_interval,
+    thermostat_cool_mode_temp_default=configuration.thermostat_cool_mode_temp_default,
+    thermostat_heat_mode_temp_default=configuration.thermostat_heat_mode_temp_default,
     alarm_pin=configuration.tydom_alarm_pin,
     thermostat_custom_presets=configuration.thermostat_custom_presets)
 
