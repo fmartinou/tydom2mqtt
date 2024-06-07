@@ -1,5 +1,8 @@
 # Changelog
 
+# 3.5.0 (wip)
+- :star: Add HVAC switch mode
+
 # 3.4.3
 - :star: Add device polling 
 - :star: Add HVAC cool mode
