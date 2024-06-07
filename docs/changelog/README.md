@@ -1,6 +1,6 @@
 # Changelog
 
-# 3.5.0 (wip)
+# 3.5.0
 - :star: Add HVAC switch mode
 
 # 3.4.3
