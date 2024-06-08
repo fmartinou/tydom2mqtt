@@ -1,5 +1,8 @@
 # Changelog
 
+# 3.5.1
+- :fire: Fix configuration not overrided when using HASS.io
+
 # 3.5.0
 - :star: Add HVAC switch mode
 
