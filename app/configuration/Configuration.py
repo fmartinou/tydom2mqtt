@@ -120,10 +120,10 @@ class Configuration:
                     if TYDOM_ALARM_NIGHT_ZONE in data and data[TYDOM_ALARM_NIGHT_ZONE] != '':
                         self.tydom_alarm_night_zone = data[TYDOM_ALARM_NIGHT_ZONE]
 
-                    if THERMOSTAT_COOL_MODE_TEMP_DEFAULT in data[THERMOSTAT_COOL_MODE_TEMP_DEFAULT] != '':
+                    if THERMOSTAT_COOL_MODE_TEMP_DEFAULT in data and data[THERMOSTAT_COOL_MODE_TEMP_DEFAULT] != '':
                         self.thermostat_cool_mode_temp_default = data[THERMOSTAT_COOL_MODE_TEMP_DEFAULT]
 
-                    if THERMOSTAT_HEAT_MODE_TEMP_DEFAULT in data[THERMOSTAT_HEAT_MODE_TEMP_DEFAULT] != '':
+                    if THERMOSTAT_HEAT_MODE_TEMP_DEFAULT in data and data[THERMOSTAT_HEAT_MODE_TEMP_DEFAULT] != '':
                         self.thermostat_heat_mode_temp_default = data[THERMOSTAT_HEAT_MODE_TEMP_DEFAULT]
 
                     if MQTT_HOST in data and data[MQTT_HOST] != '':
