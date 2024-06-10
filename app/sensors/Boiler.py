@@ -197,7 +197,7 @@ class Boiler:
                         else:
                             hvac_action = "heating"
                     elif self.current_authorization == 'COOLING':
-                        if self.current_temp > self.current_setpoint:
+                        if self.current_temp < self.current_setpoint:
                             hvac_action = "idle"
                         else:
                             hvac_action = "cooling"
