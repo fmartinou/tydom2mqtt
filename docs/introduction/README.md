@@ -31,7 +31,7 @@ docker run -d --name tydom2mqtt \
   -e TYDOM_MAC="001A25XXXXXX" \
   -e TYDOM_PASSWORD="azerty123456789" \
   -e TYDOM_IP="192.168.1.33" \  
-  koleos6/tydom2mqtt
+  fmartinou/tydom2mqtt
 ```
 <!-- tabs:end -->
 
