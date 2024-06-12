@@ -11,7 +11,7 @@
 ## Solution 1: Deploy the docker image by yourself
 Just run the container [as described here](/introduction/).
 
-## Solution 2: Install the [`tydom2mqtt` hass.io add-on](https://github.com/koleos6/hassio-addons/tree/main/tydom2mqtt)
+## Solution 2: Install the [`tydom2mqtt` hass.io add-on](https://github.com/fmartinou/hassio-addons/tree/main/tydom2mqtt)
 
 ?> [Please find here the Community Home-Assistant `tydom2mqtt` thread](https://community.home-assistant.io/t/tydom2mqtt-delta-dore-custom-component-wip/151333).
 
@@ -74,7 +74,7 @@ This is an MQTT client that will connect to your mosquitto broker to receive mqt
 
 `tydom2mqqt` is available via an extra addon repository.
 
-To add the repository to your Home-Assistant, just [follow the documentation here](https://github.com/koleos6/hassio-addons/tree/main).
+To add the repository to your Home-Assistant, just [follow the documentation here](https://github.com/fmartinou/hassio-addons/tree/main).
 
 Then you can install `tydom2mqtt`.
 

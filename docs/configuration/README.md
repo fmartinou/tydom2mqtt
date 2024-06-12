@@ -35,7 +35,7 @@ version: '3'
 
 services:
   tydom2mqtt:
-    image: koleos6/tydom2mqtt
+    image: fmartinou/tydom2mqtt
     container_name: tydom2mqtt
     environment:
       - TYDOM_MAC=001A25XXXXXX
@@ -48,7 +48,7 @@ docker run -d --name tydom2mqtt \
   -e TYDOM_MAC="001A25XXXXXX" \
   -e TYDOM_PASSWORD="azerty123456789" \
   -e TYDOM_IP="192.168.1.33" \  
-  koleos6/tydom2mqtt
+  fmartinou/tydom2mqtt
 ```
 <!-- tabs:end -->
 
@@ -76,7 +76,7 @@ version: '3'
 
 services:
   tydom2mqtt:
-image: koleos6/tydom2mqtt
+    image: fmartinou/tydom2mqtt
     environment:
       - THERMOSTAT_CUSTOM_PRESETS='{"ECO": "17", "COMFORT": "20"}'
     ...
@@ -86,6 +86,6 @@ image: koleos6/tydom2mqtt
 docker run -d --name tydom2mqtt \
   ...
   -e THERMOSTAT_CUSTOM_PRESETS='{"ECO": "17", "COMFORT": "20"}'
-  koleos6/tydom2mqtt
+  fmartinou/tydom2mqtt
 ```
 <!-- tabs:end -->
