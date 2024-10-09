@@ -187,7 +187,7 @@ class MqttClient:
             get_id = (topic.split("/"))[2]
             device_id = (get_id.split("_"))[0]
             endpoint_id = (get_id.split("_"))[1]
-            await Light.put_level_cmd(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id,
+            await Light.put_level_cmd(tydom_client=self.tydom, device_id=device_id, light_id=endpoint_id,
                                       level_cmd=str(value))
 
         elif ('set_level' in str(topic)) and not ('set_levelCmd' in str(topic)):
@@ -199,8 +199,9 @@ class MqttClient:
             get_id = (topic.split("/"))[2]
             device_id = (get_id.split("_"))[0]
             endpoint_id = (get_id.split("_"))[1]
-            await Light.put_level(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id,
+            await Light.put_level(tydom_client=self.tydom, device_id=device_id, light_id=endpoint_id,
                                   level=str(value))
+                                  
         elif 'open_automatic_door' in str(topic):
             value =  payload.decode()
             logger.info(
