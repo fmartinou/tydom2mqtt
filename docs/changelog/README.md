@@ -1,5 +1,8 @@
 # Changelog
 
+# 3.5.3
+- :fire: Fix Light command
+
 # 3.5.2
 - :fire: Fix HVAC actions on cooling mode
 
