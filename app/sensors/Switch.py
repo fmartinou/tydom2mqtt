@@ -34,7 +34,7 @@ class Switch:
     async def setup(self):
         self.device = {
             'manufacturer': 'Delta Dore',
-            'model': 'Porte',
+            'model': 'Switch',
             'name': self.name,
             'identifiers': self.id}
         self.config_topic = switch_config_topic.format(id=self.id)

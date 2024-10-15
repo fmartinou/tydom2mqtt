@@ -35,7 +35,7 @@ class Cover:
     async def setup(self):
         self.device = {
             'manufacturer': 'Delta Dore',
-            'model': 'Volet',
+            'model': 'Cover',
             'name': self.name,
             'identifiers': self.id}
         self.config_topic = cover_config_topic.format(id=self.id)

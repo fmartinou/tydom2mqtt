@@ -32,7 +32,7 @@ class Light:
     async def setup(self):
         self.device = {
             'manufacturer': 'Delta Dore',
-            'model': 'Lumiere',
+            'model': 'Light',
             'name': self.name,
             'identifiers': self.id}
         self.config_topic = light_config_topic.format(id=self.id)
@@ -69,7 +69,7 @@ class Light:
         try:
             await self.update_sensors()
         except Exception as e:
-            logger.error("light sensors Error :")
+            logger.error("Light sensors Error :")
             logger.error(e)
 
         self.level_topic = light_level_topic.format(
@@ -84,7 +84,7 @@ class Light:
                 qos=0,
                 retain=True)
         logger.info(
-            "light created / updated : %s %s %s",
+            "Light created / updated : %s %s %s",
             self.name,
             self.id,
             self.current_level)
