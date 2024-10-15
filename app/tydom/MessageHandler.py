@@ -247,6 +247,8 @@ device_conso_keywords = device_conso_classes.keys()
 
 deviceSmokeKeywords = ['techSmokeDefect']
 
+deviceWaterKeywords = ['techWaterDefect']
+
 # Device dict for parsing
 device_name = dict()
 device_endpoint = dict()
@@ -405,6 +407,11 @@ class MessageHandler:
                 device_type[device_unique_id] = 'boiler'
                 device_endpoint[device_unique_id] = i["id_endpoint"]
 
+            if i["last_usage"] == 'sensorDF':
+                device_name[device_unique_id] = i["name"]
+                device_type[device_unique_id] = 'water'
+                device_endpoint[device_unique_id] = i["id_endpoint"]
+
             if i["last_usage"] == 'sensorDFR':
                 device_name[device_unique_id] = i["name"]
                 device_type[device_unique_id] = 'smoke'
@@ -491,6 +498,7 @@ class MessageHandler:
                 attr_gate = {}
                 attr_boiler = {}
                 attr_sh_hvac = {}
+                attr_water = {}
                 attr_smoke = {}
                 endpoint_id = endpoint["id"]
                 unique_id = str(endpoint_id) + "_" + str(device_id)
@@ -626,6 +634,18 @@ class MessageHandler:
                             attr_sh_hvac['device_type'] = 'sh_hvac'
                             attr_sh_hvac[element_name] = element_value
 
+                    if type_of_id == 'water':
+                        if element_name in deviceWaterKeywords and element_validity == 'upToDate':
+                            attr_water['device_id'] = device_id
+                            attr_water['device_class'] = 'moisture'
+                            attr_water['endpoint_id'] = endpoint_id
+                            attr_water['id'] = str(
+                                device_id) + '_' + str(endpoint_id)
+                            attr_water['name'] = print_id
+                            attr_water['device_type'] = 'sensor'
+                            attr_water['element_name'] = element_name
+                            attr_water[element_name] = element_value
+
                     if type_of_id == 'smoke':
                         if element_name in deviceSmokeKeywords and element_validity == 'upToDate':
                             attr_smoke['device_id'] = device_id
@@ -713,6 +733,12 @@ class MessageHandler:
                     tydom_attributes=attr_gate,
                     mqtt=self.mqtt_client)
                 await new_gate.update()
+            elif 'device_type' in attr_water and attr_water['device_type'] == 'sensor':
+                new_water = Sensor(
+                    elem_name=attr_water['element_name'],
+                    tydom_attributes_payload=attr_water,
+                    mqtt=self.mqtt_client)
+                await new_water.update()
             elif 'device_type' in attr_smoke and attr_smoke['device_type'] == 'sensor':
                 new_smoke = Sensor(
                     elem_name=attr_smoke['element_name'],
