@@ -112,9 +112,6 @@ class Alarm:
         elif asked_state == 'PANIC':
             value = 'PANIC'
             zone_id = None
-        elif asked_state == 'PART':
-            value = 'PART'
-            zone_id = None
         elif asked_state == 'ACK':
             value = 'ACK'
             zone_id = None
