@@ -41,7 +41,7 @@ jobs:
       - name: 🐳 Build and push
         uses: docker/build-push-action@v6
         with:
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true #${{ github.event_name != 'pull_request' }}
           platforms: "linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64"
           tags: ghcr.io/${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
