@@ -768,7 +768,7 @@ class MessageHandler:
                         alarm_pin=self.tydom_client.alarm_pin,
                         tydom_attributes=attr_alarm,
                         mqtt=self.mqtt_client)
-                    if not (state is None):
+                    if state is not None:
                         await alarm.update()
                     else:
                         await alarm.update_sensors()

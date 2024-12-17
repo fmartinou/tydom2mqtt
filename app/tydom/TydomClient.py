@@ -125,7 +125,7 @@ class TydomClient:
                          json_response["sites"][0]["gateway"]["password"])
             return password
 
-        except Exception as exception:
+        except Exception:
             return None
 
     async def connect(self):

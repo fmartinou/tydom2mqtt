@@ -131,7 +131,7 @@ class MqttClient:
             await Cover.put_positionCmd(tydom_client=self.tydom, device_id=device_id, cover_id=endpoint_id,
                                         positionCmd=str(value))
 
-        elif ('set_position' in str(topic)) and not ('set_positionCmd' in str(topic)):
+        elif ('set_position' in str(topic)) and 'set_positionCmd' not in str(topic):
             value = json.loads(payload)
             logger.info(
                 'set_position message received (topic=%s, message=%s)',
@@ -165,7 +165,7 @@ class MqttClient:
             await Light.put_level_cmd(tydom_client=self.tydom, device_id=device_id, light_id=endpoint_id,
                                       level_cmd=str(value))
 
-        elif ('set_level' in str(topic)) and not ('set_levelCmd' in str(topic)):
+        elif ('set_level' in str(topic)) and 'set_levelCmd' not in str(topic):
             value = json.loads(payload)
             logger.info(
                 'set_level message received (topic=%s, message=%s)',
@@ -177,7 +177,7 @@ class MqttClient:
             await Light.put_level(tydom_client=self.tydom, device_id=device_id, light_id=endpoint_id,
                                   level=str(value))
 
-        elif ('set_alarm_state' in str(topic)) and not ('homeassistant' in str(topic)):
+        elif ('set_alarm_state' in str(topic)) and 'homeassistant' not in str(topic):
             value = payload.decode()
             logger.info(
                 'set_alarm_state message received (topic=%s, message=%s)',
@@ -228,7 +228,7 @@ class MqttClient:
             await Boiler.put_thermic_level(tydom_client=self.tydom, device_id=device_id, boiler_id=endpoint_id,
                                            set_thermic_level=str(value))
 
-        elif ('set_switch_state' in str(topic)) and not ('homeassistant' in str(topic)):
+        elif ('set_switch_state' in str(topic)) and 'homeassistant' not in str(topic):
             value = payload.decode()
             logger.info(
                 'set_switch_state message received (topic=%s, message=%s)',
@@ -254,7 +254,7 @@ class MqttClient:
             await Switch.put_level_cmd_gate(tydom_client=self.tydom, device_id=device_id, switch_id=endpoint_id,
                                             level_cmd=str(value))
 
-        elif ('set_levelGate' in str(topic)) and not ('set_levelCmd' in str(topic)):
+        elif ('set_levelGate' in str(topic)) and 'set_levelCmd' not in str(topic):
             value = json.loads(payload)
             logger.info(
                 'set_levelGate message received (topic=%s, message=%s)',
