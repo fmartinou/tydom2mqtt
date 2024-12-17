@@ -24,6 +24,7 @@ jobs:
 
   format:
     name: ✨ Check Formatting
+    runs-on: ubuntu-latest
     steps:
       - name: 📚 Git Checkout
         uses: actions/checkout@v4
