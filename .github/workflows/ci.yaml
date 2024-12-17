@@ -1,0 +1,23 @@
+name: Tydom2mqtt bot
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: write
+  checks: write
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  semantic_pull_request:
+    if: github.event_name == 'pull_request'
+    name: 🏷️ PR is semantic
+    uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/semantic_pull_request.yml@v1
