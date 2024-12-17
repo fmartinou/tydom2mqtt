@@ -52,14 +52,14 @@ jobs:
         uses: docker/build-push-action@v6
         id: push
         with:
-          push: true #${{ github.event_name != 'pull_request' }}
+          push: ${{ github.event_name != 'pull_request' }}
           platforms: "linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64"
           tags: ghcr.io/${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: 🔖 Generate artifact attestation
         uses: actions/attest-build-provenance@v2
-        #if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request'
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
           subject-digest: ${{ steps.push.outputs.digest }}
