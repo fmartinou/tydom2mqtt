@@ -11,6 +11,7 @@ on:
 
 jobs:
   build:
+    name: 🐳 Docker build
     runs-on: ubuntu-latest
     steps:
       - name: ⚙️ Set up QEMU
