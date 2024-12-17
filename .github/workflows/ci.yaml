@@ -36,10 +36,12 @@ jobs:
 
       - name: 📦 Install dependencies
         run: |
+          cd app
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements.dev.txt
 
       - name: ✨ Check Formatting
         run: |
+          cd app
           autopep8 --in-place --aggressive --aggressive *.py
