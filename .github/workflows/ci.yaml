@@ -1,4 +1,4 @@
-name: Tydom2mqtt bot
+name: 🤖 Tydom2mqtt
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -17,7 +17,7 @@ on:
   pull_request:
 
 jobs:
-  semantic_pull_request:
+  semantic-pr:
     if: github.event_name == 'pull_request'
     name: 🏷️ PR is semantic
     uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/semantic_pull_request.yml@v1
