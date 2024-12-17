@@ -41,7 +41,13 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements.dev.txt
 
-      - name: ✨ Check Formatting
-        run: |
-          cd app
-          autopep8 --in-place --aggressive --aggressive *.py
+      - name: ✨ Ruff check formatting
+        uses: astral-sh/ruff-action@v2
+        with:
+          src: "./app"
+          args: "format --check"
+
+      - name: ✨ Ruff check
+        uses: astral-sh/ruff-action@v2
+        with:
+          src: "./app"
