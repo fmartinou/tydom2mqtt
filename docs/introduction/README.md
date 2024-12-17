@@ -17,7 +17,7 @@ version: '3'
 
 services:
   tydom2mqtt:
-    image: tydom2mqtt/tydom2mqtt
+    image: ghcr.io/tydom2mqtt/tydom2mqtt
     container_name: tydom2mqtt
     environment:
       - TYDOM_MAC=001A25XXXXXX
@@ -30,7 +30,7 @@ docker run -d --name tydom2mqtt \
   -e TYDOM_MAC="001A25XXXXXX" \
   -e TYDOM_PASSWORD="azerty123456789" \
   -e TYDOM_IP="192.168.1.33" \  
-  tydom2mqtt/tydom2mqtt
+  ghcr.io/tydom2mqtt/tydom2mqtt
 ```
 <!-- tabs:end -->
 
