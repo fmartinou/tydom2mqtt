@@ -297,8 +297,7 @@ class MessageHandler:
                     logger.exception(e)
             elif "scn" in first:
                 try:
-                    incoming = get(bytes_str)
-                    await self.parse_response(incoming)
+                    await self.parse_response(bytes_str)
                     logger.debug("Scenarii message processed")
                 except BaseException as e:
                     logger.error(

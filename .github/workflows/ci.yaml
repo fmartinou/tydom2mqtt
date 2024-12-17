@@ -23,7 +23,7 @@ jobs:
     uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/semantic_pull_request.yml@v1
 
   format:
-    name: ✨ Check Formatting
+    name: ✨ Ruff check
     runs-on: ubuntu-latest
     steps:
       - name: 📚 Git Checkout
