@@ -10,7 +10,7 @@ on:
   pull_request:
 
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: ⚙️ Set up QEMU
@@ -41,6 +41,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: ${{ github.event_name != 'pull_request' }}
-          platforms: "linux/arm/v6,linux/arm/v7,linux/arm64,linux/amd64"
+          platforms: "linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64"
           tags: ghcr.io/${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
