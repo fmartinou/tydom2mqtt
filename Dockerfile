@@ -1,5 +1,7 @@
 FROM python:3.11-alpine3.17
 
+LABEL org.opencontainers.image.description="Deltadore Tydom to MQTT Bridge"
+
 # App base dir
 WORKDIR /app
 
