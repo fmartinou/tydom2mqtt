@@ -12,7 +12,6 @@ binary_sensor_json_attributes_topic = "binary_sensor/tydom/{id}/state"
 
 
 class Sensor:
-
     def __init__(self, elem_name, tydom_attributes_payload, mqtt=None):
         self.config = None
         self.config_sensor_topic = None
@@ -26,46 +25,45 @@ class Sensor:
 
         # extracted from json, but it will make sensor not in payload to be
         # considered offline....
-        self.parent_device_id = str(tydom_attributes_payload['id'])
+        self.parent_device_id = str(tydom_attributes_payload["id"])
         self.parent_name = str(tydom_attributes_payload['name'])
-        self.id = elem_name + '_tydom_' + str(tydom_attributes_payload['id'])
+        self.id = elem_name + "_tydom_" + str(tydom_attributes_payload["id"])
         self.name = elem_name
-        if 'device_class' in tydom_attributes_payload.keys():
-            self.device_class = tydom_attributes_payload['device_class']
+        if "device_class" in tydom_attributes_payload.keys():
+            self.device_class = tydom_attributes_payload["device_class"]
 
-        if 'state_class' in tydom_attributes_payload.keys():
-            self.state_class = tydom_attributes_payload['state_class']
+        if "state_class" in tydom_attributes_payload.keys():
+            self.state_class = tydom_attributes_payload["state_class"]
 
-        if 'unit_of_measurement' in tydom_attributes_payload.keys():
-            self.unit_of_measurement = tydom_attributes_payload['unit_of_measurement']
+        if "unit_of_measurement" in tydom_attributes_payload.keys():
+            self.unit_of_measurement = tydom_attributes_payload["unit_of_measurement"]
 
         self.mqtt = mqtt
         self.binary = False
 
-        if 'unit_of_measurement' not in tydom_attributes_payload.keys() and (
-            self.elem_value in [
-                "0",
-                "1",
-                "true",
-                "false",
-                "True",
-                "False",
-                "ON",
-                "OFF"] or isinstance(self.elem_value, bool)):
+        if "unit_of_measurement" not in tydom_attributes_payload.keys() and (
+            self.elem_value in ["0", "1", "true", "false", "True", "False", "ON", "OFF"]
+            or isinstance(self.elem_value, bool)
+        ):
             self.binary = True
 
-            if (isinstance(self.elem_value, bool)
-                    and self.elem_value) or self.elem_value == "True" or self.elem_value == "true" or self.elem_value == "1" or self.elem_value == "ON":
+            if (
+                (isinstance(self.elem_value, bool) and self.elem_value)
+                or self.elem_value == "True"
+                or self.elem_value == "true"
+                or self.elem_value == "1"
+                or self.elem_value == "ON"
+            ):
                 self.elem_value = "ON"
             else:
                 self.elem_value = "OFF"
 
             self.json_attributes_topic = binary_sensor_json_attributes_topic.format(
-                id=self.id)
+                id=self.id
+            )
             self.config_topic = binary_sensor_config_topic.format(id=self.id)
         else:
-            self.json_attributes_topic = sensor_json_attributes_topic.format(
-                id=self.id)
+            self.json_attributes_topic = sensor_json_attributes_topic.format(id=self.id)
             self.config_topic = sensor_config_topic.format(id=self.id)
 
     # SENSOR:
@@ -114,53 +112,53 @@ class Sensor:
 
         self.config_sensor_topic = sensor_config_topic.format(id=self.id)
 
-        self.config = {'name': self.name,
-                       'unique_id': self.id}
+        self.config = {"name": self.name, "unique_id": self.id}
         try:
-            self.config['device_class'] = self.device_class
+            self.config["device_class"] = self.device_class
         except AttributeError:
             pass
         try:
-            self.config['state_class'] = self.state_class
+            self.config["state_class"] = self.state_class
         except AttributeError:
             pass
         try:
-            self.config['unit_of_measurement'] = self.unit_of_measurement
+            self.config["unit_of_measurement"] = self.unit_of_measurement
         except AttributeError:
             pass
 
-        self.config['device'] = self.device
-        self.config['state_topic'] = self.json_attributes_topic
+        self.config["device"] = self.device
+        self.config["state_topic"] = self.json_attributes_topic
 
         if self.mqtt is not None:
             self.mqtt.mqtt_client.publish(
-                self.config_topic.lower(), json.dumps(
-                    self.config), qos=0, retain=True)  # sensor Config
+                self.config_topic.lower(), json.dumps(self.config), qos=0, retain=True
+            )  # sensor Config
 
     async def update(self):
-
         # 3 items are necessary :
         # config to config config_sensor_topic + config payload is the schema
         # state payload to state topic in config with all attributes
 
-        if 'name' in self.elem_name or 'device_type' in self.elem_name or self.elem_value is None:
+        if (
+            "name" in self.elem_name
+            or "device_type" in self.elem_name
+            or self.elem_value is None
+        ):
             pass  # OOOOOOOOOH that's quick and dirty
         else:
             await self.setup()  # Publish config
             # Publish state json to state topic
             if self.mqtt is not None:
                 self.mqtt.mqtt_client.publish(
-                    self.json_attributes_topic,
-                    self.elem_value,
-                    qos=0,
-                    retain=True)
+                    self.json_attributes_topic, self.elem_value, qos=0, retain=True
+                )
             if not self.binary:
                 logger.info(
-                    "Sensor created / updated : %s %s",
-                    self.name,
-                    self.elem_value)
+                    "Sensor created / updated : %s %s", self.name, self.elem_value
+                )
             else:
                 logger.info(
                     "Binary sensor created / updated : %s %s",
                     self.name,
-                    self.elem_value)
+                    self.elem_value,
+                )
