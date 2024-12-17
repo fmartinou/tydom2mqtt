@@ -50,6 +50,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
       - name: 🐳 Build and push
         uses: docker/build-push-action@v6
+        id: push
         with:
           push: true #${{ github.event_name != 'pull_request' }}
           platforms: "linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64"
@@ -58,6 +59,7 @@ jobs:
 
       - name: 🔖 Generate artifact attestation
         uses: actions/attest-build-provenance@v2
+        #if: github.event_name != 'pull_request'
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
           subject-digest: ${{ steps.push.outputs.digest }}
