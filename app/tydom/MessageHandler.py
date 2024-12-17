@@ -140,13 +140,6 @@ deviceGarageDetailsKeywords = [
     'cmdDefect',
     'battDefect']
 
-    "onFavPos",
-    "thermicDefect",
-    "obstacleDefect",
-    "intrusion",
-    "battDefect",
-]
-
 deviceCoverKeywords = [
     "position",
     "slope",
