@@ -279,7 +279,7 @@ class MessageHandler:
                         # Tywatt response starts at 7
                         incoming = self.parse_put_response(bytes_str, 7)
                     await self.parse_response(incoming)
-                except BaseException:
+                except BaseException as e:
                     logger.error(
                         'Error when parsing devices/data tydom message (%s)',
                         bytes_str)
@@ -289,7 +289,7 @@ class MessageHandler:
                     incoming = get(bytes_str)
                     await self.parse_response(incoming)
                     logger.debug('Scenarii message processed')
-                except BaseException:
+                except BaseException as e:
                     logger.error(
                         'Error when parsing Scenarii tydom message (%s)', bytes_str)
                     logger.exception(e)
@@ -298,7 +298,7 @@ class MessageHandler:
                     incoming = self.parse_put_response(bytes_str)
                     await self.parse_response(incoming)
                     logger.debug('POST message processed')
-                except BaseException:
+                except BaseException as e:
                     logger.error(
                         'Error when parsing POST tydom message (%s)', bytes_str)
                     logger.exception(e)
@@ -308,7 +308,7 @@ class MessageHandler:
                 incoming = response.decode("utf-8")
                 try:
                     await self.parse_response(incoming)
-                except BaseException:
+                except BaseException as e:
                     logger.error(
                         'Error when parsing HTTP/1.1 tydom message (%s)', bytes_str)
                     logger.exception(e)
@@ -831,7 +831,7 @@ class MessageHandler:
                                     element_index = 'measure'
 
                                     element_value = elem["values"][element_index]
-                                    if element_value is not None and type(element_value) == int:
+                                    if element_value is not None and type(element_value) is int:
                                         element_value = element_value / 100
 
                                     attr_conso = {

@@ -10,7 +10,7 @@ import websockets
 import requests
 from requests.auth import HTTPDigestAuth
 from urllib3 import encode_multipart_formdata
-from .const import *
+from .const import DELTADORE_API_SITES,DELTADORE_AUTH_CLIENTID,DELTADORE_AUTH_SCOPE,DELTADORE_AUTH_URL,DELTADORE_AUTH_GRANT_TYPE,MEDIATION_URL
 
 logger = logging.getLogger(__name__)
 
