@@ -1,0 +1,53 @@
+name: 🤖 Tydom2mqtt
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: write
+  checks: write
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  semantic-pr:
+    if: github.event_name == 'pull_request'
+    name: 🏷️ PR is semantic
+    uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/semantic_pull_request.yml@v1
+
+  format:
+    name: ✨ Ruff check
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: 📦 Install dependencies
+        run: |
+          cd app
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements.dev.txt
+
+      - name: ✨ Ruff check formatting
+        uses: astral-sh/ruff-action@v2
+        with:
+          src: "./app"
+          args: "format --check"
+
+      - name: ✨ Ruff check
+        uses: astral-sh/ruff-action@v2
+        with:
+          src: "./app"
