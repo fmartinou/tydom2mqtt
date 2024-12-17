@@ -7,7 +7,7 @@ on:
     tags:
       - "*.*.*"
   workflow_dispatch:
-  pull_request: 
+  pull_request:
 
 jobs:
   build-and-push:
@@ -21,7 +21,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ github.actor }}/tydom2mqtt
+          images: tydom2mqtt/tydom2mqtt
           tags: |
             # set latest tag for master branch
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
