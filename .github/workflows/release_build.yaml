@@ -10,11 +10,15 @@ on:
   pull_request:
 
 permissions:
-  issues: write
-  pull-requests: write
-  contents: write
-  checks: write
-  
+  contents: read
+  packages: write
+  attestations: write
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   build:
     name: 🐳 Docker build
@@ -24,11 +28,17 @@ jobs:
         uses: docker/setup-qemu-action@v3
       - name: ⚙️ Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+      - name: 🔐 Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: 🔖 Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: tydom2mqtt/tydom2mqtt
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=schedule
             type=ref,event=branch
@@ -38,12 +48,6 @@ jobs:
             type=semver,pattern={{major}}
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
-      - name: 🔐 Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
       - name: 🐳 Build and push
         uses: docker/build-push-action@v6
         with:
@@ -51,3 +55,10 @@ jobs:
           platforms: "linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64"
           tags: ghcr.io/${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: 🔖 Generate artifact attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
