@@ -9,6 +9,12 @@ on:
   workflow_dispatch:
   pull_request:
 
+permissions:
+  issues: write
+  pull-requests: write
+  contents: write
+  checks: write
+  
 jobs:
   build:
     name: 🐳 Docker build
