@@ -1,5 +1,6 @@
 """Constants for Tydom"""
 
+# fmt: off
 MEDIATION_URL = "mediation.tydom.com"
 DELTADORE_AUTH_URL = "https://deltadoreadb2ciot.b2clogin.com/deltadoreadb2ciot.onmicrosoft.com/v2.0/.well-known/openid-configuration?p=B2C_1_AccountProviderROPC_SignIn"
 DELTADORE_AUTH_GRANT_TYPE = "password"
