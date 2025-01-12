@@ -6,7 +6,7 @@ import os
 import ssl
 import sys
 
-import websockets
+from websockets.asyncio.client import connect
 import requests
 from requests.auth import HTTPDigestAuth
 from urllib3 import encode_multipart_formdata
@@ -193,9 +193,9 @@ class TydomClient:
             websockets.client.connect returns a WebSocketClientProtocol, which is used to send and receive messages
         """
         try:
-            self.connection = await websockets.connect(
+            self.connection = await connect(
                 f"wss://{self.host}:443/mediation/client?mac={self.mac}&appli=1",
-                extra_headers=websocket_headers,
+                additional_headers=websocket_headers,
                 ssl=websocket_ssl_context,
                 ping_timeout=None,
             )
