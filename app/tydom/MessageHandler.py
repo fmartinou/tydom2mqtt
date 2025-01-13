@@ -115,7 +115,8 @@ deviceDoorDetailsKeywords = [
     "obstacleDefect",
     "intrusionDetect",
     "battDefect",
-    "supervisionMode" "calibrationDefect",
+    "supervisionMode",
+    "calibrationDefect",
 ]
 
 deviceAutomaticDoorKeywords = ["podPosition"]
@@ -125,7 +126,8 @@ deviceGaragelKeywords = [
     "level",
     "onDusk",
     "onFavPos",
-    "onPresenceDetected" "thermicDefect",
+    "onPresenceDetected",
+    "thermicDefect",
     "loadDefect",
     "cmdDefect",
     "battDefect",
@@ -135,7 +137,8 @@ deviceGarageDetailsKeywords = [
     "level",
     "onDusk",
     "onFavPos",
-    "onPresenceDetected" "thermicDefect",
+    "onPresenceDetected",
+    "thermicDefect",
     "loadDefect",
     "cmdDefect",
     "battDefect",
@@ -168,7 +171,8 @@ deviceSensorsKeywords = [
     "battDefect",
 ]
 deviceSensorsDetailsKeywords = [
-    "outTemperature" "lightPower",
+    "outTemperature",
+    "lightPower",
     "battDefect",
     "configSensor",
     "configTemp",

@@ -355,7 +355,7 @@ class TydomClient:
             )
 
             a_bytes = bytes(str_request, "ascii")
-            logger.debug("Sending message to tydom (%s %s)" "PUT cdata", body)
+            logger.debug("Sending message to tydom (%s %s) PUT cdata", body)
 
             try:
                 await self.connection.send(a_bytes)
