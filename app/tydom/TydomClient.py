@@ -131,7 +131,8 @@ class TydomClient:
             )
             return password
 
-        except Exception:
+        except Exception as e:
+            logger.info(e)
             return None
 
     async def connect(self):
@@ -195,7 +196,7 @@ class TydomClient:
         try:
             self.connection = await websockets.connect(
                 f"wss://{self.host}:443/mediation/client?mac={self.mac}&appli=1",
-                extra_headers=websocket_headers,
+                additional_headers=websocket_headers,
                 ssl=websocket_ssl_context,
                 ping_timeout=None,
             )

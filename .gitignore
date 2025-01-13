@@ -5,3 +5,4 @@
 app/.venv/
 .gitignore
 .vs/
+*.env
