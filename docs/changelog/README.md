@@ -1,5 +1,8 @@
 # Changelog
 
+# 3.6.0
+- :star: Add support for garage door
+
 # 3.5.3
 - :fire: Fix Light command
 

@@ -219,4 +219,4 @@ class Configuration:
         if len(value) < 2 * nb:
             return char * len(value)
 
-        return f"{value[0:nb]}{char * (max(0, len(value) - (nb * 2)))}{value[len(value) - nb:len(value)]}"
+        return f"{value[0:nb]}{char * (max(0, len(value) - (nb * 2)))}{value[len(value) - nb : len(value)]}"
